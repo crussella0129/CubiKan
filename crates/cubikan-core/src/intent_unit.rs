@@ -1,3 +1,5 @@
+use std::{error::Error, fmt};
+
 use crate::{IntentSpecies, IntentUnitId, PhaseId, Workflow, WorkflowId};
 
 /// Whether an Intent Unit can still move through its workflow.
@@ -145,7 +147,63 @@ impl IntentUnit {
     pub fn history(&self) -> &[LifecycleRecord] {
         &self.history
     }
+
+    /// Moves the unit across an edge declared by its workflow snapshot.
+    pub fn transition_to(&mut self, target: &PhaseId) -> Result<(), TransitionError> {
+        if self.status == IntentUnitStatus::Completed {
+            return Err(TransitionError::AlreadyCompleted);
+        }
+        if !self.workflow.contains_phase(target) {
+            return Err(TransitionError::UnknownTarget {
+                target: target.clone(),
+            });
+        }
+
+        let from = self.phase.clone();
+        if !self.workflow.allows_transition(&from, target) {
+            return Err(TransitionError::NotAllowed {
+                from,
+                to: target.clone(),
+            });
+        }
+
+        let record = TransitionRecord {
+            sequence: self.history.len() + 1,
+            from,
+            to: target.clone(),
+        };
+        self.history.push(LifecycleRecord::Transition(record));
+        self.phase = target.clone();
+        Ok(())
+    }
 }
+
+/// Rejection from an attempted phase transition.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TransitionError {
+    /// Terminal Intent Units cannot move again.
+    AlreadyCompleted,
+    /// The requested target does not belong to the workflow snapshot.
+    UnknownTarget { target: PhaseId },
+    /// Both phases exist, but their directed edge was not declared.
+    NotAllowed { from: PhaseId, to: PhaseId },
+}
+
+impl fmt::Display for TransitionError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::AlreadyCompleted => formatter.write_str("Intent Unit is already completed"),
+            Self::UnknownTarget { target } => {
+                write!(formatter, "target phase `{target}` is not declared")
+            }
+            Self::NotAllowed { from, to } => {
+                write!(formatter, "transition `{from} -> {to}` is not declared")
+            }
+        }
+    }
+}
+
+impl Error for TransitionError {}
 
 #[cfg(test)]
 mod tests {
@@ -168,6 +226,25 @@ mod tests {
             vec![done],
         )
         .expect("fixture workflow should be valid")
+    }
+
+    fn transition_workflow() -> Workflow {
+        let queued = phase("queued");
+        let doing = phase("doing");
+        let done = phase("done");
+        Workflow::new(
+            WorkflowId::new("delivery-rework").expect("workflow ID should be valid"),
+            vec![queued.clone(), doing.clone(), done.clone()],
+            queued.clone(),
+            vec![
+                WorkflowEdge::new(queued.clone(), doing.clone()),
+                WorkflowEdge::new(doing.clone(), queued),
+                WorkflowEdge::new(doing.clone(), doing.clone()),
+                WorkflowEdge::new(doing, done.clone()),
+            ],
+            vec![done],
+        )
+        .expect("transition workflow should be valid")
     }
 
     fn fixed_id() -> IntentUnitId {
@@ -209,5 +286,108 @@ mod tests {
         assert_eq!(unit.id(), unit.id());
         assert_eq!(unit.species(), unit.species());
         assert_eq!(unit.workflow_id(), unit.workflow_id());
+    }
+
+    #[test]
+    fn test_allowed_transition_moves_and_appends_record() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let queued = phase("queued");
+        let doing = phase("doing");
+
+        unit.transition_to(&doing)
+            .expect("declared transition should succeed");
+
+        assert_eq!(unit.phase(), &doing);
+        assert_eq!(unit.history().len(), 1);
+        let LifecycleRecord::Transition(record) = &unit.history()[0] else {
+            panic!("first history entry should be a transition");
+        };
+        assert_eq!(record.sequence(), 1);
+        assert_eq!(record.from(), &queued);
+        assert_eq!(record.to(), &doing);
+    }
+
+    #[test]
+    fn test_disallowed_transition_is_atomic() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let before = unit.clone();
+        let done = phase("done");
+
+        let error = unit
+            .transition_to(&done)
+            .expect_err("undeclared edge should fail");
+
+        assert_eq!(
+            error,
+            TransitionError::NotAllowed {
+                from: phase("queued"),
+                to: done
+            }
+        );
+        assert_eq!(unit, before);
+    }
+
+    #[test]
+    fn test_unknown_target_transition_is_atomic() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let before = unit.clone();
+        let missing = phase("missing");
+
+        let error = unit
+            .transition_to(&missing)
+            .expect_err("unknown target should fail");
+
+        assert_eq!(error, TransitionError::UnknownTarget { target: missing });
+        assert_eq!(unit, before);
+    }
+
+    #[test]
+    fn test_configured_reverse_transition_succeeds() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+
+        unit.transition_to(&phase("doing"))
+            .expect("forward edge should succeed");
+        unit.transition_to(&phase("queued"))
+            .expect("declared reverse edge should succeed");
+
+        assert_eq!(unit.phase(), &phase("queued"));
+        assert_eq!(unit.history().len(), 2);
+    }
+
+    #[test]
+    fn test_transition_history_preserves_order() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let doing = phase("doing");
+        let done = phase("done");
+
+        unit.transition_to(&doing)
+            .expect("first edge should succeed");
+        unit.transition_to(&doing)
+            .expect("declared self edge should succeed");
+        unit.transition_to(&done)
+            .expect("final edge should succeed");
+
+        let sequences: Vec<_> = unit
+            .history()
+            .iter()
+            .map(LifecycleRecord::sequence)
+            .collect();
+        assert_eq!(sequences, vec![1, 2, 3]);
+        assert_eq!(unit.phase(), &done);
+    }
+
+    #[test]
+    fn test_transition_preserves_identity() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let id = unit.id();
+        let species = unit.species().clone();
+        let workflow_id = unit.workflow_id().clone();
+
+        unit.transition_to(&phase("doing"))
+            .expect("declared edge should succeed");
+
+        assert_eq!(unit.id(), id);
+        assert_eq!(unit.species(), &species);
+        assert_eq!(unit.workflow_id(), &workflow_id);
     }
 }

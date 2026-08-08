@@ -35,3 +35,9 @@
 - **Completed:** 2026-08-08T13:39:02Z
 - **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
 - **Commit:** `0c60adc`
+
+## T-007 (sprint 0)
+- **Description:** Implement guarded phase transitions and append-only records
+- **Completed:** 2026-08-08T13:40:48Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `c89998a`
