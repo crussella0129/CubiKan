@@ -99,6 +99,8 @@ pub(crate) struct ErrorDetail {
 pub(crate) enum ErrorCode {
     InvalidJson,
     InvalidRequest,
+    #[allow(dead_code, reason = "used by bounded request ingestion in T-202")]
+    RequestTooLarge,
     UnsupportedProtocolVersion,
     BlankValue,
     InvalidIntentUnitId,
@@ -363,6 +365,7 @@ mod tests {
         let codes = [
             ErrorCode::InvalidJson,
             ErrorCode::InvalidRequest,
+            ErrorCode::RequestTooLarge,
             ErrorCode::UnsupportedProtocolVersion,
             ErrorCode::BlankValue,
             ErrorCode::InvalidIntentUnitId,
@@ -383,6 +386,7 @@ mod tests {
         let expected_codes = [
             "invalid_json",
             "invalid_request",
+            "request_too_large",
             "unsupported_protocol_version",
             "blank_value",
             "invalid_intent_unit_id",
@@ -415,5 +419,31 @@ mod tests {
                 .count();
             assert_eq!(outcome_count, 1);
         }
+    }
+
+    #[test]
+    fn test_protocol_serializes_request_too_large_error() {
+        let response = serde_json::to_value(ProtocolResponse::error(
+            ErrorDetail {
+                code: ErrorCode::RequestTooLarge,
+                message: "request exceeds maximum size of 1048576 bytes".to_owned(),
+                field: None,
+                operation_number: None,
+            },
+            None,
+        ))
+        .expect("oversized-request rejection should serialize");
+
+        assert_eq!(
+            response,
+            json!({
+                "outcome": "error",
+                "protocol_version": 1,
+                "error": {
+                    "code": "request_too_large",
+                    "message": "request exceeds maximum size of 1048576 bytes"
+                }
+            })
+        );
     }
 }

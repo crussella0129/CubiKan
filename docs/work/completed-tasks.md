@@ -132,3 +132,10 @@
 - **Completed:** 2026-08-08T16:48:35Z
 - **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `ae876734fd9bbd43b0fc3278187057c91bca65c2`
+
+## T-201 (sprint 2)
+- **Description:** Define the request ceiling and typed oversize response contract
+- **Intent:** [INT-0003](../intents/INT-0003-bounded-cli-request-ingestion.md)
+- **Completed:** 2026-08-08T18:47:33Z
+- **Files modified:** `crates/cubikan-cli/src/lib.rs`, `crates/cubikan-cli/src/protocol.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0002-runnable-lifecycle-adapter.md`, `docs/intents/INT-0003-bounded-cli-request-ingestion.md`, `docs/sprints/s2/sprint-meta.md`, `docs/sprints/s2/sprint-research/research-report.md`, `docs/sprints/s2/sprint-plans/build-plan.md`, `docs/sprints/s2/sprint-plans/test-plan.md`, `docs/sprints/s2/sprint-plans/critique.md`, `docs/sprints/s2/sprint-tests/unit-tests.md`, `docs/sprints/s2/sprint-tests/integration-tests.md`, `docs/sprints/s2/sprint-tests/e2e-tests.md`, `docs/sprints/s2/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
