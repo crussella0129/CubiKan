@@ -11,3 +11,9 @@
 - **Completed:** 2026-08-08T13:30:45Z
 - **Files modified:** `.gitignore`, `Cargo.toml`, `Cargo.lock`, `crates/cubikan-core/Cargo.toml`, `crates/cubikan-core/src/lib.rs`
 - **Commit:** `dbc731f`
+
+## T-003 (sprint 0)
+- **Description:** Implement opaque Intent Unit identifiers
+- **Completed:** 2026-08-08T13:34:00Z
+- **Files modified:** `crates/cubikan-core/src/id.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `d661042`
