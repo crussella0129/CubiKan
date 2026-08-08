@@ -57,8 +57,9 @@ compatibility beyond this intent is not promised. A failed lifecycle action is
 reported without mutating that action's state, while earlier successful actions
 in the same scenario remain visible. Follow-on persistence, UI, service, or
 deployment work requires separate intents instead of silently expanding this
-one. The local adapter does not limit standard-input size; resource limiting is
-explicit future hardening that must precede any production network exposure.
+one. At INT-0002 realization the local adapter did not limit standard-input
+size; [INT-0003](INT-0003-bounded-cli-request-ingestion.md) owns that distinct
+hardening outcome before any production network exposure.
 
 ## Transition history
 
@@ -70,3 +71,4 @@ explicit future hardening that must precede any production network exposure.
 - 2026-08-08: revised while `planned` to make unbounded local input an explicit hardening deferral and lock the adapter-owned version 1 typed-error contract in the Sprint 1 plan.
 - 2026-08-08: moved to `active` when Build began T-101 for the planned CLI workspace boundary.
 - 2026-08-08: moved to `realized` after T-101–T-107 completion, actual-process E2E verification, all committed-head quality gates, and a clean final Test Critic.
+- 2026-08-08: revised the consequence after Sprint 2 created INT-0003 as the distinct bounded-input follow-on; INT-0002 remains `realized` without changing its acceptance boundary.

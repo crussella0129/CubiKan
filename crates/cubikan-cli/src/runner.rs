@@ -3,6 +3,7 @@ use std::{error::Error, fmt, io, io::Read, io::Write};
 use serde_json::error::Category;
 
 use crate::{
+    MAX_REQUEST_BYTES,
     execution::{execute, prepare},
     protocol::{ErrorCode, ErrorDetail, ProtocolRequest, ProtocolResponse},
 };
@@ -16,7 +17,7 @@ pub enum RunStatus {
 
 #[derive(Debug)]
 pub enum RunError {
-    Read(serde_json::Error),
+    Read(io::Error),
     WriteResponse(serde_json::Error),
     WriteNewline(io::Error),
 }
@@ -36,21 +37,40 @@ impl fmt::Display for RunError {
 impl Error for RunError {
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
-            Self::Read(error) | Self::WriteResponse(error) => Some(error),
+            Self::Read(error) => Some(error),
+            Self::WriteResponse(error) => Some(error),
             Self::WriteNewline(error) => Some(error),
         }
     }
 }
 
 pub fn run<R: Read, W: Write>(reader: R, mut writer: W) -> Result<RunStatus, RunError> {
-    let request = match serde_json::from_reader::<_, ProtocolRequest>(reader) {
+    let mut input = Vec::new();
+    let mut bounded_reader = reader.take((MAX_REQUEST_BYTES + 1) as u64);
+    bounded_reader
+        .read_to_end(&mut input)
+        .map_err(RunError::Read)?;
+
+    if input.len() > MAX_REQUEST_BYTES {
+        let response = ProtocolResponse::error(
+            ErrorDetail {
+                code: ErrorCode::RequestTooLarge,
+                message: format!("request exceeds maximum size of {MAX_REQUEST_BYTES} bytes"),
+                field: None,
+                operation_number: None,
+            },
+            None,
+        );
+        return write_response(&mut writer, &response, RunStatus::RequestRejected);
+    }
+
+    let request = match serde_json::from_slice::<ProtocolRequest>(&input) {
         Ok(request) => request,
-        Err(error) if error.classify() == Category::Io => return Err(RunError::Read(error)),
         Err(error) => {
             let code = match error.classify() {
                 Category::Syntax | Category::Eof => ErrorCode::InvalidJson,
                 Category::Data => ErrorCode::InvalidRequest,
-                Category::Io => unreachable!("I/O errors return before protocol mapping"),
+                Category::Io => unreachable!("slice decoding cannot produce an I/O error"),
             };
             let response = ProtocolResponse::error(
                 ErrorDetail {
@@ -94,7 +114,7 @@ fn write_response<W: Write>(
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
+    use std::{cell::Cell, io::Cursor, rc::Rc};
 
     use serde_json::{Value, json};
 
@@ -126,6 +146,75 @@ mod tests {
         assert_eq!(output.last(), Some(&b'\n'));
         assert_eq!(output.iter().filter(|byte| **byte == b'\n').count(), 1);
         serde_json::from_slice(output).expect("response should be valid JSON")
+    }
+
+    fn request_with_final_brace_at(length: usize, operations: Value) -> Vec<u8> {
+        let mut input = request(operations);
+        assert_eq!(input.pop(), Some(b'}'));
+        assert!(input.len() < length);
+        input.resize(length - 1, b' ');
+        input.push(b'}');
+        assert_eq!(input.len(), length);
+        assert_eq!(input[length - 1], b'}');
+        input
+    }
+
+    fn assert_request_too_large(status: RunStatus, output: &[u8]) {
+        assert_eq!(status, RunStatus::RequestRejected);
+        assert_eq!(
+            response(output),
+            json!({
+                "outcome": "error",
+                "protocol_version": 1,
+                "error": {
+                    "code": "request_too_large",
+                    "message": "request exceeds maximum size of 1048576 bytes"
+                }
+            })
+        );
+    }
+
+    struct CountingReader {
+        remaining: usize,
+        consumed: Rc<Cell<usize>>,
+    }
+
+    impl Read for CountingReader {
+        fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+            if buffer.is_empty() || self.remaining == 0 {
+                return Ok(0);
+            }
+
+            let count = buffer.len().min(self.remaining);
+            buffer[..count].fill(b'!');
+            self.remaining -= count;
+            self.consumed.set(self.consumed.get() + count);
+            Ok(count)
+        }
+    }
+
+    struct ErrorAfterReader {
+        remaining_before_error: usize,
+        consumed: Rc<Cell<usize>>,
+        error_observed: Rc<Cell<bool>>,
+    }
+
+    impl Read for ErrorAfterReader {
+        fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+            if buffer.is_empty() {
+                return Ok(0);
+            }
+            if self.remaining_before_error == 0 {
+                self.error_observed.set(true);
+                return Err(io::Error::other("fixture boundary read failure"));
+            }
+
+            let count = buffer.len().min(self.remaining_before_error);
+            buffer[..count].fill(b'!');
+            self.remaining_before_error -= count;
+            self.consumed.set(self.consumed.get() + count);
+            Ok(count)
+        }
     }
 
     #[test]
@@ -219,6 +308,112 @@ mod tests {
     }
 
     #[test]
+    fn test_run_preserves_below_limit_result_classes() {
+        let success = request(json!([]));
+        let mut output = Vec::new();
+        assert_eq!(
+            run(success.as_slice(), &mut output).expect("success should serialize"),
+            RunStatus::Success
+        );
+
+        let mut setup: Value =
+            serde_json::from_slice(&request(json!([]))).expect("fixture should decode");
+        setup["protocol_version"] = json!(2);
+        let setup = serde_json::to_vec(&setup).expect("fixture should serialize");
+        let mut output = Vec::new();
+        assert_eq!(
+            run(setup.as_slice(), &mut output).expect("setup rejection should serialize"),
+            RunStatus::RequestRejected
+        );
+        assert_eq!(
+            response(&output)["error"]["code"],
+            "unsupported_protocol_version"
+        );
+
+        let lifecycle = request(json!([
+            {"type": "transition", "target": "doing"},
+            {"type": "transition", "target": "queued"}
+        ]));
+        let mut output = Vec::new();
+        assert_eq!(
+            run(lifecycle.as_slice(), &mut output).expect("lifecycle rejection should serialize"),
+            RunStatus::LifecycleRejected
+        );
+        assert_eq!(response(&output)["error"]["code"], "transition_not_allowed");
+    }
+
+    #[test]
+    fn test_run_accepts_valid_json_at_exact_limit() {
+        let input = request_with_final_brace_at(MAX_REQUEST_BYTES, json!([]));
+        let mut output = Vec::new();
+
+        let status = run(input.as_slice(), &mut output).expect("exact-limit input should run");
+
+        assert_eq!(status, RunStatus::Success);
+        assert_eq!(response(&output)["outcome"], "success");
+    }
+
+    #[test]
+    fn test_run_rejects_oversize_before_json_classification() {
+        let cases = [
+            request_with_final_brace_at(MAX_REQUEST_BYTES + 1, json!([])),
+            vec![b'!'; MAX_REQUEST_BYTES + 1],
+        ];
+
+        for input in cases {
+            let mut output = Vec::new();
+            let status =
+                run(input.as_slice(), &mut output).expect("oversized rejection should serialize");
+            assert_request_too_large(status, &output);
+        }
+    }
+
+    #[test]
+    fn test_run_consumes_at_most_limit_plus_one() {
+        let consumed = Rc::new(Cell::new(0));
+        let reader = CountingReader {
+            remaining: MAX_REQUEST_BYTES + 4_096,
+            consumed: Rc::clone(&consumed),
+        };
+        let mut output = Vec::new();
+
+        let status = run(reader, &mut output).expect("oversized rejection should serialize");
+
+        assert_request_too_large(status, &output);
+        assert_eq!(consumed.get(), MAX_REQUEST_BYTES + 1);
+    }
+
+    #[test]
+    fn test_run_preserves_boundary_io_precedence() {
+        let consumed = Rc::new(Cell::new(0));
+        let error_observed = Rc::new(Cell::new(false));
+        let reader = ErrorAfterReader {
+            remaining_before_error: MAX_REQUEST_BYTES,
+            consumed: Rc::clone(&consumed),
+            error_observed: Rc::clone(&error_observed),
+        };
+        assert!(matches!(
+            run(reader, Cursor::new(Vec::new())),
+            Err(RunError::Read(_))
+        ));
+        assert_eq!(consumed.get(), MAX_REQUEST_BYTES);
+        assert!(error_observed.get());
+
+        let consumed = Rc::new(Cell::new(0));
+        let error_observed = Rc::new(Cell::new(false));
+        let reader = ErrorAfterReader {
+            remaining_before_error: MAX_REQUEST_BYTES + 1,
+            consumed: Rc::clone(&consumed),
+            error_observed: Rc::clone(&error_observed),
+        };
+        let mut output = Vec::new();
+        let status = run(reader, &mut output).expect("overflow should precede later I/O error");
+        assert_request_too_large(status, &output);
+        assert_eq!(consumed.get(), MAX_REQUEST_BYTES + 1);
+        assert!(!error_observed.get());
+    }
+
+    #[test]
     fn test_run_propagates_input_and_output_io_failures() {
         struct FailingReader;
         impl Read for FailingReader {
@@ -263,6 +458,16 @@ mod tests {
         ));
         assert!(matches!(
             run(request(json!([])).as_slice(), NewlineFailingWriter),
+            Err(RunError::WriteNewline(_))
+        ));
+
+        let oversized = request_with_final_brace_at(MAX_REQUEST_BYTES + 1, json!([]));
+        assert!(matches!(
+            run(oversized.as_slice(), FailingWriter),
+            Err(RunError::WriteResponse(_))
+        ));
+        assert!(matches!(
+            run(oversized.as_slice(), NewlineFailingWriter),
             Err(RunError::WriteNewline(_))
         ));
     }

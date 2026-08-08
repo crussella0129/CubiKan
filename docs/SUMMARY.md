@@ -3,6 +3,7 @@
 - [Intents](intents/README.md)
   - [INT-0001 — Chain-agnostic Intent Unit lifecycle core](intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
   - [INT-0002 — Runnable lifecycle adapter and E2E boundary](intents/INT-0002-runnable-lifecycle-adapter.md)
+  - [INT-0003 — Bounded CLI request ingestion](intents/INT-0003-bounded-cli-request-ingestion.md)
 - [Tasks](work/tasks.md)
 - [Completed tasks](work/completed-tasks.md)
 - [Remote profile](work/remote-profile.md)
@@ -10,3 +11,4 @@
 - [Legacy decisions (historical)](history/decisions-legacy.md)
 - [Sprint 0](sprints/s0/sprint-meta.md)
 - [Sprint 1](sprints/s1/sprint-meta.md)
+- [Sprint 2](sprints/s2/sprint-meta.md)

@@ -21,6 +21,13 @@ cargo run -p cubikan-cli --bin cubikan < crates/cubikan-cli/tests/fixtures/lifec
 Version 1 is strict: unknown fields, missing fields, and fields with the wrong
 JSON type are rejected as `invalid_request`.
 
+The complete raw request is limited to 1 MiB (`1_048_576` bytes). Every byte
+counts, including leading or trailing JSON whitespace. The runner retains at
+most one byte beyond the ceiling to distinguish an exact-size request from an
+oversized one, then rejects overflow before classifying JSON syntax or shape.
+The limit is the compile-time `cubikan_cli::MAX_REQUEST_BYTES` source constant;
+there is no runtime setting.
+
 ```json
 {
   "protocol_version": 1,
@@ -139,6 +146,8 @@ Version 1 request/setup codes:
 
 - `invalid_json` for malformed JSON or unexpected EOF;
 - `invalid_request` for an invalid JSON shape or unknown field;
+- `request_too_large` when the raw request exceeds 1 MiB; this takes precedence
+  over JSON classification and returns exit `2` without an Intent Unit snapshot;
 - `unsupported_protocol_version`;
 - `blank_value`, with the failing JSON field path;
 - `invalid_intent_unit_id`, with `intent_unit.id`;
@@ -164,9 +173,14 @@ Version 1 lifecycle codes:
 The protocol is explicitly experimental. Protocol version 1 defines the current
 adapter contract, but no cross-version compatibility guarantee exists yet.
 
-The local CLI currently reads standard input without a size limit. Resource
-limiting is deferred hardening and is required before any production network
-exposure. This adapter does not select or provide persistence, networking,
-deployment, authorization, concurrency, KPI enforcement, completed-unit naming,
-blockchain behavior, or UI policy. Each requires separate product intent rather
-than silent expansion of this execution envelope.
+The 1 MiB ceiling bounds retained raw request bytes only. It does not bound the
+process's total memory, provide timeouts, rate limiting, or concurrent-client
+quotas, or make the local executable a production network service. Changing the
+compile-time source value requires new workload evidence; callers cannot
+override it at runtime.
+
+This adapter does not select or provide persistence, durable sessions,
+networking, deployment, authorization, concurrency, KPI enforcement,
+completed-unit naming, blockchain behavior, or UI policy. Each requires
+separate product intent rather than silent expansion of this execution
+envelope.

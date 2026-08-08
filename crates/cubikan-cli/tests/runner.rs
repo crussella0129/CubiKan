@@ -1,6 +1,6 @@
 use std::io;
 
-use cubikan_cli::{RunError, RunStatus, run};
+use cubikan_cli::{MAX_REQUEST_BYTES, RunError, RunStatus, run};
 use serde_json::{Value, json};
 
 fn request(operations: Value) -> Vec<u8> {
@@ -29,8 +29,80 @@ fn invoke(input: &[u8]) -> (RunStatus, Value) {
     let mut output = Vec::new();
     let status = run(input, &mut output).expect("modeled result should serialize");
     assert_eq!(output.last(), Some(&b'\n'));
+    assert_eq!(output.iter().filter(|byte| **byte == b'\n').count(), 1);
     let response = serde_json::from_slice(&output).expect("response should be valid JSON");
     (status, response)
+}
+
+fn request_with_final_brace_at(length: usize, operations: Value) -> Vec<u8> {
+    let mut input = request(operations);
+    assert_eq!(input.pop(), Some(b'}'));
+    assert!(input.len() < length);
+    input.resize(length - 1, b' ');
+    input.push(b'}');
+    assert_eq!(input.len(), length);
+    input
+}
+
+#[test]
+fn test_request_limit_is_one_mib() {
+    let _: usize = MAX_REQUEST_BYTES;
+    assert_eq!(MAX_REQUEST_BYTES, 1_048_576);
+}
+
+#[test]
+fn test_runner_exposes_io_read_error_payload() {
+    struct FailingReader;
+
+    impl io::Read for FailingReader {
+        fn read(&mut self, _buffer: &mut [u8]) -> io::Result<usize> {
+            Err(io::Error::other("fixture read failure"))
+        }
+    }
+
+    let error: io::Error = match run(FailingReader, Vec::new()) {
+        Err(RunError::Read(error)) => error,
+        other => panic!("expected public I/O read error payload, got {other:?}"),
+    };
+
+    assert_eq!(error.kind(), io::ErrorKind::Other);
+    assert_eq!(error.to_string(), "fixture read failure");
+}
+
+#[test]
+fn test_runner_accepts_exact_limit_request() {
+    let operations = json!([
+        {"type": "transition", "target": "doing"},
+        {"type": "transition", "target": "done"},
+        {"type": "complete"}
+    ]);
+    let below_limit = request(operations.clone());
+    let exact_limit = request_with_final_brace_at(MAX_REQUEST_BYTES, operations);
+
+    let expected = invoke(&below_limit);
+    let actual = invoke(&exact_limit);
+
+    assert_eq!(actual, expected);
+}
+
+#[test]
+fn test_runner_rejects_one_byte_over_limit() {
+    let input = request_with_final_brace_at(MAX_REQUEST_BYTES + 1, json!([]));
+
+    let (status, response) = invoke(&input);
+
+    assert_eq!(status, RunStatus::RequestRejected);
+    assert_eq!(
+        response,
+        json!({
+            "outcome": "error",
+            "protocol_version": 1,
+            "error": {
+                "code": "request_too_large",
+                "message": "request exceeds maximum size of 1048576 bytes"
+            }
+        })
+    );
 }
 
 #[test]
