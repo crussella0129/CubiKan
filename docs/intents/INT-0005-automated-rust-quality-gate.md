@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0005
-- **State:** active
+- **State:** realized
 - **Work evidence:** [Sprint 4 build plan](../sprints/s4/sprint-plans/build-plan.md)
-- **Completion evidence:** none
-- **Code evidence:** none
-- **Test evidence:** none
-- **Documentation evidence:** none
+- **Completion evidence:** [T-401–T-403 completion ledger](../work/completed-tasks.md#t-401-sprint-4)
+- **Code evidence:** [Rust CI workflow](../../.github/workflows/ci.yml)
+- **Test evidence:** [Sprint 4 test report](../sprints/s4/sprint-tests/test-report.md)
+- **Documentation evidence:** [CubiKan development guide](../../README.md)
 
 ## Intent
 
@@ -83,3 +83,4 @@ is review evidence, but it does not make the check required or authorize merging
 - 2026-08-08: created as `proposed` after Sprint 4 research selected the repeatedly recorded hosted-CI gap as the strongest bounded outcome that requires no new product policy.
 - 2026-08-08: moved to `planned` when Sprint 4 decomposed the workflow, hosted-run proof, and contributor boundary into T-401–T-403 with intent-to-EARS-to-test traceability.
 - 2026-08-08: moved to `active` immediately before Build began T-401 under the finalized Sprint 4 plans.
+- 2026-08-08: moved to `realized` after T-401–T-403 completed, the final Test Critic returned `clean`, all local gates passed, and GitHub Actions push run 31281268756 succeeded at exact Build head `85aaa99e6cbe375129475feb445319f2fd94beda`.

@@ -6,7 +6,7 @@
 - **Work evidence:** [Sprint 2 build plan](../sprints/s2/sprint-plans/build-plan.md)
 - **Completion evidence:** [T-201–T-204 completion ledger](../work/completed-tasks.md#t-201-sprint-2)
 - **Code evidence:** [`MAX_REQUEST_BYTES` and process shell](../../crates/cubikan-cli/src/lib.rs), [bounded runner](../../crates/cubikan-cli/src/runner.rs), and [typed protocol error](../../crates/cubikan-cli/src/protocol.rs)
-- **Test evidence:** [Sprint 2 test report](../sprints/s2/sprint-tests/test-report.md)
+- **Test evidence:** [Sprint 2 test report](../sprints/s2/sprint-tests/test-report.md), [Sprint 4 CI regression report](../sprints/s4/sprint-tests/test-report.md)
 - **Documentation evidence:** [CubiKan overview](../../README.md) and [CLI guide](../../crates/cubikan-cli/README.md)
 
 ## Intent
