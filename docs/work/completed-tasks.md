@@ -224,3 +224,10 @@
 - **Completed:** 2026-08-08T23:51:26Z
 - **Files modified:** `crates/cubikan-cli/tests/cli_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `3eadc3ac44d73c4aa6b67582dbbea6b6f33b629d`
+
+## T-504 (sprint 5)
+- **Description:** Document the ID-presence contract and preserve scope
+- **Intent:** [INT-0006](../intents/INT-0006-distinguish-omitted-cli-id.md)
+- **Completed:** 2026-08-08T23:53:36Z
+- **Files modified:** `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

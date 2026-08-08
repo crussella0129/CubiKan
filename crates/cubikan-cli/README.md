@@ -20,8 +20,9 @@ cargo run -p cubikan-cli --bin cubikan < crates/cubikan-cli/tests/fixtures/lifec
 
 ## Protocol version 1 request
 
-Version 1 is strict: unknown fields, missing fields, and fields with the wrong
-JSON type are rejected as `invalid_request`.
+Version 1 is strict: `intent_unit.id` is the sole optional member. Other unknown
+or missing fields, and fields with the wrong JSON type, are rejected as
+`invalid_request`.
 
 The complete raw request is limited to 1 MiB (`1_048_576` bytes). Every byte
 counts, including leading or trailing JSON whitespace. The runner retains at
@@ -55,9 +56,14 @@ there is no runtime setting.
 }
 ```
 
-`intent_unit.id` is optional. When omitted, the core generates a non-nil UUID
-v4; when supplied, any UUID accepted by `cubikan-core` retains the same UUID
-value.
+When `intent_unit.id` is absent, the core generates a non-nil UUID v4. When the
+member is present, its value must be a JSON string; `null`, Boolean, number,
+array, and object values are structural `invalid_request` failures. A present
+string is passed to the existing `cubikan-core` UUID parser: an accepted UUID
+retains the same value, while malformed UUID text produces
+`invalid_intent_unit_id` with field `intent_unit.id`. Exact human-readable error
+messages are not stable protocol surface and must not be parsed.
+
 Workflow IDs, phases, species, and operation targets are caller-defined nonblank
 text and are not trimmed. Empty operation lists, empty completion sets, and
 explicit reverse or self edges are valid when the core accepts the topology.
