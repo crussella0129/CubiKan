@@ -200,10 +200,21 @@ mod tests {
         assert_eq!(status, RunStatus::LifecycleRejected);
         assert_eq!(response["error"]["code"], "transition_not_allowed");
         assert_eq!(response["error"]["operation_number"], 2);
-        assert_eq!(response["intent_unit"]["phase"], "doing");
         assert_eq!(
-            response["intent_unit"]["history"].as_array().map(Vec::len),
-            Some(1)
+            response["intent_unit"],
+            json!({
+                "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
+                "species": "feature",
+                "workflow_id": "delivery",
+                "phase": "doing",
+                "status": "active",
+                "history": [{
+                    "type": "transition",
+                    "sequence": 1,
+                    "from": "queued",
+                    "to": "doing"
+                }]
+            })
         );
     }
 
@@ -227,6 +238,21 @@ mod tests {
             }
         }
 
+        struct NewlineFailingWriter;
+        impl Write for NewlineFailingWriter {
+            fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+                if buffer == b"\n" {
+                    Err(io::Error::other("fixture newline failure"))
+                } else {
+                    Ok(buffer.len())
+                }
+            }
+
+            fn flush(&mut self) -> io::Result<()> {
+                Ok(())
+            }
+        }
+
         assert!(matches!(
             run(FailingReader, Cursor::new(Vec::new())),
             Err(RunError::Read(_))
@@ -234,6 +260,10 @@ mod tests {
         assert!(matches!(
             run(request(json!([])).as_slice(), FailingWriter),
             Err(RunError::WriteResponse(_))
+        ));
+        assert!(matches!(
+            run(request(json!([])).as_slice(), NewlineFailingWriter),
+            Err(RunError::WriteNewline(_))
         ));
     }
 }

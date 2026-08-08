@@ -206,7 +206,19 @@ mod tests {
         assert_eq!(decoded.workflow.id, "  delivery  ");
         assert_eq!(decoded.workflow.phases, ["queued", "doing", "done"]);
         assert_eq!(decoded.workflow.initial_phase, "queued");
-        assert_eq!(decoded.workflow.edges.len(), 2);
+        assert_eq!(
+            decoded.workflow.edges,
+            [
+                EdgeInput {
+                    from: "queued".to_owned(),
+                    to: "doing".to_owned(),
+                },
+                EdgeInput {
+                    from: "doing".to_owned(),
+                    to: "done".to_owned(),
+                },
+            ]
+        );
         assert_eq!(decoded.workflow.completion_phases, ["done"]);
         assert_eq!(decoded.intent_unit.species, "feature");
         assert_eq!(
@@ -227,9 +239,25 @@ mod tests {
         unknown_root["unexpected"] = json!(true);
         assert!(serde_json::from_value::<ProtocolRequest>(unknown_root).is_err());
 
-        let mut unknown_operation = request;
-        unknown_operation["operations"][1]["target"] = json!("done");
-        assert!(serde_json::from_value::<ProtocolRequest>(unknown_operation).is_err());
+        let mut unknown_workflow = request.clone();
+        unknown_workflow["workflow"]["unexpected"] = json!(true);
+        assert!(serde_json::from_value::<ProtocolRequest>(unknown_workflow).is_err());
+
+        let mut unknown_edge = request.clone();
+        unknown_edge["workflow"]["edges"][0]["unexpected"] = json!(true);
+        assert!(serde_json::from_value::<ProtocolRequest>(unknown_edge).is_err());
+
+        let mut unknown_intent_unit = request.clone();
+        unknown_intent_unit["intent_unit"]["unexpected"] = json!(true);
+        assert!(serde_json::from_value::<ProtocolRequest>(unknown_intent_unit).is_err());
+
+        let mut unknown_transition = request.clone();
+        unknown_transition["operations"][0]["unexpected"] = json!(true);
+        assert!(serde_json::from_value::<ProtocolRequest>(unknown_transition).is_err());
+
+        let mut unknown_complete = request;
+        unknown_complete["operations"][1]["target"] = json!("done");
+        assert!(serde_json::from_value::<ProtocolRequest>(unknown_complete).is_err());
     }
 
     #[test]
@@ -238,12 +266,33 @@ mod tests {
             SnapshotStatus::Completed,
         )))
         .expect("success should serialize");
-        assert_eq!(success["protocol_version"], 1);
-        assert_eq!(success["outcome"], "success");
-        assert_eq!(success["intent_unit"]["status"], "completed");
-        assert_eq!(success["intent_unit"]["history"][0]["type"], "transition");
-        assert!(success["intent_unit"].get("workflow").is_none());
-        assert!(success.get("error").is_none());
+        assert_eq!(
+            success,
+            json!({
+                "outcome": "success",
+                "protocol_version": 1,
+                "intent_unit": {
+                    "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
+                    "species": "feature",
+                    "workflow_id": "delivery",
+                    "phase": "done",
+                    "status": "completed",
+                    "history": [
+                        {
+                            "type": "transition",
+                            "sequence": 1,
+                            "from": "doing",
+                            "to": "done"
+                        },
+                        {
+                            "type": "completion",
+                            "sequence": 2,
+                            "phase": "done"
+                        }
+                    ]
+                }
+            })
+        );
 
         let setup_error = serde_json::to_value(ProtocolResponse::error(
             ErrorDetail {
@@ -255,12 +304,18 @@ mod tests {
             None,
         ))
         .expect("setup error should serialize");
-        assert_eq!(setup_error["protocol_version"], 1);
-        assert_eq!(setup_error["outcome"], "error");
-        assert_eq!(setup_error["error"]["code"], "blank_value");
-        assert_eq!(setup_error["error"]["field"], "intent_unit.species");
-        assert!(setup_error["error"].get("operation_number").is_none());
-        assert!(setup_error.get("intent_unit").is_none());
+        assert_eq!(
+            setup_error,
+            json!({
+                "outcome": "error",
+                "protocol_version": 1,
+                "error": {
+                    "code": "blank_value",
+                    "message": "value must not be blank",
+                    "field": "intent_unit.species"
+                }
+            })
+        );
 
         let lifecycle_error = serde_json::to_value(ProtocolResponse::error(
             ErrorDetail {
@@ -272,10 +327,38 @@ mod tests {
             Some(snapshot(SnapshotStatus::Active)),
         ))
         .expect("lifecycle error should serialize");
-        assert_eq!(lifecycle_error["error"]["code"], "transition_not_allowed");
-        assert_eq!(lifecycle_error["error"]["operation_number"], 2);
-        assert!(lifecycle_error["error"].get("field").is_none());
-        assert_eq!(lifecycle_error["intent_unit"]["status"], "active");
+        assert_eq!(
+            lifecycle_error,
+            json!({
+                "outcome": "error",
+                "protocol_version": 1,
+                "error": {
+                    "code": "transition_not_allowed",
+                    "message": "transition is not declared",
+                    "operation_number": 2
+                },
+                "intent_unit": {
+                    "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
+                    "species": "feature",
+                    "workflow_id": "delivery",
+                    "phase": "done",
+                    "status": "active",
+                    "history": [
+                        {
+                            "type": "transition",
+                            "sequence": 1,
+                            "from": "doing",
+                            "to": "done"
+                        },
+                        {
+                            "type": "completion",
+                            "sequence": 2,
+                            "phase": "done"
+                        }
+                    ]
+                }
+            })
+        );
 
         let codes = [
             ErrorCode::InvalidJson,

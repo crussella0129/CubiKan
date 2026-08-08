@@ -36,6 +36,22 @@ mod process_tests {
         }
     }
 
+    struct NewlineFailingWriter;
+
+    impl Write for NewlineFailingWriter {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            if buffer == b"\n" {
+                Err(io::Error::other("fixture newline failure"))
+            } else {
+                Ok(buffer.len())
+            }
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+
     #[test]
     fn test_process_shell_maps_operational_failure_to_exit_1() {
         let mut stdout = Vec::new();
@@ -47,6 +63,26 @@ mod process_tests {
         assert!(stdout.is_empty());
         let diagnostic = String::from_utf8(stderr).expect("diagnostic should be UTF-8");
         assert!(diagnostic.contains("failed to read request"));
+        assert!(diagnostic.ends_with('\n'));
+
+        let request = br#"{
+            "protocol_version": 1,
+            "workflow": {
+                "id": "delivery",
+                "phases": ["queued"],
+                "initial_phase": "queued",
+                "edges": [],
+                "completion_phases": []
+            },
+            "intent_unit": {"id": null, "species": "feature"},
+            "operations": []
+        }"#;
+        let mut stderr = Vec::new();
+        let exit = run_process(request.as_slice(), NewlineFailingWriter, &mut stderr);
+
+        assert_eq!(exit, 1);
+        let diagnostic = String::from_utf8(stderr).expect("diagnostic should be UTF-8");
+        assert!(diagnostic.contains("failed to finish response line"));
         assert!(diagnostic.ends_with('\n'));
     }
 }

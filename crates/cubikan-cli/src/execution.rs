@@ -572,9 +572,22 @@ mod tests {
                 .expect_err("undeclared reverse edge should fail");
         assert_eq!(transition_error.error.code, ErrorCode::TransitionNotAllowed);
         assert_eq!(transition_error.error.operation_number, Some(2));
+        assert_eq!(
+            transition_error.intent_unit.id,
+            "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+        );
+        assert_eq!(transition_error.intent_unit.species, "feature");
+        assert_eq!(transition_error.intent_unit.workflow_id, "delivery");
         assert_eq!(transition_error.intent_unit.phase, "doing");
         assert_eq!(transition_error.intent_unit.status, SnapshotStatus::Active);
-        assert_eq!(transition_error.intent_unit.history.len(), 1);
+        assert_eq!(
+            transition_error.intent_unit.history,
+            [HistoryEntry::Transition {
+                sequence: 1,
+                from: "queued".to_owned(),
+                to: "doing".to_owned(),
+            }]
+        );
 
         let mut rejected_completion = request();
         rejected_completion.operations = vec![transition("doing"), complete(), transition("done")];
@@ -586,9 +599,22 @@ mod tests {
             ErrorCode::CompletionPhaseNotEligible
         );
         assert_eq!(completion_error.error.operation_number, Some(2));
+        assert_eq!(
+            completion_error.intent_unit.id,
+            "6ba7b810-9dad-11d1-80b4-00c04fd430c8"
+        );
+        assert_eq!(completion_error.intent_unit.species, "feature");
+        assert_eq!(completion_error.intent_unit.workflow_id, "delivery");
         assert_eq!(completion_error.intent_unit.phase, "doing");
         assert_eq!(completion_error.intent_unit.status, SnapshotStatus::Active);
-        assert_eq!(completion_error.intent_unit.history.len(), 1);
+        assert_eq!(
+            completion_error.intent_unit.history,
+            [HistoryEntry::Transition {
+                sequence: 1,
+                from: "queued".to_owned(),
+                to: "doing".to_owned(),
+            }]
+        );
     }
 
     #[test]

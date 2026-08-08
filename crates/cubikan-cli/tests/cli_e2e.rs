@@ -49,8 +49,26 @@ fn test_cli_configure_create_transition_complete() {
     assert_eq!(response["intent_unit"]["phase"], "done");
     assert_eq!(response["intent_unit"]["status"], "completed");
     assert_eq!(
-        response["intent_unit"]["history"].as_array().map(Vec::len),
-        Some(3)
+        response["intent_unit"]["history"],
+        json!([
+            {
+                "type": "transition",
+                "sequence": 1,
+                "from": "queued",
+                "to": "doing"
+            },
+            {
+                "type": "transition",
+                "sequence": 2,
+                "from": "doing",
+                "to": "done"
+            },
+            {
+                "type": "completion",
+                "sequence": 3,
+                "phase": "done"
+            }
+        ])
     );
 }
 
@@ -84,10 +102,20 @@ fn test_cli_reports_lifecycle_rejection_with_exit_3() {
     assert_eq!(response["outcome"], "error");
     assert_eq!(response["error"]["code"], "transition_not_allowed");
     assert_eq!(response["error"]["operation_number"], 2);
-    assert_eq!(response["intent_unit"]["phase"], "doing");
-    assert_eq!(response["intent_unit"]["status"], "active");
     assert_eq!(
-        response["intent_unit"]["history"].as_array().map(Vec::len),
-        Some(1)
+        response["intent_unit"],
+        json!({
+            "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
+            "species": "feature",
+            "workflow_id": "delivery",
+            "phase": "doing",
+            "status": "active",
+            "history": [{
+                "type": "transition",
+                "sequence": 1,
+                "from": "queued",
+                "to": "doing"
+            }]
+        })
     );
 }

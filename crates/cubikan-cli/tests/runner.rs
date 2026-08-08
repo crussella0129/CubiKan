@@ -80,11 +80,21 @@ fn test_runner_preserves_prior_successes_on_lifecycle_failure() {
 
     assert_eq!(status, RunStatus::LifecycleRejected);
     assert_eq!(response["error"]["operation_number"], 2);
-    assert_eq!(response["intent_unit"]["phase"], "doing");
-    assert_eq!(response["intent_unit"]["status"], "active");
     assert_eq!(
-        response["intent_unit"]["history"].as_array().map(Vec::len),
-        Some(1)
+        response["intent_unit"],
+        json!({
+            "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
+            "species": "feature",
+            "workflow_id": "custom-delivery",
+            "phase": "doing",
+            "status": "active",
+            "history": [{
+                "type": "transition",
+                "sequence": 1,
+                "from": "queued",
+                "to": "doing"
+            }]
+        })
     );
 }
 
