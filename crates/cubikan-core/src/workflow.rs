@@ -260,23 +260,45 @@ mod tests {
         let queued = phase("queued");
         let doing = phase("doing");
         let done = phase("done");
+        let id = workflow_id();
+        let phases = vec![queued.clone(), doing.clone(), done.clone()];
+        let edges = vec![
+            WorkflowEdge::new(queued.clone(), doing.clone()),
+            WorkflowEdge::new(doing.clone(), done.clone()),
+        ];
+        let completion_phases = vec![done.clone()];
         let workflow = Workflow::new(
-            workflow_id(),
-            vec![queued.clone(), doing.clone(), done.clone()],
+            id.clone(),
+            phases.clone(),
             queued.clone(),
-            vec![
-                WorkflowEdge::new(queued.clone(), doing.clone()),
-                WorkflowEdge::new(doing.clone(), done.clone()),
-            ],
-            vec![done.clone()],
+            edges.clone(),
+            completion_phases.clone(),
         )
         .expect("workflow should be valid");
 
+        assert_eq!(workflow.id(), &id);
+        assert_eq!(workflow.phases(), phases);
         assert_eq!(workflow.initial_phase(), &queued);
-        assert!(workflow.allows_transition(&doing, &done));
-        assert!(!workflow.allows_transition(&done, &doing));
-        assert!(workflow.allows_completion(&done));
-        assert!(!workflow.allows_completion(&doing));
+        assert_eq!(workflow.edges(), edges);
+        assert_eq!(workflow.completion_phases(), completion_phases);
+
+        for from in &phases {
+            for to in &phases {
+                let expected = edges
+                    .iter()
+                    .any(|edge| edge.from() == from && edge.to() == to);
+                assert_eq!(
+                    workflow.allows_transition(from, to),
+                    expected,
+                    "unexpected transition policy for {from} -> {to}"
+                );
+            }
+            assert_eq!(
+                workflow.allows_completion(from),
+                completion_phases.contains(from),
+                "unexpected completion policy for {from}"
+            );
+        }
     }
 
     #[test]

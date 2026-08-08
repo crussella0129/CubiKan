@@ -491,11 +491,24 @@ mod tests {
 
     #[test]
     fn test_intent_unit_identity_accessors_are_stable() {
-        let unit = IntentUnit::new(fixed_id(), species(), workflow());
+        let expected_id = fixed_id();
+        let expected_species = species();
+        let expected_workflow = workflow();
+        let expected_workflow_id = expected_workflow.id().clone();
+        let unit = IntentUnit::new(
+            expected_id,
+            expected_species.clone(),
+            expected_workflow.clone(),
+        );
 
-        assert_eq!(unit.id(), unit.id());
-        assert_eq!(unit.species(), unit.species());
-        assert_eq!(unit.workflow_id(), unit.workflow_id());
+        assert_eq!(unit.id(), expected_id);
+        assert_eq!(unit.id(), expected_id);
+        assert_eq!(unit.species(), &expected_species);
+        assert_eq!(unit.species(), &expected_species);
+        assert_eq!(unit.workflow(), &expected_workflow);
+        assert_eq!(unit.workflow(), &expected_workflow);
+        assert_eq!(unit.workflow_id(), &expected_workflow_id);
+        assert_eq!(unit.workflow_id(), &expected_workflow_id);
     }
 
     #[test]
