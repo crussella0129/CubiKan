@@ -216,4 +216,4 @@
 - **Intent:** [INT-0006](../intents/INT-0006-distinguish-omitted-cli-id.md)
 - **Completed:** 2026-08-08T23:48:26Z
 - **Files modified:** `crates/cubikan-cli/tests/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `e3cd97727752c05cf2c02702ff25bb8da3dbae9a`
