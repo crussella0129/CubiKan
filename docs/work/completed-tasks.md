@@ -217,3 +217,10 @@
 - **Completed:** 2026-08-08T23:48:26Z
 - **Files modified:** `crates/cubikan-cli/tests/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `e3cd97727752c05cf2c02702ff25bb8da3dbae9a`
+
+## T-503 (sprint 5)
+- **Description:** Prove the actual-process identity boundary
+- **Intent:** [INT-0006](../intents/INT-0006-distinguish-omitted-cli-id.md)
+- **Completed:** 2026-08-08T23:51:26Z
+- **Files modified:** `crates/cubikan-cli/tests/cli_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
