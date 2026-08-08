@@ -1,7 +1,3 @@
-// The locked T-103–T-105 tasks consume this contract. T-102 intentionally
-// defines the complete protocol before those runtime paths exist.
-#![cfg_attr(not(test), allow(dead_code))]
-
 use serde::{Deserialize, Serialize};
 
 pub(crate) const PROTOCOL_VERSION: u32 = 1;

@@ -1,7 +1,3 @@
-// T-103 establishes setup validation; the locked T-104 task consumes prepared
-// scenarios through lifecycle execution.
-#![cfg_attr(not(test), allow(dead_code))]
-
 use std::str::FromStr;
 
 use cubikan_core::{

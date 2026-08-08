@@ -111,3 +111,10 @@
 - **Completed:** 2026-08-08T16:42:00Z
 - **Files modified:** `crates/cubikan-cli/src/execution.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `bd599c05328c664f96112971a38e7077a9b0a44f`
+
+## T-105 (sprint 1)
+- **Description:** Implement the generic JSON stream runner
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:44:47Z
+- **Files modified:** `crates/cubikan-cli/src/lib.rs`, `crates/cubikan-cli/src/protocol.rs`, `crates/cubikan-cli/src/execution.rs`, `crates/cubikan-cli/src/runner.rs`, `crates/cubikan-cli/tests/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
