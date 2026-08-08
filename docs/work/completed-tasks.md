@@ -153,3 +153,10 @@
 - **Completed:** 2026-08-08T18:52:25Z
 - **Files modified:** `crates/cubikan-cli/tests/runner.rs`, `crates/cubikan-cli/tests/cli_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `809b4b9e828523875febd511ae048373daaa1262`
+
+## T-204 (sprint 2)
+- **Description:** Document the bounded local ingestion contract
+- **Intent:** [INT-0003](../intents/INT-0003-bounded-cli-request-ingestion.md)
+- **Completed:** 2026-08-08T18:53:46Z
+- **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

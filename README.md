@@ -50,6 +50,13 @@ rejection (`2`), and lifecycle rejection (`3`). See the
 [`cubikan` protocol reference](crates/cubikan-cli/README.md) for complete request,
 response, error-code, and partial-state semantics.
 
+Raw request ingestion is capped at 1 MiB (`1_048_576` bytes), including JSON
+whitespace. An input whose required next byte would exceed that ceiling receives
+one `request_too_large` response and exit `2` before JSON classification. The
+ceiling is a compile-time source constant, not a runtime setting. It bounds the
+retained raw request payload only; it is not a total-memory guarantee or a claim
+that the adapter is production-ready.
+
 This is intentionally one-shot and in-memory. It does not preserve state between
 invocations, and its experimental adapter-owned protocol is not a cross-version
 compatibility promise.
@@ -84,9 +91,8 @@ The current core does not choose or implement:
 - KPI evaluation or automatic transition authorization;
 - default phase topology, completed-unit naming syntax, or parent/child lineage;
 - stable core serialization or cross-version CLI wire-schema compatibility;
-- production input resource limits: the local CLI currently reads standard
-  input without a size cap, and resource limiting is required before production
-  network exposure.
+- network-specific controls such as timeouts, rate limits, or concurrent-client
+  quotas; the local raw-byte ceiling does not make the CLI a network service.
 
 These boundaries keep the domain foundation testable and allow later adapters to
 be selected through evidence rather than embedded assumptions.
