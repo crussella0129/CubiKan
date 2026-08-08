@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-002 (sprint 0): Scaffold the Cargo workspace and cubikan-core crate — touches: Cargo.toml, crates/cubikan-core/Cargo.toml, crates/cubikan-core/src/lib.rs, .gitignore
 - [ ] T-003 (sprint 0): Implement opaque Intent Unit identifiers — touches: crates/cubikan-core/src/id.rs, crates/cubikan-core/src/lib.rs
 - [ ] T-004 (sprint 0): Implement validated textual domain values — touches: crates/cubikan-core/src/vocabulary.rs, crates/cubikan-core/src/lib.rs
 - [ ] T-005 (sprint 0): Implement caller-declared directed workflow definitions — touches: crates/cubikan-core/src/workflow.rs, crates/cubikan-core/src/lib.rs

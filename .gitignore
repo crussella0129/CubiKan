@@ -6,3 +6,6 @@
 sprints/
 *.tmp
 # <<< sprint-loops <<<
+
+# Rust build output
+/target/
