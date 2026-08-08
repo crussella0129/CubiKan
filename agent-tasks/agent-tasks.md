@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-005 (sprint 0): Implement caller-declared directed workflow definitions — touches: crates/cubikan-core/src/workflow.rs, crates/cubikan-core/src/lib.rs
 - [ ] T-006 (sprint 0): Implement active Intent Unit construction — touches: crates/cubikan-core/src/intent_unit.rs, crates/cubikan-core/src/lib.rs
 - [ ] T-007 (sprint 0): Implement guarded phase transitions and append-only records — touches: crates/cubikan-core/src/intent_unit.rs
 - [ ] T-008 (sprint 0): Implement terminal completion — touches: crates/cubikan-core/src/intent_unit.rs

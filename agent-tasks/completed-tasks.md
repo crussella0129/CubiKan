@@ -23,3 +23,9 @@
 - **Completed:** 2026-08-08T13:35:14Z
 - **Files modified:** `crates/cubikan-core/src/vocabulary.rs`, `crates/cubikan-core/src/lib.rs`
 - **Commit:** `20d313a`
+
+## T-005 (sprint 0)
+- **Description:** Implement caller-declared directed workflow definitions
+- **Completed:** 2026-08-08T13:37:26Z
+- **Files modified:** `crates/cubikan-core/src/workflow.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `b5b7d5c`
