@@ -44,9 +44,13 @@ cargo run -p cubikan-cli --bin cubikan < crates/cubikan-cli/tests/fixtures/lifec
 ```
 
 The process reads one strict version 1 request from standard input and writes one
-newline-terminated JSON success or typed error response to standard output. Exit
-codes distinguish success (`0`), operational I/O failure (`1`), request or setup
-rejection (`2`), and lifecycle rejection (`3`). See the
+newline-terminated JSON success or typed error response to standard output. The
+runner returns a modeled outcome only after the supplied output writer accepts
+the JSON, the newline, and one explicit `flush()`; a failure at any of those
+steps is an operational error (`1`) with a best-effort stderr diagnostic. This
+checks only the supplied writer's flush contract, not durable or acknowledged
+delivery. Other exit codes distinguish request or setup rejection (`2`) and
+lifecycle rejection (`3`). See the
 [`cubikan` protocol reference](crates/cubikan-cli/README.md) for complete request,
 response, error-code, and partial-state semantics.
 

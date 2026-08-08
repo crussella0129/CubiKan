@@ -174,3 +174,10 @@
 - **Completed:** 2026-08-08T20:14:17Z
 - **Files modified:** `crates/cubikan-cli/tests/runner.rs`, `crates/cubikan-cli/tests/cli_e2e.rs`, `crates/cubikan-cli/src/lib.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `064b18bb623db9e3843f954202a7cebd69aabe6b`
+
+## T-303 (sprint 3)
+- **Description:** Document the writer-flush-checked response boundary
+- **Intent:** [INT-0004](../intents/INT-0004-explicit-cli-response-flush.md)
+- **Completed:** 2026-08-08T20:17:13Z
+- **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
