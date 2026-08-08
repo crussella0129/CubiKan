@@ -209,3 +209,4 @@
 - **Completed:** 2026-08-08T23:42:50Z
 - **Files modified:** `crates/cubikan-cli/src/protocol.rs`, `crates/cubikan-cli/src/lib.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0006-distinguish-omitted-cli-id.md`, `docs/sprints/s5/sprint-meta.md`, `docs/sprints/s5/sprint-research/research-report.md`, `docs/sprints/s5/sprint-plans/build-plan.md`, `docs/sprints/s5/sprint-plans/test-plan.md`, `docs/sprints/s5/sprint-plans/critique.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `1a689edf525b02e05f44eb5027d6ff42d698fb0d`
+- **Evidence clarification:** The task commit also created the initialized zero-byte placeholders `docs/sprints/s5/sprint-tests/unit-tests.md`, `docs/sprints/s5/sprint-tests/integration-tests.md`, `docs/sprints/s5/sprint-tests/e2e-tests.md`, and `docs/sprints/s5/sprint-tests/test-report.md`.
