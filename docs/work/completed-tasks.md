@@ -202,3 +202,10 @@
 - **Completed:** 2026-08-08T22:14:16Z
 - **Files modified:** `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `c4489cd35bfdce36600925918d73c215b0b2a891`
+
+## T-501 (sprint 5)
+- **Description:** Distinguish absent and present ID values in the version 1 decoder
+- **Intent:** [INT-0006](../intents/INT-0006-distinguish-omitted-cli-id.md)
+- **Completed:** 2026-08-08T23:42:50Z
+- **Files modified:** `crates/cubikan-cli/src/protocol.rs`, `crates/cubikan-cli/src/lib.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0006-distinguish-omitted-cli-id.md`, `docs/sprints/s5/sprint-meta.md`, `docs/sprints/s5/sprint-research/research-report.md`, `docs/sprints/s5/sprint-plans/build-plan.md`, `docs/sprints/s5/sprint-plans/test-plan.md`, `docs/sprints/s5/sprint-plans/critique.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

@@ -6,6 +6,7 @@
   - [INT-0003 — Bounded CLI request ingestion](intents/INT-0003-bounded-cli-request-ingestion.md)
   - [INT-0004 — Explicit CLI response flush before modeled outcome](intents/INT-0004-explicit-cli-response-flush.md)
   - [INT-0005 — Automated Rust quality gate](intents/INT-0005-automated-rust-quality-gate.md)
+  - [INT-0006 — Distinguish omitted CLI ID from explicit null](intents/INT-0006-distinguish-omitted-cli-id.md)
 - [Tasks](work/tasks.md)
 - [Completed tasks](work/completed-tasks.md)
 - [Remote profile](work/remote-profile.md)
@@ -16,3 +17,4 @@
 - [Sprint 2](sprints/s2/sprint-meta.md)
 - [Sprint 3](sprints/s3/sprint-meta.md)
 - [Sprint 4](sprints/s4/sprint-meta.md)
+- [Sprint 5](sprints/s5/sprint-meta.md)
