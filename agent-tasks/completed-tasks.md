@@ -17,3 +17,9 @@
 - **Completed:** 2026-08-08T13:34:00Z
 - **Files modified:** `crates/cubikan-core/src/id.rs`, `crates/cubikan-core/src/lib.rs`
 - **Commit:** `d661042`
+
+## T-004 (sprint 0)
+- **Description:** Implement validated textual domain values
+- **Completed:** 2026-08-08T13:35:14Z
+- **Files modified:** `crates/cubikan-core/src/vocabulary.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `20d313a`
