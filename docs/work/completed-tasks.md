@@ -180,4 +180,4 @@
 - **Intent:** [INT-0004](../intents/INT-0004-explicit-cli-response-flush.md)
 - **Completed:** 2026-08-08T20:17:13Z
 - **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `e62d29c3b4db4e6eb9617f5b0d6d0fec80704a78`
