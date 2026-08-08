@@ -20,6 +20,7 @@ pub enum RunError {
     Read(io::Error),
     WriteResponse(serde_json::Error),
     WriteNewline(io::Error),
+    FlushResponse(io::Error),
 }
 
 impl fmt::Display for RunError {
@@ -30,6 +31,7 @@ impl fmt::Display for RunError {
             Self::WriteNewline(error) => {
                 write!(formatter, "failed to finish response line: {error}")
             }
+            Self::FlushResponse(error) => write!(formatter, "failed to flush response: {error}"),
         }
     }
 }
@@ -40,6 +42,7 @@ impl Error for RunError {
             Self::Read(error) => Some(error),
             Self::WriteResponse(error) => Some(error),
             Self::WriteNewline(error) => Some(error),
+            Self::FlushResponse(error) => Some(error),
         }
     }
 }
@@ -109,6 +112,7 @@ fn write_response<W: Write>(
 ) -> Result<RunStatus, RunError> {
     serde_json::to_writer(&mut *writer, response).map_err(RunError::WriteResponse)?;
     writer.write_all(b"\n").map_err(RunError::WriteNewline)?;
+    writer.flush().map_err(RunError::FlushResponse)?;
     Ok(status)
 }
 
@@ -215,6 +219,206 @@ mod tests {
             self.consumed.set(self.consumed.get() + count);
             Ok(count)
         }
+    }
+
+    #[derive(Default)]
+    struct RecordingWriter {
+        bytes: Vec<u8>,
+        newline_attempts: usize,
+        flush_offsets: Vec<usize>,
+    }
+
+    impl Write for RecordingWriter {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            if buffer == b"\n" {
+                self.newline_attempts += 1;
+            }
+            self.bytes.extend_from_slice(buffer);
+            Ok(buffer.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            self.flush_offsets.push(self.bytes.len());
+            Ok(())
+        }
+    }
+
+    #[derive(Clone, Copy)]
+    enum FailureStage {
+        Body,
+        Newline,
+        Flush,
+    }
+
+    struct StageFailingWriter {
+        failure: FailureStage,
+        bytes: Vec<u8>,
+        body_attempts: usize,
+        newline_attempts: usize,
+        flush_attempts: usize,
+    }
+
+    impl StageFailingWriter {
+        const fn new(failure: FailureStage) -> Self {
+            Self {
+                failure,
+                bytes: Vec::new(),
+                body_attempts: 0,
+                newline_attempts: 0,
+                flush_attempts: 0,
+            }
+        }
+    }
+
+    impl Write for StageFailingWriter {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            if buffer == b"\n" {
+                self.newline_attempts += 1;
+                if matches!(self.failure, FailureStage::Newline) {
+                    return Err(io::Error::other("fixture newline failure"));
+                }
+            } else {
+                self.body_attempts += 1;
+                if matches!(self.failure, FailureStage::Body) {
+                    return Err(io::Error::other("fixture body failure"));
+                }
+            }
+
+            self.bytes.extend_from_slice(buffer);
+            Ok(buffer.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            self.flush_attempts += 1;
+            if matches!(self.failure, FailureStage::Flush) {
+                return Err(io::Error::new(
+                    io::ErrorKind::BrokenPipe,
+                    "fixture flush failure",
+                ));
+            }
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn test_run_flushes_each_modeled_response_once_after_newline() {
+        let mut setup: Value =
+            serde_json::from_slice(&request(json!([]))).expect("fixture should decode");
+        setup["protocol_version"] = json!(2);
+        let setup = serde_json::to_vec(&setup).expect("fixture should serialize");
+        let lifecycle = request(json!([
+            {"type": "transition", "target": "doing"},
+            {"type": "transition", "target": "queued"}
+        ]));
+        let oversized = request_with_final_brace_at(MAX_REQUEST_BYTES + 1, json!([]));
+        let cases = [
+            ("success", request(json!([])), RunStatus::Success, None),
+            (
+                "malformed request",
+                br#"{"protocol_version":"#.to_vec(),
+                RunStatus::RequestRejected,
+                Some("invalid_json"),
+            ),
+            (
+                "setup rejection",
+                setup,
+                RunStatus::RequestRejected,
+                Some("unsupported_protocol_version"),
+            ),
+            (
+                "lifecycle rejection",
+                lifecycle,
+                RunStatus::LifecycleRejected,
+                Some("transition_not_allowed"),
+            ),
+            (
+                "oversized rejection",
+                oversized,
+                RunStatus::RequestRejected,
+                Some("request_too_large"),
+            ),
+        ];
+
+        for (name, input, expected_status, expected_code) in cases {
+            let mut writer = RecordingWriter::default();
+            let status = run(input.as_slice(), &mut writer).unwrap_or_else(|error| {
+                panic!("{name} should produce a modeled response: {error}")
+            });
+
+            assert_eq!(status, expected_status, "{name}");
+            assert_eq!(writer.newline_attempts, 1, "{name}");
+            assert_eq!(writer.bytes.last(), Some(&b'\n'), "{name}");
+            assert_eq!(writer.flush_offsets, [writer.bytes.len()], "{name}");
+
+            let response = response(&writer.bytes);
+            match expected_code {
+                Some(code) => assert_eq!(response["error"]["code"], code, "{name}"),
+                None => assert_eq!(response["outcome"], "success", "{name}"),
+            }
+        }
+    }
+
+    #[test]
+    fn test_run_preserves_flush_error_payload_display_and_source() {
+        let mut writer = StageFailingWriter::new(FailureStage::Flush);
+        let error = run(request(json!([])).as_slice(), &mut writer)
+            .expect_err("flush failure must not return a modeled status");
+
+        let RunError::FlushResponse(payload) = &error else {
+            panic!("expected flush response error, got {error:?}");
+        };
+        assert_eq!(payload.kind(), io::ErrorKind::BrokenPipe);
+        assert_eq!(payload.to_string(), "fixture flush failure");
+        assert_eq!(
+            error.to_string(),
+            "failed to flush response: fixture flush failure"
+        );
+
+        let source = std::error::Error::source(&error)
+            .expect("flush response error should expose its source")
+            .downcast_ref::<io::Error>()
+            .expect("flush response source should remain an I/O error");
+        assert_eq!(source.kind(), io::ErrorKind::BrokenPipe);
+        assert_eq!(source.to_string(), "fixture flush failure");
+        assert_eq!(writer.newline_attempts, 1);
+        assert_eq!(writer.flush_attempts, 1);
+        assert_eq!(writer.bytes.last(), Some(&b'\n'));
+    }
+
+    #[test]
+    fn test_run_preserves_response_output_error_precedence() {
+        let input = request(json!([]));
+
+        let mut body_writer = StageFailingWriter::new(FailureStage::Body);
+        assert!(matches!(
+            run(input.as_slice(), &mut body_writer),
+            Err(RunError::WriteResponse(_))
+        ));
+        assert_eq!(body_writer.body_attempts, 1);
+        assert_eq!(body_writer.newline_attempts, 0);
+        assert_eq!(body_writer.flush_attempts, 0);
+        assert!(body_writer.bytes.is_empty());
+
+        let mut newline_writer = StageFailingWriter::new(FailureStage::Newline);
+        assert!(matches!(
+            run(input.as_slice(), &mut newline_writer),
+            Err(RunError::WriteNewline(_))
+        ));
+        assert!(newline_writer.body_attempts > 0);
+        assert_eq!(newline_writer.newline_attempts, 1);
+        assert_eq!(newline_writer.flush_attempts, 0);
+        assert_ne!(newline_writer.bytes.last(), Some(&b'\n'));
+
+        let mut flush_writer = StageFailingWriter::new(FailureStage::Flush);
+        assert!(matches!(
+            run(input.as_slice(), &mut flush_writer),
+            Err(RunError::FlushResponse(_))
+        ));
+        assert!(flush_writer.body_attempts > 0);
+        assert_eq!(flush_writer.newline_attempts, 1);
+        assert_eq!(flush_writer.flush_attempts, 1);
+        assert_eq!(flush_writer.bytes.last(), Some(&b'\n'));
+        let _ = response(&flush_writer.bytes);
     }
 
     #[test]
