@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0002
-- **State:** active
-- **Work evidence:** [Sprint 1 build plan](../sprints/s1/sprint-plans/build-plan.md) and [T-101–T-107](../work/tasks.md)
-- **Completion evidence:** none
-- **Code evidence:** none
-- **Test evidence:** none
-- **Documentation evidence:** [Sprint 1 research](../sprints/s1/sprint-research/research-report.md)
+- **State:** realized
+- **Work evidence:** [Sprint 1 build plan](../sprints/s1/sprint-plans/build-plan.md)
+- **Completion evidence:** [T-101–T-107 completion ledger](../work/completed-tasks.md#t-101-sprint-1)
+- **Code evidence:** [`cubikan-cli` runner](../../crates/cubikan-cli/src/lib.rs) and [process shell](../../crates/cubikan-cli/src/main.rs)
+- **Test evidence:** [Sprint 1 test report](../sprints/s1/sprint-tests/test-report.md)
+- **Documentation evidence:** [CubiKan CLI guide](../../crates/cubikan-cli/README.md) and [Sprint 1 research](../sprints/s1/sprint-research/research-report.md)
 
 ## Intent
 
@@ -69,3 +69,4 @@ explicit future hardening that must precede any production network exposure.
 - 2026-08-08: moved to `planned` when Sprint 1 decomposed the selected CLI boundary into T-101–T-107 with process-level E2E coverage.
 - 2026-08-08: revised while `planned` to make unbounded local input an explicit hardening deferral and lock the adapter-owned version 1 typed-error contract in the Sprint 1 plan.
 - 2026-08-08: moved to `active` when Build began T-101 for the planned CLI workspace boundary.
+- 2026-08-08: moved to `realized` after T-101–T-107 completion, actual-process E2E verification, all committed-head quality gates, and a clean final Test Critic.
