@@ -117,4 +117,4 @@
 - **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
 - **Completed:** 2026-08-08T16:44:47Z
 - **Files modified:** `crates/cubikan-cli/src/lib.rs`, `crates/cubikan-cli/src/protocol.rs`, `crates/cubikan-cli/src/execution.rs`, `crates/cubikan-cli/src/runner.rs`, `crates/cubikan-cli/tests/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `5819ef135d00f06dbe812220cd666a43f985619e`
