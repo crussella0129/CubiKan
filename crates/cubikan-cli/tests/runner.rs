@@ -1,4 +1,4 @@
-use std::io;
+use std::io::{self, BufWriter, Write};
 
 use cubikan_cli::{MAX_REQUEST_BYTES, RunError, RunStatus, run};
 use serde_json::{Value, json};
@@ -186,4 +186,63 @@ fn test_runner_propagates_output_io_failure() {
 
     let result = run(request(json!([])).as_slice(), FailingWriter);
     assert!(matches!(result, Err(RunError::WriteResponse(_))));
+}
+
+#[test]
+fn test_runner_surfaces_buffered_sink_failure_on_explicit_flush() {
+    #[derive(Default)]
+    struct DrainFailingSink {
+        write_attempts: usize,
+        flush_attempts: usize,
+    }
+
+    impl Write for DrainFailingSink {
+        fn write(&mut self, _buffer: &[u8]) -> io::Result<usize> {
+            self.write_attempts += 1;
+            Err(io::Error::new(
+                io::ErrorKind::BrokenPipe,
+                "fixture buffered drain failure",
+            ))
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            self.flush_attempts += 1;
+            Ok(())
+        }
+    }
+
+    let input = request(json!([]));
+    let mut writer = BufWriter::with_capacity(4_096, DrainFailingSink::default());
+    let error = run(input.as_slice(), &mut writer)
+        .expect_err("explicit flush should expose the buffered sink failure");
+
+    let RunError::FlushResponse(payload) = &error else {
+        panic!("expected public flush response error, got {error:?}");
+    };
+    assert_eq!(payload.kind(), io::ErrorKind::BrokenPipe);
+    assert_eq!(payload.to_string(), "fixture buffered drain failure");
+    assert_eq!(
+        error.to_string(),
+        "failed to flush response: fixture buffered drain failure"
+    );
+    let source = std::error::Error::source(&error)
+        .expect("flush response error should expose its source")
+        .downcast_ref::<io::Error>()
+        .expect("flush response source should remain an I/O error");
+    assert_eq!(source.kind(), io::ErrorKind::BrokenPipe);
+    assert_eq!(source.to_string(), "fixture buffered drain failure");
+
+    assert_eq!(writer.get_ref().write_attempts, 1);
+    assert_eq!(writer.get_ref().flush_attempts, 0);
+    assert!(writer.buffer().len() < writer.capacity());
+    assert_eq!(writer.buffer().last(), Some(&b'\n'));
+
+    let (sink, buffered) = writer.into_parts();
+    let buffered = buffered.expect("fixture writer should not panic");
+    assert_eq!(sink.write_attempts, 1);
+    assert_eq!(sink.flush_attempts, 0);
+    assert_eq!(buffered.last(), Some(&b'\n'));
+    let response: Value =
+        serde_json::from_slice(&buffered).expect("retained response line should be valid JSON");
+    assert_eq!(response["outcome"], "success");
 }
