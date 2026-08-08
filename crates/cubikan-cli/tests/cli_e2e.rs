@@ -5,6 +5,8 @@ use std::{
 
 use serde_json::{Value, json};
 
+use cubikan_cli::MAX_REQUEST_BYTES;
+
 const SUCCESS_FIXTURE: &[u8] = include_bytes!("fixtures/lifecycle-success-v1.json");
 
 fn invoke(input: &[u8]) -> Output {
@@ -32,6 +34,18 @@ fn response(output: &Output) -> Value {
         1
     );
     serde_json::from_slice(&output.stdout).expect("stdout should contain one JSON value")
+}
+
+fn success_request_with_final_brace_at(length: usize) -> Vec<u8> {
+    let value: Value =
+        serde_json::from_slice(SUCCESS_FIXTURE).expect("success fixture should be valid JSON");
+    let mut input = serde_json::to_vec(&value).expect("success fixture should serialize");
+    assert_eq!(input.pop(), Some(b'}'));
+    assert!(input.len() < length);
+    input.resize(length - 1, b' ');
+    input.push(b'}');
+    assert_eq!(input.len(), length);
+    input
 }
 
 #[test]
@@ -116,6 +130,27 @@ fn test_cli_reports_lifecycle_rejection_with_exit_3() {
                 "from": "queued",
                 "to": "doing"
             }]
+        })
+    );
+}
+
+#[test]
+fn test_cli_reports_oversized_request_with_exit_2() {
+    let input = success_request_with_final_brace_at(MAX_REQUEST_BYTES + 1);
+
+    let output = invoke(&input);
+    let response = response(&output);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(
+        response,
+        json!({
+            "outcome": "error",
+            "protocol_version": 1,
+            "error": {
+                "code": "request_too_large",
+                "message": "request exceeds maximum size of 1048576 bytes"
+            }
         })
     );
 }

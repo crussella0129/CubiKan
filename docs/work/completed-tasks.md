@@ -146,3 +146,10 @@
 - **Completed:** 2026-08-08T18:50:15Z
 - **Files modified:** `crates/cubikan-cli/src/protocol.rs`, `crates/cubikan-cli/src/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `4ff64088f17f2dfbcb35ce2175a8a44cc3893e5f`
+
+## T-203 (sprint 2)
+- **Description:** Add public-seam and actual-process boundary coverage
+- **Intent:** [INT-0003](../intents/INT-0003-bounded-cli-request-ingestion.md)
+- **Completed:** 2026-08-08T18:52:25Z
+- **Files modified:** `crates/cubikan-cli/tests/runner.rs`, `crates/cubikan-cli/tests/cli_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
