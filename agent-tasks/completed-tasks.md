@@ -41,3 +41,9 @@
 - **Completed:** 2026-08-08T13:40:48Z
 - **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
 - **Commit:** `c89998a`
+
+## T-008 (sprint 0)
+- **Description:** Implement terminal completion
+- **Completed:** 2026-08-08T13:42:14Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `cb544ee`

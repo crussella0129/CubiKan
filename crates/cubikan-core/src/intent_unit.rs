@@ -176,6 +176,26 @@ impl IntentUnit {
         self.phase = target.clone();
         Ok(())
     }
+
+    /// Completes the unit when its current phase is marked eligible.
+    pub fn complete(&mut self) -> Result<(), CompletionError> {
+        if self.status == IntentUnitStatus::Completed {
+            return Err(CompletionError::AlreadyCompleted);
+        }
+        if !self.workflow.allows_completion(&self.phase) {
+            return Err(CompletionError::PhaseNotEligible {
+                phase: self.phase.clone(),
+            });
+        }
+
+        let record = CompletionRecord {
+            sequence: self.history.len() + 1,
+            final_phase: self.phase.clone(),
+        };
+        self.history.push(LifecycleRecord::Completion(record));
+        self.status = IntentUnitStatus::Completed;
+        Ok(())
+    }
 }
 
 /// Rejection from an attempted phase transition.
@@ -204,6 +224,28 @@ impl fmt::Display for TransitionError {
 }
 
 impl Error for TransitionError {}
+
+/// Rejection from an attempted terminal completion.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum CompletionError {
+    /// Terminal Intent Units cannot complete again.
+    AlreadyCompleted,
+    /// The current phase is not marked completion-eligible.
+    PhaseNotEligible { phase: PhaseId },
+}
+
+impl fmt::Display for CompletionError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::AlreadyCompleted => formatter.write_str("Intent Unit is already completed"),
+            Self::PhaseNotEligible { phase } => {
+                write!(formatter, "phase `{phase}` is not eligible for completion")
+            }
+        }
+    }
+}
+
+impl Error for CompletionError {}
 
 #[cfg(test)]
 mod tests {
@@ -385,6 +427,87 @@ mod tests {
 
         unit.transition_to(&phase("doing"))
             .expect("declared edge should succeed");
+
+        assert_eq!(unit.id(), id);
+        assert_eq!(unit.species(), &species);
+        assert_eq!(unit.workflow_id(), &workflow_id);
+    }
+
+    #[test]
+    fn test_completion_from_eligible_phase_is_terminal() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        unit.transition_to(&phase("doing"))
+            .expect("first edge should succeed");
+        unit.transition_to(&phase("done"))
+            .expect("completion phase should be reachable");
+
+        unit.complete().expect("eligible completion should succeed");
+
+        assert_eq!(unit.status(), IntentUnitStatus::Completed);
+        assert_eq!(unit.phase(), &phase("done"));
+        assert_eq!(unit.history().len(), 3);
+        let LifecycleRecord::Completion(record) = &unit.history()[2] else {
+            panic!("last history entry should be completion");
+        };
+        assert_eq!(record.sequence(), 3);
+        assert_eq!(record.final_phase(), &phase("done"));
+    }
+
+    #[test]
+    fn test_completion_from_ineligible_phase_is_atomic() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let before = unit.clone();
+
+        let error = unit
+            .complete()
+            .expect_err("ineligible completion should fail");
+
+        assert_eq!(
+            error,
+            CompletionError::PhaseNotEligible {
+                phase: phase("queued")
+            }
+        );
+        assert_eq!(unit, before);
+    }
+
+    #[test]
+    fn test_second_completion_is_rejected_without_mutation() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), workflow());
+        unit.transition_to(&phase("done"))
+            .expect("completion phase should be reachable");
+        unit.complete().expect("first completion should succeed");
+        let before = unit.clone();
+
+        assert_eq!(unit.complete(), Err(CompletionError::AlreadyCompleted));
+        assert_eq!(unit, before);
+    }
+
+    #[test]
+    fn test_transition_after_completion_is_rejected_without_mutation() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), workflow());
+        unit.transition_to(&phase("done"))
+            .expect("completion phase should be reachable");
+        unit.complete().expect("completion should succeed");
+        let before = unit.clone();
+
+        assert_eq!(
+            unit.transition_to(&phase("queued")),
+            Err(TransitionError::AlreadyCompleted)
+        );
+        assert_eq!(unit, before);
+    }
+
+    #[test]
+    fn test_completion_preserves_identity_and_species() {
+        let mut unit = IntentUnit::new(fixed_id(), species(), workflow());
+        let id = unit.id();
+        let species = unit.species().clone();
+        let workflow_id = unit.workflow_id().clone();
+        unit.transition_to(&phase("done"))
+            .expect("completion phase should be reachable");
+
+        unit.complete().expect("completion should succeed");
 
         assert_eq!(unit.id(), id);
         assert_eq!(unit.species(), &species);
