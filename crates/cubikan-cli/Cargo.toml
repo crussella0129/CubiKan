@@ -11,5 +11,9 @@ cubikan-core = { path = "../cubikan-core" }
 serde.workspace = true
 serde_json.workspace = true
 
+[[bin]]
+name = "cubikan"
+path = "src/main.rs"
+
 [lints]
 workspace = true
