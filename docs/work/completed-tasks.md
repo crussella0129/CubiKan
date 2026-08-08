@@ -104,3 +104,10 @@
 - **Completed:** 2026-08-08T16:38:13Z
 - **Files modified:** `crates/cubikan-cli/src/lib.rs`, `crates/cubikan-cli/src/execution.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `8122bf48bd50f70472a5f91c7502b05568fee6c9`
+
+## T-104 (sprint 1)
+- **Description:** Execute ordered lifecycle operations and expose adapter snapshots
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:42:00Z
+- **Files modified:** `crates/cubikan-cli/src/execution.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
