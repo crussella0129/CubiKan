@@ -3,7 +3,7 @@ use std::{error::Error, fmt};
 use crate::{IntentSpecies, IntentUnitId, PhaseId, Workflow, WorkflowId};
 
 /// Whether an Intent Unit can still move through its workflow.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum IntentUnitStatus {
     /// The unit may transition or complete according to its workflow snapshot.
     Active,
@@ -12,7 +12,7 @@ pub enum IntentUnitStatus {
 }
 
 /// Immutable record of one successful phase transition.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct TransitionRecord {
     sequence: usize,
     from: PhaseId,
@@ -40,7 +40,7 @@ impl TransitionRecord {
 }
 
 /// Immutable record of terminal completion.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct CompletionRecord {
     sequence: usize,
     final_phase: PhaseId,
@@ -61,7 +61,7 @@ impl CompletionRecord {
 }
 
 /// One immutable entry in an Intent Unit's in-memory domain history.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub enum LifecycleRecord {
     /// A successful directed phase transition.
     Transition(TransitionRecord),
@@ -81,7 +81,7 @@ impl LifecycleRecord {
 }
 
 /// A chain-agnostic unit of intent moving through caller-declared phases.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct IntentUnit {
     id: IntentUnitId,
     species: IntentSpecies,
@@ -247,10 +247,178 @@ impl fmt::Display for CompletionError {
 
 impl Error for CompletionError {}
 
+#[derive(serde::Deserialize)]
+struct IntentUnitRepr {
+    id: IntentUnitId,
+    species: IntentSpecies,
+    workflow: Workflow,
+    phase: PhaseId,
+    status: IntentUnitStatus,
+    history: Vec<LifecycleRecordRepr>,
+}
+
+#[derive(serde::Deserialize)]
+enum LifecycleRecordRepr {
+    Transition(TransitionRecordRepr),
+    Completion(CompletionRecordRepr),
+}
+
+#[derive(serde::Deserialize)]
+struct TransitionRecordRepr {
+    sequence: usize,
+    from: PhaseId,
+    to: PhaseId,
+}
+
+#[derive(serde::Deserialize)]
+struct CompletionRecordRepr {
+    sequence: usize,
+    final_phase: PhaseId,
+}
+
+impl TryFrom<IntentUnitRepr> for IntentUnit {
+    type Error = RestoreIntentUnitError;
+
+    fn try_from(repr: IntentUnitRepr) -> Result<Self, Self::Error> {
+        let expected_phase = repr.phase;
+        let expected_status = repr.status;
+        let mut unit = Self::new(repr.id, repr.species, repr.workflow);
+
+        for (index, record) in repr.history.into_iter().enumerate() {
+            let expected_sequence = index + 1;
+            match record {
+                LifecycleRecordRepr::Transition(record) => {
+                    if record.sequence != expected_sequence {
+                        return Err(RestoreIntentUnitError::SequenceMismatch {
+                            expected: expected_sequence,
+                            actual: record.sequence,
+                        });
+                    }
+                    if unit.phase() != &record.from {
+                        return Err(RestoreIntentUnitError::TransitionSourceMismatch {
+                            expected: unit.phase().clone(),
+                            actual: record.from,
+                        });
+                    }
+                    unit.transition_to(&record.to)
+                        .map_err(RestoreIntentUnitError::Transition)?;
+                }
+                LifecycleRecordRepr::Completion(record) => {
+                    if record.sequence != expected_sequence {
+                        return Err(RestoreIntentUnitError::SequenceMismatch {
+                            expected: expected_sequence,
+                            actual: record.sequence,
+                        });
+                    }
+                    if unit.phase() != &record.final_phase {
+                        return Err(RestoreIntentUnitError::CompletionPhaseMismatch {
+                            expected: unit.phase().clone(),
+                            actual: record.final_phase,
+                        });
+                    }
+                    unit.complete()
+                        .map_err(RestoreIntentUnitError::Completion)?;
+                }
+            }
+        }
+
+        if unit.phase() != &expected_phase {
+            return Err(RestoreIntentUnitError::FinalPhaseMismatch {
+                expected: expected_phase,
+                actual: unit.phase().clone(),
+            });
+        }
+        if unit.status() != expected_status {
+            return Err(RestoreIntentUnitError::FinalStatusMismatch {
+                expected: expected_status,
+                actual: unit.status(),
+            });
+        }
+
+        Ok(unit)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for IntentUnit {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let repr = <IntentUnitRepr as serde::Deserialize>::deserialize(deserializer)?;
+        Self::try_from(repr).map_err(serde::de::Error::custom)
+    }
+}
+
+#[derive(Debug)]
+enum RestoreIntentUnitError {
+    SequenceMismatch {
+        expected: usize,
+        actual: usize,
+    },
+    TransitionSourceMismatch {
+        expected: PhaseId,
+        actual: PhaseId,
+    },
+    CompletionPhaseMismatch {
+        expected: PhaseId,
+        actual: PhaseId,
+    },
+    Transition(TransitionError),
+    Completion(CompletionError),
+    FinalPhaseMismatch {
+        expected: PhaseId,
+        actual: PhaseId,
+    },
+    FinalStatusMismatch {
+        expected: IntentUnitStatus,
+        actual: IntentUnitStatus,
+    },
+}
+
+impl fmt::Display for RestoreIntentUnitError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::SequenceMismatch { expected, actual } => write!(
+                formatter,
+                "lifecycle sequence mismatch: expected {expected}, found {actual}"
+            ),
+            Self::TransitionSourceMismatch { expected, actual } => write!(
+                formatter,
+                "transition source mismatch: expected `{expected}`, found `{actual}`"
+            ),
+            Self::CompletionPhaseMismatch { expected, actual } => write!(
+                formatter,
+                "completion phase mismatch: expected `{expected}`, found `{actual}`"
+            ),
+            Self::Transition(error) => write!(formatter, "invalid transition record: {error}"),
+            Self::Completion(error) => write!(formatter, "invalid completion record: {error}"),
+            Self::FinalPhaseMismatch { expected, actual } => write!(
+                formatter,
+                "final phase mismatch: serialized `{expected}`, replayed `{actual}`"
+            ),
+            Self::FinalStatusMismatch { expected, actual } => write!(
+                formatter,
+                "final status mismatch: serialized {expected:?}, replayed {actual:?}"
+            ),
+        }
+    }
+}
+
+impl Error for RestoreIntentUnitError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Transition(error) => Some(error),
+            Self::Completion(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::WorkflowEdge;
+    use serde_json::{Value, json};
     use std::str::FromStr;
 
     fn phase(value: &str) -> PhaseId {
@@ -512,5 +680,91 @@ mod tests {
         assert_eq!(unit.id(), id);
         assert_eq!(unit.species(), &species);
         assert_eq!(unit.workflow_id(), &workflow_id);
+    }
+
+    fn active_serialized_unit() -> IntentUnit {
+        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        unit.transition_to(&phase("doing"))
+            .expect("fixture transition should succeed");
+        unit
+    }
+
+    fn completed_serialized_unit() -> IntentUnit {
+        let mut unit = active_serialized_unit();
+        unit.transition_to(&phase("done"))
+            .expect("fixture completion phase should be reachable");
+        unit.complete().expect("fixture completion should succeed");
+        unit
+    }
+
+    fn serialized_value(unit: &IntentUnit) -> Value {
+        serde_json::to_value(unit).expect("Intent Unit should serialize")
+    }
+
+    #[test]
+    fn test_active_intent_semantic_round_trip() {
+        let unit = active_serialized_unit();
+        let json = serde_json::to_string(&unit).expect("Intent Unit should serialize");
+        let restored = serde_json::from_str(&json).expect("valid Intent Unit should restore");
+
+        assert_eq!(unit, restored);
+    }
+
+    #[test]
+    fn test_completed_intent_semantic_round_trip() {
+        let unit = completed_serialized_unit();
+        let json = serde_json::to_string(&unit).expect("Intent Unit should serialize");
+        let restored = serde_json::from_str(&json).expect("valid Intent Unit should restore");
+
+        assert_eq!(unit, restored);
+    }
+
+    #[test]
+    fn test_serialization_rejects_inconsistent_lifecycle_history() {
+        let unit = active_serialized_unit();
+        let mut broken_sequence = serialized_value(&unit);
+        broken_sequence["history"][0]["Transition"]["sequence"] = json!(7);
+        let mut broken_source = serialized_value(&unit);
+        broken_source["history"][0]["Transition"]["from"] = json!("doing");
+        let mut wrong_phase = serialized_value(&unit);
+        wrong_phase["phase"] = json!("queued");
+        let mut wrong_status = serialized_value(&unit);
+        wrong_status["status"] = json!("Completed");
+
+        assert!(serde_json::from_value::<IntentUnit>(broken_sequence).is_err());
+        assert!(serde_json::from_value::<IntentUnit>(broken_source).is_err());
+        assert!(serde_json::from_value::<IntentUnit>(wrong_phase).is_err());
+        assert!(serde_json::from_value::<IntentUnit>(wrong_status).is_err());
+    }
+
+    #[test]
+    fn test_serialization_rejects_disallowed_recorded_edge() {
+        let unit = active_serialized_unit();
+        let mut value = serialized_value(&unit);
+        value["history"][0]["Transition"]["to"] = json!("done");
+        value["phase"] = json!("done");
+
+        assert!(serde_json::from_value::<IntentUnit>(value).is_err());
+    }
+
+    #[test]
+    fn test_serialization_rejects_invalid_completion_record() {
+        let unit = completed_serialized_unit();
+        let mut ineligible_phase = serialized_value(&unit);
+        ineligible_phase["history"][2]["Completion"]["final_phase"] = json!("doing");
+        let mut record_after_completion = serialized_value(&unit);
+        record_after_completion["history"]
+            .as_array_mut()
+            .expect("history should be an array")
+            .push(json!({
+                "Transition": {
+                    "sequence": 4,
+                    "from": "done",
+                    "to": "doing"
+                }
+            }));
+
+        assert!(serde_json::from_value::<IntentUnit>(ineligible_phase).is_err());
+        assert!(serde_json::from_value::<IntentUnit>(record_after_completion).is_err());
     }
 }
