@@ -1,0 +1,85 @@
+# Completed Tasks Log (Append-Only)
+
+## T-001 (sprint 0)
+- **Description:** Record foundational architecture decisions
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:27:24Z
+- **Files modified:** `decisions.md`, `.gitignore`, `agent-tasks/agent-tasks.md`, `agent-tasks/completed-tasks.md`
+- **Commit:** `b8fe6811352fcae801c72d09e08d2022e43b27dc`
+
+## T-002 (sprint 0)
+- **Description:** Scaffold the Cargo workspace and cubikan-core crate
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:30:45Z
+- **Files modified:** `.gitignore`, `Cargo.toml`, `Cargo.lock`, `crates/cubikan-core/Cargo.toml`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `4d77343f45ea4cbc6b906097127b8d884551fca8`
+
+## T-003 (sprint 0)
+- **Description:** Implement opaque Intent Unit identifiers
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:34:00Z
+- **Files modified:** `crates/cubikan-core/src/id.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `047b571b4459b981b6b604a094296bf131dc4753`
+
+## T-004 (sprint 0)
+- **Description:** Implement validated textual domain values
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:35:14Z
+- **Files modified:** `crates/cubikan-core/src/vocabulary.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `d96d5e6afae6be9a073e05b146cd14a4971e5741`
+
+## T-005 (sprint 0)
+- **Description:** Implement caller-declared directed workflow definitions
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:37:26Z
+- **Files modified:** `crates/cubikan-core/src/workflow.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `389b9e8863748fb2ed258fcb13604d42f0136940`
+
+## T-006 (sprint 0)
+- **Description:** Implement active Intent Unit construction
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:39:02Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `51d7af0c6f9156f156265170efe91d961c8815cb`
+
+## T-007 (sprint 0)
+- **Description:** Implement guarded phase transitions and append-only records
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:40:48Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `74883da8f7b149a2c7963d543eb55256cc92bc7a`
+
+## T-008 (sprint 0)
+- **Description:** Implement terminal completion
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:42:14Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `f94c4689e125bf64e190e73f0a4743f21f7c324c`
+
+## T-009 (sprint 0)
+- **Description:** Add validated format-neutral serialization for scalars and workflows
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:44:28Z
+- **Files modified:** `crates/cubikan-core/src/id.rs`, `crates/cubikan-core/src/vocabulary.rs`, `crates/cubikan-core/src/workflow.rs`
+- **Commit:** `308761f1a8058828a8f532007fe20de5acae61e0`
+
+## T-010 (sprint 0)
+- **Description:** Add validated format-neutral serialization for Intent Units
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:46:35Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`
+- **Commit:** `61cfa193d5196ef612da75e2134c39ccba48f8f2`
+
+## T-011 (sprint 0)
+- **Description:** Document the core vocabulary and Sprint 0 boundaries
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:48:05Z
+- **Files modified:** `README.md`
+- **Commit:** `e918ab07b987a0e358ce66e3a5e298280ba5c539`
+
+## T-012 (sprint 0)
+- **Description:** Add an executable public lifecycle example
+- **Intent:** [INT-0001](../intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+- **Completed:** 2026-08-08T13:49:36Z
+- **Files modified:** `crates/cubikan-core/src/lib.rs`
+- **Commit:** `3f79615c3c8cc1d740f4642455f7fffb2112755e`

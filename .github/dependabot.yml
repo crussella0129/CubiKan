@@ -1,0 +1,14 @@
+# Dependabot opens scheduled version-update PRs against the work branch.
+# Merge only at sprint boundaries when green; add ecosystems as the project grows.
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "dev"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "dev"
