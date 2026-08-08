@@ -31,6 +31,19 @@ mod process_tests {
 
     use super::*;
 
+    const VALID_REQUEST: &[u8] = br#"{
+        "protocol_version": 1,
+        "workflow": {
+            "id": "delivery",
+            "phases": ["queued"],
+            "initial_phase": "queued",
+            "edges": [],
+            "completion_phases": []
+        },
+        "intent_unit": {"id": null, "species": "feature"},
+        "operations": []
+    }"#;
+
     struct FailingReader;
 
     impl Read for FailingReader {
@@ -55,6 +68,43 @@ mod process_tests {
         }
     }
 
+    #[derive(Default)]
+    struct FlushOnlyFailingWriter {
+        bytes: Vec<u8>,
+        flush_attempts: usize,
+    }
+
+    impl Write for FlushOnlyFailingWriter {
+        fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+            self.bytes.extend_from_slice(buffer);
+            Ok(buffer.len())
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            self.flush_attempts += 1;
+            Err(io::Error::new(
+                io::ErrorKind::BrokenPipe,
+                "fixture flush failure",
+            ))
+        }
+    }
+
+    #[derive(Default)]
+    struct FailingDiagnosticWriter {
+        write_attempts: usize,
+    }
+
+    impl Write for FailingDiagnosticWriter {
+        fn write(&mut self, _buffer: &[u8]) -> io::Result<usize> {
+            self.write_attempts += 1;
+            Err(io::Error::other("fixture diagnostic failure"))
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Err(io::Error::other("fixture diagnostic failure"))
+        }
+    }
+
     #[test]
     fn test_process_shell_maps_operational_failure_to_exit_1() {
         let mut stdout = Vec::new();
@@ -68,24 +118,44 @@ mod process_tests {
         assert!(diagnostic.contains("failed to read request"));
         assert!(diagnostic.ends_with('\n'));
 
-        let request = br#"{
-            "protocol_version": 1,
-            "workflow": {
-                "id": "delivery",
-                "phases": ["queued"],
-                "initial_phase": "queued",
-                "edges": [],
-                "completion_phases": []
-            },
-            "intent_unit": {"id": null, "species": "feature"},
-            "operations": []
-        }"#;
         let mut stderr = Vec::new();
-        let exit = run_process(request.as_slice(), NewlineFailingWriter, &mut stderr);
+        let exit = run_process(VALID_REQUEST, NewlineFailingWriter, &mut stderr);
 
         assert_eq!(exit, 1);
         let diagnostic = String::from_utf8(stderr).expect("diagnostic should be UTF-8");
         assert!(diagnostic.contains("failed to finish response line"));
         assert!(diagnostic.ends_with('\n'));
+    }
+
+    #[test]
+    fn test_process_shell_maps_flush_failure_to_exit_1() {
+        let mut stdout = FlushOnlyFailingWriter::default();
+        let mut stderr = Vec::new();
+
+        let exit = run_process(VALID_REQUEST, &mut stdout, &mut stderr);
+
+        assert_eq!(exit, 1);
+        assert_eq!(stdout.flush_attempts, 1);
+        assert_eq!(stdout.bytes.last(), Some(&b'\n'));
+        let response: serde_json::Value = serde_json::from_slice(&stdout.bytes)
+            .expect("accepted stdout bytes should form a complete response line");
+        assert_eq!(response["outcome"], "success");
+        assert_eq!(
+            stderr,
+            b"cubikan: failed to flush response: fixture flush failure\n"
+        );
+    }
+
+    #[test]
+    fn test_process_shell_keeps_exit_1_when_flush_diagnostic_fails() {
+        let mut stdout = FlushOnlyFailingWriter::default();
+        let mut stderr = FailingDiagnosticWriter::default();
+
+        let exit = run_process(VALID_REQUEST, &mut stdout, &mut stderr);
+
+        assert_eq!(exit, 1);
+        assert_eq!(stdout.flush_attempts, 1);
+        assert_eq!(stdout.bytes.last(), Some(&b'\n'));
+        assert!(stderr.write_attempts > 0);
     }
 }

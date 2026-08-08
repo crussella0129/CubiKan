@@ -3,7 +3,9 @@
 `cubikan` is CubiKan's experimental runnable adapter. It reads one complete
 lifecycle scenario from standard input, delegates validation and mutation to
 `cubikan-core`, and writes exactly one compact JSON response followed by a
-newline.
+newline. Before returning a modeled outcome, the runner requires response
+serialization, newline writing, and exactly one call to the supplied writer's
+`flush()` to each return successfully.
 
 One process owns one in-memory scenario. There is no durable session, repository,
 or cross-invocation state.
@@ -142,6 +144,12 @@ and must not be parsed as a machine contract.
 | `2` | Request or setup rejection | codes below; no Intent Unit snapshot |
 | `3` | Lifecycle rejection | codes below; operation number and partial snapshot included |
 
+Exit `1` includes a response-body write failure, newline write failure, or
+supplied-writer flush failure. The process attempts a stderr diagnostic on a
+best-effort basis; successful diagnostic delivery is not guaranteed. A modeled
+exit `0`, `2`, or `3` is returned only after the corresponding stdout response,
+newline, and one explicit supplied-writer flush all succeed.
+
 Version 1 request/setup codes:
 
 - `invalid_json` for malformed JSON or unexpected EOF;
@@ -172,6 +180,13 @@ Version 1 lifecycle codes:
 
 The protocol is explicitly experimental. Protocol version 1 defines the current
 adapter contract, but no cross-version compatibility guarantee exists yet.
+
+The explicit flush checks only the contract implemented by the supplied Rust
+`Write`. It does not promise stream atomicity or rollback: a later error may be
+reported after some or all response bytes have already been accepted. It also
+does not promise operating-system or kernel delivery, close success, `fsync` or
+durable storage, persistence, retries, external-reader receipt, or network
+acknowledgement.
 
 The 1 MiB ceiling bounds retained raw request bytes only. It does not bound the
 process's total memory, provide timeouts, rate limiting, or concurrent-client

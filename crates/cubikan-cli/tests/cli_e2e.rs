@@ -54,35 +54,38 @@ fn test_cli_configure_create_transition_complete() {
     let response = response(&output);
 
     assert_eq!(output.status.code(), Some(0));
-    assert_eq!(response["protocol_version"], 1);
-    assert_eq!(response["outcome"], "success");
     assert_eq!(
-        response["intent_unit"]["id"],
-        "67e55044-10b1-426f-9247-bb680e5fe0c8"
-    );
-    assert_eq!(response["intent_unit"]["phase"], "done");
-    assert_eq!(response["intent_unit"]["status"], "completed");
-    assert_eq!(
-        response["intent_unit"]["history"],
-        json!([
-            {
-                "type": "transition",
-                "sequence": 1,
-                "from": "queued",
-                "to": "doing"
-            },
-            {
-                "type": "transition",
-                "sequence": 2,
-                "from": "doing",
-                "to": "done"
-            },
-            {
-                "type": "completion",
-                "sequence": 3,
-                "phase": "done"
+        response,
+        json!({
+            "outcome": "success",
+            "protocol_version": 1,
+            "intent_unit": {
+                "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
+                "species": "feature",
+                "workflow_id": "delivery",
+                "phase": "done",
+                "status": "completed",
+                "history": [
+                    {
+                        "type": "transition",
+                        "sequence": 1,
+                        "from": "queued",
+                        "to": "doing"
+                    },
+                    {
+                        "type": "transition",
+                        "sequence": 2,
+                        "from": "doing",
+                        "to": "done"
+                    },
+                    {
+                        "type": "completion",
+                        "sequence": 3,
+                        "phase": "done"
+                    }
+                ]
             }
-        ])
+        })
     );
 }
 
@@ -92,10 +95,17 @@ fn test_cli_reports_malformed_request_with_exit_2() {
     let response = response(&output);
 
     assert_eq!(output.status.code(), Some(2));
-    assert_eq!(response["protocol_version"], 1);
-    assert_eq!(response["outcome"], "error");
-    assert_eq!(response["error"]["code"], "invalid_json");
-    assert!(response.get("intent_unit").is_none());
+    assert_eq!(
+        response,
+        json!({
+            "outcome": "error",
+            "protocol_version": 1,
+            "error": {
+                "code": "invalid_json",
+                "message": "EOF while parsing a value at line 1 column 20"
+            }
+        })
+    );
 }
 
 #[test]
@@ -113,23 +123,29 @@ fn test_cli_reports_lifecycle_rejection_with_exit_3() {
     let response = response(&output);
 
     assert_eq!(output.status.code(), Some(3));
-    assert_eq!(response["outcome"], "error");
-    assert_eq!(response["error"]["code"], "transition_not_allowed");
-    assert_eq!(response["error"]["operation_number"], 2);
     assert_eq!(
-        response["intent_unit"],
+        response,
         json!({
-            "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
-            "species": "feature",
-            "workflow_id": "delivery",
-            "phase": "doing",
-            "status": "active",
-            "history": [{
-                "type": "transition",
-                "sequence": 1,
-                "from": "queued",
-                "to": "doing"
-            }]
+            "outcome": "error",
+            "protocol_version": 1,
+            "error": {
+                "code": "transition_not_allowed",
+                "message": "transition `doing -> queued` is not declared",
+                "operation_number": 2
+            },
+            "intent_unit": {
+                "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
+                "species": "feature",
+                "workflow_id": "delivery",
+                "phase": "doing",
+                "status": "active",
+                "history": [{
+                    "type": "transition",
+                    "sequence": 1,
+                    "from": "queued",
+                    "to": "doing"
+                }]
+            }
         })
     );
 }

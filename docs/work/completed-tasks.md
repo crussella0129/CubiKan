@@ -160,3 +160,24 @@
 - **Completed:** 2026-08-08T18:53:46Z
 - **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `5e4f43db0675be7be6aa33cbf540031ccabe363d`
+
+## T-301 (sprint 3)
+- **Description:** Implement the typed supplied-writer flush contract
+- **Intent:** [INT-0004](../intents/INT-0004-explicit-cli-response-flush.md)
+- **Completed:** 2026-08-08T20:08:20Z
+- **Files modified:** `crates/cubikan-cli/src/runner.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0004-explicit-cli-response-flush.md`, `docs/sprints/s3/sprint-meta.md`, `docs/sprints/s3/sprint-research/research-report.md`, `docs/sprints/s3/sprint-plans/build-plan.md`, `docs/sprints/s3/sprint-plans/test-plan.md`, `docs/sprints/s3/sprint-plans/critique.md`, `docs/sprints/s3/sprint-tests/unit-tests.md`, `docs/sprints/s3/sprint-tests/integration-tests.md`, `docs/sprints/s3/sprint-tests/e2e-tests.md`, `docs/sprints/s3/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `17f57cad08447f3931ae3e6e196bc3da428dc90c`
+
+## T-302 (sprint 3)
+- **Description:** Prove the public buffered-writer and process-shell boundaries
+- **Intent:** [INT-0004](../intents/INT-0004-explicit-cli-response-flush.md)
+- **Completed:** 2026-08-08T20:14:17Z
+- **Files modified:** `crates/cubikan-cli/tests/runner.rs`, `crates/cubikan-cli/tests/cli_e2e.rs`, `crates/cubikan-cli/src/lib.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `064b18bb623db9e3843f954202a7cebd69aabe6b`
+
+## T-303 (sprint 3)
+- **Description:** Document the writer-flush-checked response boundary
+- **Intent:** [INT-0004](../intents/INT-0004-explicit-cli-response-flush.md)
+- **Completed:** 2026-08-08T20:17:13Z
+- **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `e62d29c3b4db4e6eb9617f5b0d6d0fec80704a78`
