@@ -83,3 +83,52 @@
 - **Completed:** 2026-08-08T13:49:36Z
 - **Files modified:** `crates/cubikan-core/src/lib.rs`
 - **Commit:** `3f79615c3c8cc1d740f4642455f7fffb2112755e`
+
+## T-101 (sprint 1)
+- **Description:** Scaffold the cubikan-cli workspace package
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:23:49Z
+- **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-cli/Cargo.toml`, `crates/cubikan-cli/src/lib.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0002-runnable-lifecycle-adapter.md`, `docs/sprints/s1/sprint-meta.md`, `docs/sprints/s1/sprint-research/research-report.md`, `docs/sprints/s1/sprint-plans/build-plan.md`, `docs/sprints/s1/sprint-plans/test-plan.md`, `docs/sprints/s1/sprint-plans/critique.md`, `docs/sprints/s1/sprint-tests/unit-tests.md`, `docs/sprints/s1/sprint-tests/integration-tests.md`, `docs/sprints/s1/sprint-tests/e2e-tests.md`, `docs/sprints/s1/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `2a050101b29b03f8aca5d22acc2b45058270ce4b`
+
+## T-102 (sprint 1)
+- **Description:** Define the adapter-owned version 1 JSON contract
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:33:36Z
+- **Files modified:** `crates/cubikan-cli/src/lib.rs`, `crates/cubikan-cli/src/protocol.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `d6237e4a2dc64d4ac47fab248b6a0f0f13f1a735`
+
+## T-103 (sprint 1)
+- **Description:** Construct validated core scenarios and map setup failures
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:38:13Z
+- **Files modified:** `crates/cubikan-cli/src/lib.rs`, `crates/cubikan-cli/src/execution.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `8122bf48bd50f70472a5f91c7502b05568fee6c9`
+
+## T-104 (sprint 1)
+- **Description:** Execute ordered lifecycle operations and expose adapter snapshots
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:42:00Z
+- **Files modified:** `crates/cubikan-cli/src/execution.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `bd599c05328c664f96112971a38e7077a9b0a44f`
+
+## T-105 (sprint 1)
+- **Description:** Implement the generic JSON stream runner
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:44:47Z
+- **Files modified:** `crates/cubikan-cli/src/lib.rs`, `crates/cubikan-cli/src/protocol.rs`, `crates/cubikan-cli/src/execution.rs`, `crates/cubikan-cli/src/runner.rs`, `crates/cubikan-cli/tests/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `5819ef135d00f06dbe812220cd666a43f985619e`
+
+## T-106 (sprint 1)
+- **Description:** Expose and process-test the cubikan executable
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:46:38Z
+- **Files modified:** `crates/cubikan-cli/Cargo.toml`, `crates/cubikan-cli/src/lib.rs`, `crates/cubikan-cli/src/main.rs`, `crates/cubikan-cli/tests/cli_e2e.rs`, `crates/cubikan-cli/tests/fixtures/lifecycle-success-v1.json`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `37896a330c95548e6c2a1bf163e709e7cd467584`
+
+## T-107 (sprint 1)
+- **Description:** Document the CLI contract and Sprint 1 boundaries
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:48:35Z
+- **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `ae876734fd9bbd43b0fc3278187057c91bca65c2`

@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/cubikan-core"]
+members = ["crates/cubikan-cli", "crates/cubikan-core"]
 resolver = "3"
 
 [workspace.package]
