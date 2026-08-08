@@ -51,6 +51,25 @@ fn test_request_limit_is_one_mib() {
 }
 
 #[test]
+fn test_runner_exposes_io_read_error_payload() {
+    struct FailingReader;
+
+    impl io::Read for FailingReader {
+        fn read(&mut self, _buffer: &mut [u8]) -> io::Result<usize> {
+            Err(io::Error::other("fixture read failure"))
+        }
+    }
+
+    let error: io::Error = match run(FailingReader, Vec::new()) {
+        Err(RunError::Read(error)) => error,
+        other => panic!("expected public I/O read error payload, got {other:?}"),
+    };
+
+    assert_eq!(error.kind(), io::ErrorKind::Other);
+    assert_eq!(error.to_string(), "fixture read failure");
+}
+
+#[test]
 fn test_runner_accepts_exact_limit_request() {
     let operations = json!([
         {"type": "transition", "target": "doing"},
