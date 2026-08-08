@@ -159,4 +159,4 @@
 - **Intent:** [INT-0003](../intents/INT-0003-bounded-cli-request-ingestion.md)
 - **Completed:** 2026-08-08T18:53:46Z
 - **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `5e4f43db0675be7be6aa33cbf540031ccabe363d`
