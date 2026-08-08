@@ -99,7 +99,6 @@ pub(crate) struct ErrorDetail {
 pub(crate) enum ErrorCode {
     InvalidJson,
     InvalidRequest,
-    #[allow(dead_code, reason = "used by bounded request ingestion in T-202")]
     RequestTooLarge,
     UnsupportedProtocolVersion,
     BlankValue,
