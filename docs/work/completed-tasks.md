@@ -152,4 +152,4 @@
 - **Intent:** [INT-0003](../intents/INT-0003-bounded-cli-request-ingestion.md)
 - **Completed:** 2026-08-08T18:52:25Z
 - **Files modified:** `crates/cubikan-cli/tests/runner.rs`, `crates/cubikan-cli/tests/cli_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `809b4b9e828523875febd511ae048373daaa1262`
