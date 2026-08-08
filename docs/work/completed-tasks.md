@@ -195,3 +195,10 @@
 - **Completed:** 2026-08-08T22:11:25Z
 - **Files modified:** `.github/workflows/ci.yml`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `f70ee3d34f633023a633aad6e7377108cebf571d`
+
+## T-403 (sprint 4)
+- **Description:** Document the automated quality boundary
+- **Intent:** [INT-0005](../intents/INT-0005-automated-rust-quality-gate.md)
+- **Completed:** 2026-08-08T22:14:16Z
+- **Files modified:** `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

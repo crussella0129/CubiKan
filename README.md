@@ -74,15 +74,25 @@ before the core exposes them as stable behavior.
 
 ## Development
 
-The workspace requires a current Rust toolchain with Rust 2024 edition support.
-Run the quality gates from the repository root:
+The workspace requires current-stable Rust with Rust 2024 edition support. The
+[Rust CI](.github/workflows/ci.yml) workflow runs on GitHub-hosted Ubuntu for
+pull requests targeting `dev` or `main` and pushes to `dev` or `main`.
+Reproduce its five quality gates from the repository root in this order:
 
 ```sh
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets --all-features -- -D warnings
-cargo test --workspace --all-targets
-cargo test --doc --workspace
+cargo +stable fmt --all -- --check
+cargo +stable clippy --workspace --all-targets --all-features -- -D warnings
+RUSTFLAGS="-D warnings" cargo +stable check --workspace --all-targets
+cargo +stable test --workspace --all-targets
+cargo +stable test --doc --workspace
 ```
+
+The workflow produces a GitHub status for review. It does not configure
+required branch protection or authorize a merge; retained human merge approval
+remains required. This CI boundary intentionally adds no caches, artifacts,
+coverage/security scanners, secrets, releases/deployment, automatic merge
+(auto-merge), MSRV, or OS/toolchain matrices. These CI nonclaims do not change
+the product boundaries below.
 
 ## Explicit current exclusions
 
