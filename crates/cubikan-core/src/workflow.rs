@@ -3,7 +3,7 @@ use std::{collections::HashSet, error::Error, fmt};
 use crate::{PhaseId, WorkflowId};
 
 /// A directed edge declared by a workflow.
-#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct WorkflowEdge {
     from: PhaseId,
     to: PhaseId,
@@ -30,7 +30,7 @@ impl WorkflowEdge {
 }
 
 /// Immutable, caller-declared lifecycle policy for Intent Units.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct Workflow {
     id: WorkflowId,
     phases: Vec<PhaseId>,
@@ -216,9 +216,36 @@ impl fmt::Display for WorkflowError {
 
 impl Error for WorkflowError {}
 
+#[derive(serde::Deserialize)]
+struct WorkflowRepr {
+    id: WorkflowId,
+    phases: Vec<PhaseId>,
+    initial_phase: PhaseId,
+    edges: Vec<WorkflowEdge>,
+    completion_phases: Vec<PhaseId>,
+}
+
+impl<'de> serde::Deserialize<'de> for Workflow {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        let repr = <WorkflowRepr as serde::Deserialize>::deserialize(deserializer)?;
+        Self::new(
+            repr.id,
+            repr.phases,
+            repr.initial_phase,
+            repr.edges,
+            repr.completion_phases,
+        )
+        .map_err(serde::de::Error::custom)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::{Value, json};
 
     fn phase(value: &str) -> PhaseId {
         PhaseId::new(value).expect("fixture phase should be valid")
@@ -390,5 +417,69 @@ mod tests {
         assert!(workflow.allows_transition(&doing, &queued));
         assert!(workflow.allows_transition(&doing, &doing));
         assert!(!workflow.allows_transition(&queued, &queued));
+    }
+
+    fn serialized_workflow() -> Value {
+        json!({
+            "id": "delivery",
+            "phases": ["queued", "doing", "done"],
+            "initial_phase": "queued",
+            "edges": [
+                { "from": "queued", "to": "doing" },
+                { "from": "doing", "to": "done" }
+            ],
+            "completion_phases": ["done"]
+        })
+    }
+
+    #[test]
+    fn test_workflow_semantic_round_trip() {
+        let workflow: Workflow = serde_json::from_value(serialized_workflow())
+            .expect("valid workflow should deserialize");
+        let json = serde_json::to_string(&workflow).expect("workflow should serialize");
+        let restored = serde_json::from_str(&json).expect("workflow should deserialize");
+
+        assert_eq!(workflow, restored);
+    }
+
+    #[test]
+    fn test_serialization_rejects_empty_workflow() {
+        let mut value = serialized_workflow();
+        value["phases"] = json!([]);
+
+        assert!(serde_json::from_value::<Workflow>(value).is_err());
+    }
+
+    #[test]
+    fn test_serialization_rejects_duplicate_phase_or_edge() {
+        let mut duplicate_phase = serialized_workflow();
+        duplicate_phase["phases"] = json!(["queued", "queued", "done"]);
+        let mut duplicate_edge = serialized_workflow();
+        duplicate_edge["edges"] = json!([
+            { "from": "queued", "to": "doing" },
+            { "from": "queued", "to": "doing" }
+        ]);
+
+        assert!(serde_json::from_value::<Workflow>(duplicate_phase).is_err());
+        assert!(serde_json::from_value::<Workflow>(duplicate_edge).is_err());
+    }
+
+    #[test]
+    fn test_serialization_rejects_unknown_initial_phase() {
+        let mut value = serialized_workflow();
+        value["initial_phase"] = json!("missing");
+
+        assert!(serde_json::from_value::<Workflow>(value).is_err());
+    }
+
+    #[test]
+    fn test_serialization_rejects_unknown_edge_or_completion_phase() {
+        let mut unknown_edge = serialized_workflow();
+        unknown_edge["edges"] = json!([{ "from": "queued", "to": "missing" }]);
+        let mut unknown_completion = serialized_workflow();
+        unknown_completion["completion_phases"] = json!(["missing"]);
+
+        assert!(serde_json::from_value::<Workflow>(unknown_edge).is_err());
+        assert!(serde_json::from_value::<Workflow>(unknown_completion).is_err());
     }
 }

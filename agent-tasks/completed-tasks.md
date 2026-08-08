@@ -47,3 +47,9 @@
 - **Completed:** 2026-08-08T13:42:14Z
 - **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
 - **Commit:** `cb544ee`
+
+## T-009 (sprint 0)
+- **Description:** Add validated format-neutral serialization for scalars and workflows
+- **Completed:** 2026-08-08T13:44:28Z
+- **Files modified:** `crates/cubikan-core/src/id.rs`, `crates/cubikan-core/src/vocabulary.rs`, `crates/cubikan-core/src/workflow.rs`
+- **Commit:** `76304a2`

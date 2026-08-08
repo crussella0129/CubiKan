@@ -53,6 +53,25 @@ macro_rules! define_text_value {
             }
         }
 
+        impl serde::Serialize for $name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                serializer.serialize_str(self.as_str())
+            }
+        }
+
+        impl<'de> serde::Deserialize<'de> for $name {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                let value = <String as serde::Deserialize>::deserialize(deserializer)?;
+                Self::new(value).map_err(serde::de::Error::custom)
+            }
+        }
+
         impl FromStr for $name {
             type Err = VocabularyError;
 
@@ -121,5 +140,12 @@ mod tests {
         assert_eq!(WorkflowId::new(" \t\n"), Err(VocabularyError::Blank));
         assert_eq!(PhaseId::new("\u{2003}"), Err(VocabularyError::Blank));
         assert_eq!(IntentSpecies::new("   "), Err(VocabularyError::Blank));
+    }
+
+    #[test]
+    fn test_serialization_rejects_blank_vocabulary() {
+        assert!(serde_json::from_str::<WorkflowId>(r#""""#).is_err());
+        assert!(serde_json::from_str::<PhaseId>(r#""   ""#).is_err());
+        assert!(serde_json::from_str::<IntentSpecies>(r#""\t""#).is_err());
     }
 }

@@ -1,5 +1,6 @@
 use std::{error::Error, fmt, str::FromStr};
 
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use uuid::Uuid;
 
 /// Stable identity for an Intent Unit.
@@ -57,6 +58,26 @@ impl FromStr for IntentUnitId {
     }
 }
 
+impl Serialize for IntentUnitId {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for IntentUnitId {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        String::deserialize(deserializer)?
+            .parse()
+            .map_err(serde::de::Error::custom)
+    }
+}
+
 /// Error returned when textual Intent Unit identity is not a valid UUID.
 #[derive(Debug)]
 pub struct ParseIntentUnitIdError(uuid::Error);
@@ -76,6 +97,7 @@ impl Error for ParseIntentUnitIdError {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{IntentSpecies, PhaseId, WorkflowId};
     use uuid::Version;
 
     #[test]
@@ -106,5 +128,25 @@ mod tests {
             .expect_err("malformed UUID should fail");
 
         assert!(error.to_string().starts_with("invalid Intent Unit ID:"));
+    }
+
+    #[test]
+    fn test_identifier_and_vocabulary_semantic_round_trip() {
+        let values = (
+            IntentUnitId::from_str("67e55044-10b1-426f-9247-bb680e5fe0c8")
+                .expect("fixed ID should parse"),
+            WorkflowId::new("flow").expect("workflow ID should be valid"),
+            PhaseId::new("in progress").expect("phase should be valid"),
+            IntentSpecies::new("feature").expect("species should be valid"),
+        );
+        let json = serde_json::to_string(&values).expect("values should serialize");
+        let restored = serde_json::from_str(&json).expect("values should deserialize");
+
+        assert_eq!(values, restored);
+    }
+
+    #[test]
+    fn test_serialization_rejects_malformed_identifier() {
+        assert!(serde_json::from_str::<IntentUnitId>(r#""not-a-uuid""#).is_err());
     }
 }
