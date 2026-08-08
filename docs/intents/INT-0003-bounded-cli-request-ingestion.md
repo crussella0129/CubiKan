@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0003
-- **State:** active
+- **State:** realized
 - **Work evidence:** [Sprint 2 build plan](../sprints/s2/sprint-plans/build-plan.md)
-- **Completion evidence:** none
-- **Code evidence:** none
-- **Test evidence:** none
-- **Documentation evidence:** none
+- **Completion evidence:** [T-201–T-204 completion ledger](../work/completed-tasks.md#t-201-sprint-2)
+- **Code evidence:** [`MAX_REQUEST_BYTES` and process shell](../../crates/cubikan-cli/src/lib.rs), [bounded runner](../../crates/cubikan-cli/src/runner.rs), and [typed protocol error](../../crates/cubikan-cli/src/protocol.rs)
+- **Test evidence:** [Sprint 2 test report](../sprints/s2/sprint-tests/test-report.md)
+- **Documentation evidence:** [CubiKan overview](../../README.md) and [CLI guide](../../crates/cubikan-cli/README.md)
 
 ## Intent
 
@@ -87,3 +87,4 @@ protocol compatibility remain separate future outcomes.
 - 2026-08-08: created as `proposed` from INT-0002's explicit unbounded-input hardening deferral.
 - 2026-08-08: moved to `planned` when Sprint 2 decomposed bounded ingestion into T-201–T-204 with exact-limit and actual-process verification.
 - 2026-08-08: moved to `active` when Build began T-201 for the public request-limit contract.
+- 2026-08-08: moved to `realized` after T-201–T-204 completion, exact-boundary and actual-process verification at the committed Test head, all quality gates, and a clean final Test Critic.
