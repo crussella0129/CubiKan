@@ -29,3 +29,9 @@
 - **Completed:** 2026-08-08T13:37:26Z
 - **Files modified:** `crates/cubikan-core/src/workflow.rs`, `crates/cubikan-core/src/lib.rs`
 - **Commit:** `b5b7d5c`
+
+## T-006 (sprint 0)
+- **Description:** Implement active Intent Unit construction
+- **Completed:** 2026-08-08T13:39:02Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`
+- **Commit:** `0c60adc`

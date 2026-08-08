@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-006 (sprint 0): Implement active Intent Unit construction — touches: crates/cubikan-core/src/intent_unit.rs, crates/cubikan-core/src/lib.rs
 - [ ] T-007 (sprint 0): Implement guarded phase transitions and append-only records — touches: crates/cubikan-core/src/intent_unit.rs
 - [ ] T-008 (sprint 0): Implement terminal completion — touches: crates/cubikan-core/src/intent_unit.rs
 - [ ] T-009 (sprint 0): Add validated format-neutral serialization for scalars and workflows — touches: crates/cubikan-core/src/id.rs, crates/cubikan-core/src/vocabulary.rs, crates/cubikan-core/src/workflow.rs
