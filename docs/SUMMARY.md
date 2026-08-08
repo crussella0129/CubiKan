@@ -1,0 +1,11 @@
+# Summary
+- [Project Book](README.md)
+- [Intents](intents/README.md)
+  - [INT-0001 — Chain-agnostic Intent Unit lifecycle core](intents/INT-0001-chain-agnostic-intent-lifecycle-core.md)
+  - [INT-0002 — Runnable lifecycle adapter and E2E boundary](intents/INT-0002-runnable-lifecycle-adapter.md)
+- [Tasks](work/tasks.md)
+- [Completed tasks](work/completed-tasks.md)
+- [Remote profile](work/remote-profile.md)
+- [Migration provenance](history/migration-provenance.md)
+- [Legacy decisions (historical)](history/decisions-legacy.md)
+- [Sprint 0](sprints/s0/sprint-meta.md)

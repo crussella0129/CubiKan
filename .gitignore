@@ -1,11 +1,7 @@
-
-# >>> sprint-loops >>>
-# Ephemeral sprint working memory — regenerable; the real outcome lives in the
-# per-task git commits + decisions.md. KEEP tracked (long-term memory the
-# protocol depends on): decisions.md, agent-tasks/, confidence.txt.
-sprints/
-*.tmp
-# <<< sprint-loops <<<
-
 # Rust build output
 /target/
+# >>> sprint-loops >>>
+# The Book is tracked. Ignore only transient helper output.
+*.tmp
+/guards-report.ndjson
+# <<< sprint-loops <<<
