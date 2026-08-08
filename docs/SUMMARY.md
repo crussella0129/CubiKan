@@ -9,3 +9,4 @@
 - [Migration provenance](history/migration-provenance.md)
 - [Legacy decisions (historical)](history/decisions-legacy.md)
 - [Sprint 0](sprints/s0/sprint-meta.md)
+- [Sprint 1](sprints/s1/sprint-meta.md)

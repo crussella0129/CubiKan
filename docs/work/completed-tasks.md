@@ -83,3 +83,10 @@
 - **Completed:** 2026-08-08T13:49:36Z
 - **Files modified:** `crates/cubikan-core/src/lib.rs`
 - **Commit:** `3f79615c3c8cc1d740f4642455f7fffb2112755e`
+
+## T-101 (sprint 1)
+- **Description:** Scaffold the cubikan-cli workspace package
+- **Intent:** [INT-0002](../intents/INT-0002-runnable-lifecycle-adapter.md)
+- **Completed:** 2026-08-08T16:23:49Z
+- **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-cli/Cargo.toml`, `crates/cubikan-cli/src/lib.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0002-runnable-lifecycle-adapter.md`, `docs/sprints/s1/sprint-meta.md`, `docs/sprints/s1/sprint-research/research-report.md`, `docs/sprints/s1/sprint-plans/build-plan.md`, `docs/sprints/s1/sprint-plans/test-plan.md`, `docs/sprints/s1/sprint-plans/critique.md`, `docs/sprints/s1/sprint-tests/unit-tests.md`, `docs/sprints/s1/sprint-tests/integration-tests.md`, `docs/sprints/s1/sprint-tests/e2e-tests.md`, `docs/sprints/s1/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
