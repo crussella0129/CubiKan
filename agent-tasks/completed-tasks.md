@@ -65,3 +65,9 @@
 - **Completed:** 2026-08-08T13:48:05Z
 - **Files modified:** `README.md`
 - **Commit:** `af1d0c9`
+
+## T-012 (sprint 0)
+- **Description:** Add an executable public lifecycle example
+- **Completed:** 2026-08-08T13:49:36Z
+- **Files modified:** `crates/cubikan-core/src/lib.rs`
+- **Commit:** `72407f3`
