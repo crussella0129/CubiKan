@@ -59,3 +59,9 @@
 - **Completed:** 2026-08-08T13:46:35Z
 - **Files modified:** `crates/cubikan-core/src/intent_unit.rs`
 - **Commit:** `8f0c2bc`
+
+## T-011 (sprint 0)
+- **Description:** Document the core vocabulary and Sprint 0 boundaries
+- **Completed:** 2026-08-08T13:48:05Z
+- **Files modified:** `README.md`
+- **Commit:** `af1d0c9`
