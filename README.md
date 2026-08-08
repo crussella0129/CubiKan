@@ -7,9 +7,10 @@ caller-defined process phase until it reaches terminal completion.
 ## Current scope
 
 Sprint 0 provides `cubikan-core`, a chain-agnostic Rust library for defining and
-validating Intent Unit lifecycles. It deliberately establishes the domain rules
-before selecting a blockchain, persistence layer, service boundary, or user
-interface.
+validating Intent Unit lifecycles. Sprint 1 adds `cubikan`, an experimental,
+stateless JSON command-line adapter that executes one complete caller-defined
+lifecycle scenario per process. Neither layer selects a blockchain, persistence
+model, service boundary, or user interface.
 
 ## Core model
 
@@ -33,6 +34,26 @@ The library does not export default Kanban phase names. A caller can declare a
 simple forward workflow, explicit rework/backward edges, self edges, or arbitrary
 custom phase labels.
 
+## Runnable JSON adapter
+
+Run the checked-in configure → create → transition → complete example
+from the repository root:
+
+```sh
+cargo run -p cubikan-cli --bin cubikan < crates/cubikan-cli/tests/fixtures/lifecycle-success-v1.json
+```
+
+The process reads one strict version 1 request from standard input and writes one
+newline-terminated JSON success or typed error response to standard output. Exit
+codes distinguish success (`0`), operational I/O failure (`1`), request or setup
+rejection (`2`), and lifecycle rejection (`3`). See the
+[`cubikan` protocol reference](crates/cubikan-cli/README.md) for complete request,
+response, error-code, and partial-state semantics.
+
+This is intentionally one-shot and in-memory. It does not preserve state between
+invocations, and its experimental adapter-owned protocol is not a cross-version
+compatibility promise.
+
 ## Species provenance and future naming
 
 Sprint 0 preserves an Intent Unit's immutable species through every transition
@@ -52,17 +73,20 @@ cargo test --workspace --all-targets
 cargo test --doc --workspace
 ```
 
-## Explicit Sprint 0 exclusions
+## Explicit current exclusions
 
 The current core does not choose or implement:
 
 - a blockchain, network, smart contract, or cryptographic audit proof;
 - database persistence, workflow registries, or workflow migration/versioning;
-- a CLI, service/API, Electron UI, or other runnable application boundary;
+- a service/API, Electron UI, or durable interactive application session;
 - ownership, authorization, privacy, concurrency, or multi-user conflict rules;
 - KPI evaluation or automatic transition authorization;
 - default phase topology, completed-unit naming syntax, or parent/child lineage;
-- stable JSON field names or cross-version wire-schema compatibility.
+- stable core serialization or cross-version CLI wire-schema compatibility;
+- production input resource limits: the local CLI currently reads standard
+  input without a size cap, and resource limiting is required before production
+  network exposure.
 
 These boundaries keep the domain foundation testable and allow later adapters to
 be selected through evidence rather than embedded assumptions.
