@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0004
-- **State:** active
+- **State:** realized
 - **Work evidence:** [Sprint 3 build plan](../sprints/s3/sprint-plans/build-plan.md)
-- **Completion evidence:** none
-- **Code evidence:** none
-- **Test evidence:** none
-- **Documentation evidence:** none
+- **Completion evidence:** [T-301–T-303 completion ledger](../work/completed-tasks.md#t-301-sprint-3)
+- **Code evidence:** [writer-flush-checked runner](../../crates/cubikan-cli/src/runner.rs) and [process-shell mapping](../../crates/cubikan-cli/src/lib.rs)
+- **Test evidence:** [Sprint 3 test report](../sprints/s3/sprint-tests/test-report.md)
+- **Documentation evidence:** [CubiKan overview](../../README.md) and [CLI guide](../../crates/cubikan-cli/README.md)
 
 ## Intent
 
@@ -82,3 +82,4 @@ must treat exit `1` as “complete response not guaranteed,” not as rollback.
 - 2026-08-08: created as `proposed` after Sprint 3 research reproduced a missing supplied-writer flush check in the realized generic writer boundary.
 - 2026-08-08: moved to `planned` when Sprint 3 decomposed the correction into runner, public/process verification, and documentation tasks with exact output-stage evidence.
 - 2026-08-08: moved to `active` when Build began T-301 for the typed supplied-writer flush contract.
+- 2026-08-08: moved to `realized` after T-301–T-303 completion, all 91 workspace tests and the core doctest passed at the committed Test head, and the final Test Critic verdict was clean.
