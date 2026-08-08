@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-102 (sprint 1) [intent: INT-0002]: Define the adapter-owned version 1 JSON contract — touches: crates/cubikan-cli/src/lib.rs, crates/cubikan-cli/src/protocol.rs
 - [ ] T-103 (sprint 1) [intent: INT-0002]: Construct validated core scenarios and map setup failures — touches: crates/cubikan-cli/src/lib.rs, crates/cubikan-cli/src/protocol.rs, crates/cubikan-cli/src/execution.rs
 - [ ] T-104 (sprint 1) [intent: INT-0002]: Execute ordered lifecycle operations and expose adapter snapshots — touches: crates/cubikan-cli/src/protocol.rs, crates/cubikan-cli/src/execution.rs
 - [ ] T-105 (sprint 1) [intent: INT-0002]: Implement the generic JSON stream runner — touches: crates/cubikan-cli/src/lib.rs, crates/cubikan-cli/src/runner.rs, crates/cubikan-cli/tests/runner.rs
