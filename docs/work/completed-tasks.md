@@ -181,3 +181,10 @@
 - **Completed:** 2026-08-08T20:17:13Z
 - **Files modified:** `README.md`, `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `e62d29c3b4db4e6eb9617f5b0d6d0fec80704a78`
+
+## T-401 (sprint 4)
+- **Description:** Establish the bounded Rust CI workflow shell
+- **Intent:** [INT-0005](../intents/INT-0005-automated-rust-quality-gate.md)
+- **Completed:** 2026-08-08T22:07:45Z
+- **Files modified:** `.github/workflows/ci.yml`, `docs/SUMMARY.md`, `docs/intents/INT-0005-automated-rust-quality-gate.md`, `docs/sprints/s4/sprint-meta.md`, `docs/sprints/s4/sprint-research/research-report.md`, `docs/sprints/s4/sprint-plans/build-plan.md`, `docs/sprints/s4/sprint-plans/test-plan.md`, `docs/sprints/s4/sprint-plans/critique.md`, `docs/sprints/s4/sprint-tests/unit-tests.md`, `docs/sprints/s4/sprint-tests/integration-tests.md`, `docs/sprints/s4/sprint-tests/e2e-tests.md`, `docs/sprints/s4/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
