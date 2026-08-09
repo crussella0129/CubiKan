@@ -1,10 +1,14 @@
 use std::{
     fs,
+    io::{Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicU64, Ordering},
 };
 
-use cubikan_backend::SqliteBackend;
+use cubikan_backend::{
+    BackendError, ListFilters, ListIntentUnits, PageLimit, SqliteBackend, TransitionIntentUnit,
+};
+use cubikan_core::{IntentUnitRevision, PhaseId};
 use cubikan_local::{ResponseClass, execute_request};
 use serde_json::{Value, json};
 
@@ -108,6 +112,38 @@ fn execute_raw(path: &Path, request: &[u8]) -> (ResponseClass, Value) {
     let response = execute_request(path, request);
     let value = serde_json::from_slice(response.body()).expect("response should be valid JSON");
     (response.class(), value)
+}
+
+fn replace_file_bytes_exactly_once(path: &Path, original: &[u8], replacement: &[u8]) {
+    assert_eq!(
+        original.len(),
+        replacement.len(),
+        "raw SQLite fixture edits must preserve file structure"
+    );
+    let bytes = fs::read(path).expect("database bytes should be readable");
+    let positions = bytes
+        .windows(original.len())
+        .enumerate()
+        .filter_map(|(offset, candidate)| (candidate == original).then_some(offset))
+        .collect::<Vec<_>>();
+    assert_eq!(
+        positions.len(),
+        1,
+        "fixture marker must occur exactly once in the database"
+    );
+
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .open(path)
+        .expect("database should open for deterministic fixture tampering");
+    file.seek(SeekFrom::Start(
+        u64::try_from(positions[0]).expect("fixture offset should fit u64"),
+    ))
+    .expect("fixture tamper should seek to the envelope marker");
+    file.write_all(replacement)
+        .expect("fixture tamper should replace equal-length bytes");
+    file.sync_all()
+        .expect("fixture tamper should be durable before reopen");
 }
 
 fn assert_failure(
@@ -755,4 +791,116 @@ fn test_executor_preserves_backend_atomicity_on_modeled_failure() {
     assert_eq!(response["error"]["code"], "storage_error");
     assert!(!unavailable.exists());
     assert_eq!(state(), revision_one);
+}
+
+#[test]
+fn test_corruption_never_reaches_mutation_or_protocol_success() {
+    let directory = TestDirectory::new("cross-component-corruption");
+    let database = directory.path("cubikan.sqlite3");
+    assert_eq!(
+        execute_value(&database, &create_request(ID)).0,
+        ResponseClass::Success
+    );
+
+    // The equal-length replacement changes only the stored envelope's initial
+    // phase. Its undeclared value makes replay fail without editing a schema or
+    // projection, and avoids a rusqlite dependency in this adapter crate.
+    replace_file_bytes_exactly_once(
+        &database,
+        br#""initial_phase":"queued""#,
+        br#""initial_phase":"broken""#,
+    );
+    let corrupted_bytes = fs::read(&database).expect("corrupt fixture should be readable");
+    let id = ID.parse().expect("fixture ID should parse");
+
+    {
+        let mut backend = SqliteBackend::open(&database).expect("owned schema should still reopen");
+        assert_eq!(
+            backend.get(id).expect_err("get must reject corrupt replay"),
+            BackendError::CorruptEnvelope
+        );
+        assert_eq!(
+            backend
+                .list(ListIntentUnits::new(
+                    ListFilters::default(),
+                    PageLimit::new(1).expect("fixture limit should be valid"),
+                    None,
+                ))
+                .expect_err("list must reject the selected corrupt row"),
+            BackendError::CorruptEnvelope
+        );
+        assert_eq!(
+            backend
+                .transition(TransitionIntentUnit::new(
+                    id,
+                    PhaseId::new("doing").expect("fixture phase should be valid"),
+                    IntentUnitRevision::INITIAL,
+                ))
+                .expect_err("mutation must reject corrupt replay before update"),
+            BackendError::CorruptEnvelope
+        );
+    }
+    assert_eq!(
+        fs::read(&database).expect("database should remain readable as bytes"),
+        corrupted_bytes,
+        "backend failures must leave the corrupt row byte-for-byte unchanged"
+    );
+
+    let (class, response) = execute_value(&database, &transition_request(ID, "doing", json!("0")));
+    assert_eq!(class, ResponseClass::StorageRejected);
+    assert_eq!(response["protocol_version"], 1);
+    assert_eq!(response["outcome"], "failure");
+    assert_eq!(response["error"]["code"], "corrupt_envelope");
+    assert!(response.get("result").is_none());
+    assert!(response["error"].get("field").is_none());
+    assert!(response["error"].get("expected_revision").is_none());
+    assert!(response["error"].get("actual_revision").is_none());
+    assert_eq!(
+        fs::read(&database).expect("database should remain readable as bytes"),
+        corrupted_bytes,
+        "executor failure must leave the same corrupt row unchanged"
+    );
+}
+
+#[test]
+fn test_revision_conflict_propagates_core_to_local_protocol() {
+    let directory = TestDirectory::new("cross-component-conflict");
+    let database = directory.path("cubikan.sqlite3");
+    assert_eq!(
+        execute_value(&database, &create_request(ID)).0,
+        ResponseClass::Success
+    );
+    assert_eq!(
+        execute_value(&database, &transition_request(ID, "doing", json!("0"))).0,
+        ResponseClass::Success
+    );
+
+    let id = ID.parse().expect("fixture ID should parse");
+    let before = SqliteBackend::open(&database)
+        .expect("database should reopen before conflict")
+        .get(id)
+        .expect("revision-one unit should replay");
+    assert_eq!(before.revision(), IntentUnitRevision::new(1));
+    assert_eq!(before.history().len(), 1);
+
+    // The target is not declared, so the conflict proves the guarded core
+    // command retains stale-before-domain precedence through both adapters.
+    let (class, response) =
+        execute_value(&database, &transition_request(ID, "undeclared", json!("0")));
+    assert_eq!(class, ResponseClass::CommandRejected);
+    assert_eq!(response["protocol_version"], 1);
+    assert_eq!(response["outcome"], "failure");
+    assert_eq!(response["error"]["code"], "revision_conflict");
+    assert_eq!(response["error"]["expected_revision"], "0");
+    assert_eq!(response["error"]["actual_revision"], "1");
+    assert!(response["error"]["expected_revision"].is_string());
+    assert!(response["error"]["actual_revision"].is_string());
+    assert!(response["error"].get("field").is_none());
+    assert!(response.get("result").is_none());
+
+    let after = SqliteBackend::open(&database)
+        .expect("database should reopen after conflict")
+        .get(id)
+        .expect("conflicted unit should remain readable");
+    assert_eq!(after, before);
 }

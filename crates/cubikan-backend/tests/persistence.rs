@@ -1,8 +1,13 @@
 mod common;
 
-use common::{TestDatabase, fixed_id, linear_workflow, stored_rows};
-use cubikan_backend::{BackendError, CreateIntentUnit, SqliteBackend};
-use cubikan_core::{IntentSpecies, IntentUnitRevision, IntentUnitStatus};
+use common::{TestDatabase, fixed_id, linear_workflow, phase, stored_rows};
+use cubikan_backend::{
+    BackendError, CompleteIntentUnit, CreateIntentUnit, IntentUnitSummary, IntentUnitView,
+    ListFilters, ListIntentUnits, PageLimit, SqliteBackend, TransitionIntentUnit,
+};
+use cubikan_core::{
+    IntentSpecies, IntentUnit, IntentUnitRevision, IntentUnitStatus, LifecycleRecord,
+};
 
 fn species(value: &str) -> IntentSpecies {
     IntentSpecies::new(value).expect("fixture species should be valid")
@@ -145,4 +150,122 @@ fn test_duplicate_create_and_missing_get_are_typed_and_nonmutating() {
         .expect_err("unknown ID should be typed");
     assert_eq!(missing, BackendError::IntentUnitNotFound { id: missing_id });
     assert_eq!(stored_rows(&database.connect()), before);
+}
+
+#[test]
+fn test_backend_codec_schema_crud_query_and_mutation_compose() {
+    let database = TestDatabase::new("cross-component-compose");
+    let id = fixed_id("50000000-0000-0000-0000-000000000005");
+    let unit_species = species("cross-component-feature");
+    let workflow = linear_workflow("custom-compose-flow", "draft", "shipped");
+
+    let created = {
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        backend
+            .create(CreateIntentUnit::new(
+                Some(id),
+                unit_species.clone(),
+                workflow.clone(),
+            ))
+            .expect("custom-workflow unit should create")
+    };
+    assert_eq!(created.revision(), IntentUnitRevision::INITIAL);
+    assert_eq!(created.workflow(), &workflow);
+
+    let transitioned = {
+        let mut backend = SqliteBackend::open(database.path()).expect("database should reopen");
+        assert_eq!(
+            backend.get(id).expect("created unit should replay"),
+            created
+        );
+
+        let page = backend
+            .list(ListIntentUnits::new(
+                ListFilters::new(
+                    Some(workflow.id().clone()),
+                    Some(unit_species.clone()),
+                    Some(phase("draft")),
+                    Some(IntentUnitStatus::Active),
+                ),
+                PageLimit::new(1).expect("fixture limit should be valid"),
+                None,
+            ))
+            .expect("created unit should be queryable after reopen");
+        assert_eq!(page.items(), [IntentUnitSummary::from_view(&created)]);
+        assert_eq!(page.next_cursor(), None);
+
+        backend
+            .transition(TransitionIntentUnit::new(
+                id,
+                phase("shipped"),
+                IntentUnitRevision::INITIAL,
+            ))
+            .expect("guarded transition should commit")
+    };
+    assert_eq!(
+        transitioned.committed_revision(),
+        IntentUnitRevision::new(1)
+    );
+    assert_eq!(transitioned.intent_unit().workflow(), &workflow);
+
+    let completed = {
+        let mut backend =
+            SqliteBackend::open(database.path()).expect("database should reopen for completion");
+        assert_eq!(
+            backend
+                .get(id)
+                .expect("transitioned unit should replay before completion"),
+            *transitioned.intent_unit()
+        );
+        backend
+            .complete(CompleteIntentUnit::new(
+                id,
+                transitioned.committed_revision(),
+            ))
+            .expect("guarded completion should commit")
+    };
+
+    let final_backend =
+        SqliteBackend::open(database.path()).expect("database should reopen after completion");
+    let final_view = final_backend
+        .get(id)
+        .expect("completed unit should replay after reopen");
+    assert_eq!(final_view, *completed.intent_unit());
+    assert_eq!(final_view.revision(), IntentUnitRevision::new(2));
+    assert_eq!(final_view.status(), IntentUnitStatus::Completed);
+    assert_eq!(final_view.workflow(), &workflow);
+
+    let mut expected = IntentUnit::new(id, unit_species.clone(), workflow.clone());
+    expected
+        .transition_to(&phase("shipped"))
+        .expect("expected transition should be valid");
+    expected
+        .complete()
+        .expect("expected completion should be valid");
+    assert_eq!(final_view, IntentUnitView::from_intent_unit(&expected));
+    assert!(matches!(
+        final_view.history(),
+        [
+            LifecycleRecord::Transition(_),
+            LifecycleRecord::Completion(_)
+        ]
+    ));
+
+    let completed_page = final_backend
+        .list(ListIntentUnits::new(
+            ListFilters::new(
+                Some(workflow.id().clone()),
+                Some(unit_species),
+                Some(phase("shipped")),
+                Some(IntentUnitStatus::Completed),
+            ),
+            PageLimit::new(1).expect("fixture limit should be valid"),
+            None,
+        ))
+        .expect("completed unit should remain queryable");
+    assert_eq!(
+        completed_page.items(),
+        [IntentUnitSummary::from_view(&final_view)]
+    );
+    assert_eq!(completed_page.next_cursor(), None);
 }
