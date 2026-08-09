@@ -274,3 +274,10 @@
 - **Completed:** 2026-08-09T06:55:38Z
 - **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/tests/serialization.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `6f894980523856ec5b06d2aa5577b6e74733cef5`
+
+## T-704 (sprint 7)
+- **Description:** Document optimistic lifecycle revisions and scope boundaries
+- **Intent:** [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
+- **Completed:** 2026-08-09T07:04:13Z
+- **Files modified:** `crates/cubikan-core/src/lib.rs`, `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

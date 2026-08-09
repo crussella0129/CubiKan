@@ -26,13 +26,49 @@ model, service boundary, or user interface.
   one-based record. Undeclared edges and unknown phases leave the unit unchanged.
 - Completion is allowed only at configured phases, appends one final record, and
   makes the unit terminal.
+- Every new Intent Unit starts at aggregate-local revision
+  `IntentUnitRevision::INITIAL` (numeric `0`). Each accepted conditioned or
+  unconditioned transition or completion advances that revision exactly once;
+  every rejected operation leaves it unchanged.
 - Serialized workflows and Intent Units are restored through the same validation
-  rules as live operations. JSON is currently a test format, not a stable wire
-  contract.
+  rules as live operations, including replay validation of the serialized
+  revision. JSON is currently a test format, not a stable wire contract; a
+  snapshot from an older schema that omits the required revision fails to
+  restore.
 
 The library does not export default Kanban phase names. A caller can declare a
 simple forward workflow, explicit rework/backward edges, self edges, or arbitrary
 custom phase labels.
+
+## Revision-conditioned lifecycle mutations
+
+`transition_to_if_revision` and `complete_if_revision` provide aggregate-local
+optimistic conflict detection using the revision that the caller previously
+observed. They compare that value before terminal-state, phase, edge, or
+completion-eligibility validation. A stale value therefore returns the
+`Conflict(RevisionConflict)` variant of `RevisionedTransitionError` or
+`RevisionedCompletionError` even when the requested lifecycle operation would
+also be invalid. Matching that variant exposes both `expected()` (the caller's
+observation) and `actual()` (the aggregate's current revision), allowing the
+caller to reject the command, refresh its view, and decide whether to retry. If
+the supplied revision is current, normal domain validation runs and retains its
+typed transition or completion error; a successful operation returns the newly
+committed revision.
+
+A revision is an opaque version of one Intent Unit, not a clock or a global
+sequence. Lifecycle record sequence numbers are one-based positions in that
+unit's history; revision values start at zero. Although both currently advance
+with each accepted mutation, they are distinct contracts, and callers must not
+derive one from the other.
+
+The unconditioned `transition_to` and `complete` methods remain convenient for a
+single owner that already has exclusive access to the in-memory aggregate. A
+future durable or multi-client adapter must instead receive the caller's
+previously observed revision and pass it to the conditioned operation. Reading
+the revision inside the adapter immediately before mutation would erase the
+stale-observation check. The core comparison alone does not make storage writes
+atomic: such an adapter must provide its own durable compare-and-set or
+transaction/isolation boundary.
 
 ## Runnable JSON adapter
 
@@ -99,12 +135,19 @@ the product boundaries below.
 The current core does not choose or implement:
 
 - a blockchain, network, smart contract, or cryptographic audit proof;
-- database persistence, workflow registries, or workflow migration/versioning;
+- database persistence, durable compare-and-set, transaction/isolation, workflow
+  registries, or workflow migration/versioning;
 - a service/API, Electron UI, or durable interactive application session;
-- ownership, authorization, privacy, concurrency, or multi-user conflict rules;
+- ownership, authorization, or privacy policy;
+- locking, synchronization, cross-Intent-Unit atomicity, or durable multi-client
+  coordination;
+- idempotency keys, automatic retry behavior, or retry-safety guarantees;
+- clocks, timestamps, or global ordering across different Intent Units;
 - KPI evaluation or automatic transition authorization;
 - default phase topology, completed-unit naming syntax, or parent/child lineage;
 - stable core serialization or cross-version CLI wire-schema compatibility;
+- revision fields or revision-conditioned commands in the experimental CLI v1
+  protocol;
 - network-specific controls such as timeouts, rate limits, or concurrent-client
   quotas; the local raw-byte ceiling does not make the CLI a network service.
 
