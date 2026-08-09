@@ -6,7 +6,8 @@ use rusqlite::{
 };
 
 use crate::{
-    BackendError, CreateIntentUnit, IntentUnitView, StorageFailure,
+    BackendError, CreateIntentUnit, IntentUnitPage, IntentUnitView, ListIntentUnits,
+    StorageFailure, query,
     schema::{self, Ownership},
     stored::{
         ENVELOPE_VERSION, decode_envelope, decode_revision_blob, encode_envelope,
@@ -126,6 +127,11 @@ impl SqliteBackend {
         let unit = row.into_validated_unit()?;
         Ok(IntentUnitView::from_intent_unit(&unit))
     }
+
+    /// Lists one bounded, live keyset page of replay-validated summaries.
+    pub fn list(&self, command: ListIntentUnits) -> Result<IntentUnitPage, BackendError> {
+        query::list(&self.connection, &command)
+    }
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -192,7 +198,7 @@ impl StoredRow {
     }
 }
 
-const fn status_projection(status: IntentUnitStatus) -> &'static str {
+pub(crate) const fn status_projection(status: IntentUnitStatus) -> &'static str {
     match status {
         IntentUnitStatus::Active => "active",
         IntentUnitStatus::Completed => "completed",

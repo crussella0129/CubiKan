@@ -8,6 +8,7 @@
 
 mod error;
 mod model;
+mod query;
 mod schema;
 mod sqlite;
 mod stored;

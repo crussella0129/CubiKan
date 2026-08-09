@@ -8,8 +8,12 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
-use cubikan_core::{IntentUnitId, PhaseId, Workflow, WorkflowEdge, WorkflowId};
-use rusqlite::Connection;
+use cubikan_core::{
+    IntentUnit, IntentUnitId, IntentUnitStatus, LifecycleRecord, PhaseId, Workflow, WorkflowEdge,
+    WorkflowId,
+};
+use rusqlite::{Connection, params};
+use serde_json::{Value, json};
 
 static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(0);
 
@@ -111,4 +115,80 @@ pub fn stored_rows(connection: &Connection) -> Vec<StoredRowSnapshot> {
         .expect("stored row query should execute")
         .collect::<Result<Vec<_>, _>>()
         .expect("stored rows should decode")
+}
+
+/// Replaces an existing row with a complete envelope derived from a core unit.
+///
+/// This is deliberately an integration-test fixture rather than a backend API:
+/// T-805 needs live phase/status membership before public mutations exist.
+pub fn replace_stored_unit(connection: &Connection, unit: &IntentUnit) {
+    let workflow = unit.workflow();
+    let history = unit
+        .history()
+        .iter()
+        .map(|record| match record {
+            LifecycleRecord::Transition(record) => json!({
+                "type": "transition",
+                "sequence": record.sequence(),
+                "from": record.from().as_str(),
+                "to": record.to().as_str(),
+            }),
+            LifecycleRecord::Completion(record) => json!({
+                "type": "completion",
+                "sequence": record.sequence(),
+                "phase": record.final_phase().as_str(),
+            }),
+        })
+        .collect::<Vec<Value>>();
+    let envelope = json!({
+        "representation_version": 1,
+        "id": unit.id().to_string(),
+        "species": unit.species().as_str(),
+        "phase": unit.phase().as_str(),
+        "revision": unit.revision().value().to_string(),
+        "status": status_text(unit.status()),
+        "workflow": {
+            "id": workflow.id().as_str(),
+            "phases": workflow.phases().iter().map(PhaseId::as_str).collect::<Vec<_>>(),
+            "initial_phase": workflow.initial_phase().as_str(),
+            "edges": workflow.edges().iter().map(|edge| json!({
+                "from": edge.from().as_str(),
+                "to": edge.to().as_str(),
+            })).collect::<Vec<_>>(),
+            "completion_phases": workflow.completion_phases().iter()
+                .map(PhaseId::as_str).collect::<Vec<_>>(),
+        },
+        "history": history,
+    })
+    .to_string();
+    let changed = connection
+        .execute(
+            "UPDATE intent_units SET
+                envelope_version=1,
+                envelope=?1,
+                workflow_id=?2,
+                species=?3,
+                phase=?4,
+                status=?5,
+                revision=?6
+             WHERE id=?7",
+            params![
+                envelope,
+                workflow.id().as_str(),
+                unit.species().as_str(),
+                unit.phase().as_str(),
+                status_text(unit.status()),
+                unit.revision().value().to_be_bytes(),
+                unit.id().to_string(),
+            ],
+        )
+        .expect("core-derived stored fixture should update");
+    assert_eq!(changed, 1, "fixture must replace exactly one existing row");
+}
+
+const fn status_text(status: IntentUnitStatus) -> &'static str {
+    match status {
+        IntentUnitStatus::Active => "active",
+        IntentUnitStatus::Completed => "completed",
+    }
 }

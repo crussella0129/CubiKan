@@ -216,6 +216,10 @@ impl PageLimit {
 pub struct ListCursor(IntentUnitId);
 
 impl ListCursor {
+    pub(crate) const fn from_id(id: IntentUnitId) -> Self {
+        Self(id)
+    }
+
     /// Returns the typed identity carried by this cursor.
     #[must_use]
     pub const fn id(self) -> IntentUnitId {
@@ -349,6 +353,17 @@ pub struct IntentUnitSummary {
 }
 
 impl IntentUnitSummary {
+    pub(crate) fn from_intent_unit(unit: &IntentUnit) -> Self {
+        Self {
+            id: unit.id(),
+            workflow_id: unit.workflow_id().clone(),
+            species: unit.species().clone(),
+            phase: unit.phase().clone(),
+            status: unit.status(),
+            revision: unit.revision(),
+        }
+    }
+
     #[must_use]
     pub fn from_view(view: &IntentUnitView) -> Self {
         Self {
