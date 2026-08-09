@@ -343,4 +343,4 @@
 - **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md), preserving [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
 - **Completed:** 2026-08-09T23:20:44Z
 - **Files modified:** `crates/cubikan-local/tests/cli_e2e.rs`, `crates/cubikan-local/tests/fixtures/durable-lifecycle-v1.json`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `6e19edd75820fd8d62338f667217cf19f929f787`
