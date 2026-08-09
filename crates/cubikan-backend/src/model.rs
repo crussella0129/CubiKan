@@ -43,6 +43,10 @@ impl CreateIntentUnit {
     pub const fn workflow(&self) -> &Workflow {
         &self.workflow
     }
+
+    pub(crate) fn into_parts(self) -> (Option<IntentUnitId>, IntentSpecies, Workflow) {
+        (self.id, self.species, self.workflow)
+    }
 }
 
 /// Input for retrieving one Intent Unit.

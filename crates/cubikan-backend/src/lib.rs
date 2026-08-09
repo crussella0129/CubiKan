@@ -10,8 +10,6 @@ mod error;
 mod model;
 mod schema;
 mod sqlite;
-// T-804 introduces the first storage operation that consumes this codec.
-#[allow(dead_code)]
 mod stored;
 
 pub use error::{BackendError, ListCursorError, PageLimitError, StorageFailure};

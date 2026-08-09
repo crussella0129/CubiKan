@@ -302,3 +302,10 @@
 - **Completed:** 2026-08-09T21:41:15Z
 - **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-backend/Cargo.toml`, `crates/cubikan-backend/src/error.rs`, `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/schema.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/model.rs`, `crates/cubikan-backend/tests/schema.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `00ab50eed285aea5795de6a7a59b48444262481c`
+
+## T-804 (sprint 8)
+- **Description:** Add transactional durable create and replay-validated get
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T21:55:32Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/corruption.rs`, `crates/cubikan-backend/tests/persistence.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

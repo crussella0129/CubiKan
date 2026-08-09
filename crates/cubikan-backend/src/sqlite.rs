@@ -1,10 +1,17 @@
 use std::{path::Path, time::Duration};
 
-use rusqlite::{Connection, ErrorCode, OpenFlags, TransactionBehavior};
+use cubikan_core::{IntentUnit, IntentUnitId, IntentUnitStatus};
+use rusqlite::{
+    Connection, ErrorCode, OpenFlags, OptionalExtension, Row, TransactionBehavior, params,
+};
 
 use crate::{
-    BackendError, StorageFailure,
+    BackendError, CreateIntentUnit, IntentUnitView, StorageFailure,
     schema::{self, Ownership},
+    stored::{
+        ENVELOPE_VERSION, decode_envelope, decode_revision_blob, encode_envelope,
+        encode_revision_blob,
+    },
 };
 
 const BUSY_TIMEOUT: Duration = Duration::from_millis(5_000);
@@ -18,7 +25,6 @@ const SYNCHRONOUS_EXTRA: i64 = 3;
 /// adopts or migrates an unknown database.
 #[derive(Debug)]
 pub struct SqliteBackend {
-    #[allow(dead_code)] // T-804 introduces the first operations over this connection.
     connection: Connection,
 }
 
@@ -69,6 +75,144 @@ impl SqliteBackend {
         verify_connection_configuration(&connection)?;
 
         Ok(Self { connection })
+    }
+
+    /// Durably creates one revision-zero Intent Unit.
+    pub fn create(&mut self, command: CreateIntentUnit) -> Result<IntentUnitView, BackendError> {
+        let (id, species, workflow) = command.into_parts();
+        let id = id.unwrap_or_else(IntentUnitId::generate);
+        let unit = IntentUnit::new(id, species, workflow);
+        let row = StoredRow::from_intent_unit(&unit)?;
+
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(classify_runtime_error)?;
+        transaction
+            .execute(
+                "INSERT INTO intent_units (
+                    id, envelope_version, envelope, workflow_id, species, phase, status, revision
+                 ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+                params![
+                    &row.id,
+                    row.envelope_version,
+                    &row.envelope,
+                    &row.workflow_id,
+                    &row.species,
+                    &row.phase,
+                    &row.status,
+                    &row.revision,
+                ],
+            )
+            .map_err(|error| classify_insert_error(error, id))?;
+        transaction.commit().map_err(classify_runtime_error)?;
+
+        Ok(IntentUnitView::from_intent_unit(&unit))
+    }
+
+    /// Retrieves and replay-validates one Intent Unit by stable identity.
+    pub fn get(&self, id: IntentUnitId) -> Result<IntentUnitView, BackendError> {
+        let row = self
+            .connection
+            .query_row(
+                "SELECT id, envelope_version, envelope, workflow_id, species, phase, status, revision
+                 FROM intent_units WHERE id=?1",
+                [id.to_string()],
+                StoredRow::from_row,
+            )
+            .optional()
+            .map_err(classify_runtime_error)?
+            .ok_or(BackendError::IntentUnitNotFound { id })?;
+        let unit = row.into_validated_unit()?;
+        Ok(IntentUnitView::from_intent_unit(&unit))
+    }
+}
+
+#[derive(Debug, Eq, PartialEq)]
+pub(crate) struct StoredRow {
+    id: String,
+    envelope_version: i64,
+    envelope: String,
+    workflow_id: String,
+    species: String,
+    phase: String,
+    status: String,
+    revision: Vec<u8>,
+}
+
+impl StoredRow {
+    fn from_intent_unit(unit: &IntentUnit) -> Result<Self, BackendError> {
+        Ok(Self {
+            id: unit.id().to_string(),
+            envelope_version: i64::try_from(ENVELOPE_VERSION)
+                .expect("envelope version 1 must fit SQLite INTEGER"),
+            envelope: encode_envelope(unit)?,
+            workflow_id: unit.workflow_id().as_str().to_owned(),
+            species: unit.species().as_str().to_owned(),
+            phase: unit.phase().as_str().to_owned(),
+            status: status_projection(unit.status()).to_owned(),
+            revision: encode_revision_blob(unit.revision()).to_vec(),
+        })
+    }
+
+    pub(crate) fn from_row(row: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            id: row.get(0)?,
+            envelope_version: row.get(1)?,
+            envelope: row.get(2)?,
+            workflow_id: row.get(3)?,
+            species: row.get(4)?,
+            phase: row.get(5)?,
+            status: row.get(6)?,
+            revision: row.get(7)?,
+        })
+    }
+
+    pub(crate) fn into_validated_unit(self) -> Result<IntentUnit, BackendError> {
+        let projected_version =
+            u64::try_from(self.envelope_version).map_err(|_| BackendError::ProjectionMismatch)?;
+        if projected_version != ENVELOPE_VERSION {
+            return Err(BackendError::UnsupportedEnvelopeVersion {
+                found: projected_version,
+            });
+        }
+
+        let unit = decode_envelope(self.envelope.as_bytes())?;
+        let projected_revision = decode_revision_blob(&self.revision)?;
+        if self.id != unit.id().to_string()
+            || self.workflow_id != unit.workflow_id().as_str()
+            || self.species != unit.species().as_str()
+            || self.phase != unit.phase().as_str()
+            || self.status != status_projection(unit.status())
+            || projected_revision != unit.revision()
+        {
+            return Err(BackendError::ProjectionMismatch);
+        }
+        Ok(unit)
+    }
+}
+
+const fn status_projection(status: IntentUnitStatus) -> &'static str {
+    match status {
+        IntentUnitStatus::Active => "active",
+        IntentUnitStatus::Completed => "completed",
+    }
+}
+
+fn classify_insert_error(error: rusqlite::Error, id: IntentUnitId) -> BackendError {
+    let is_duplicate = matches!(
+        &error,
+        rusqlite::Error::SqliteFailure(failure, _)
+            if matches!(
+                failure.extended_code,
+                rusqlite::ffi::SQLITE_CONSTRAINT_PRIMARYKEY
+                    | rusqlite::ffi::SQLITE_CONSTRAINT_UNIQUE
+            )
+    );
+    if is_duplicate {
+        BackendError::DuplicateIntentUnit { id }
+    } else {
+        classify_runtime_error(error)
     }
 }
 
