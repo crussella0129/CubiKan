@@ -308,4 +308,4 @@
 - **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
 - **Completed:** 2026-08-09T21:55:32Z
 - **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/corruption.rs`, `crates/cubikan-backend/tests/persistence.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `38924cad7849d63fcfac4d8170d5b114da3ab5ec`
