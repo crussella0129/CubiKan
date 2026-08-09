@@ -260,3 +260,10 @@
 - **Completed:** 2026-08-09T06:40:40Z
 - **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`, `crates/cubikan-core/tests/lifecycle.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0009-revisioned-lifecycle-commands.md`, `docs/sprints/s7/sprint-meta.md`, `docs/sprints/s7/sprint-research/research-report.md`, `docs/sprints/s7/sprint-plans/build-plan.md`, `docs/sprints/s7/sprint-plans/test-plan.md`, `docs/sprints/s7/sprint-plans/critique.md`, `docs/sprints/s7/sprint-tests/unit-tests.md`, `docs/sprints/s7/sprint-tests/integration-tests.md`, `docs/sprints/s7/sprint-tests/e2e-tests.md`, `docs/sprints/s7/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `380e2285ee1a25b37b12a09612dce32784a30319`
+
+## T-702 (sprint 7)
+- **Description:** Add stale-first revision-conditioned lifecycle commands
+- **Intent:** [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
+- **Completed:** 2026-08-09T06:49:09Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`, `crates/cubikan-core/tests/lifecycle.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

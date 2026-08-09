@@ -38,6 +38,43 @@ impl fmt::Display for IntentUnitRevision {
     }
 }
 
+/// A rejected command whose observed revision no longer matches the aggregate.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RevisionConflict {
+    expected: IntentUnitRevision,
+    actual: IntentUnitRevision,
+}
+
+impl RevisionConflict {
+    fn new(expected: IntentUnitRevision, actual: IntentUnitRevision) -> Self {
+        Self { expected, actual }
+    }
+
+    /// Returns the revision supplied with the rejected command.
+    #[must_use]
+    pub const fn expected(&self) -> IntentUnitRevision {
+        self.expected
+    }
+
+    /// Returns the aggregate revision observed when the command was rejected.
+    #[must_use]
+    pub const fn actual(&self) -> IntentUnitRevision {
+        self.actual
+    }
+}
+
+impl fmt::Display for RevisionConflict {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            formatter,
+            "revision conflict: expected {}, actual {}",
+            self.expected, self.actual
+        )
+    }
+}
+
+impl Error for RevisionConflict {}
+
 /// Whether an Intent Unit can still move through its workflow.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum IntentUnitStatus {
@@ -222,6 +259,27 @@ impl IntentUnit {
         Ok(())
     }
 
+    /// Moves the unit only when `expected_revision` is still current.
+    ///
+    /// Revision comparison occurs before workflow or terminal-state validation.
+    /// On success, this returns the newly committed revision.
+    pub fn transition_to_if_revision(
+        &mut self,
+        target: &PhaseId,
+        expected_revision: IntentUnitRevision,
+    ) -> Result<IntentUnitRevision, RevisionedTransitionError> {
+        if expected_revision != self.revision {
+            return Err(RevisionedTransitionError::Conflict(RevisionConflict::new(
+                expected_revision,
+                self.revision,
+            )));
+        }
+
+        self.transition_to(target)
+            .map_err(RevisionedTransitionError::Transition)?;
+        Ok(self.revision)
+    }
+
     /// Completes the unit when its current phase is marked eligible.
     pub fn complete(&mut self) -> Result<(), CompletionError> {
         if self.status == IntentUnitStatus::Completed {
@@ -241,6 +299,26 @@ impl IntentUnit {
         self.commit_lifecycle_record(LifecycleRecord::Completion(record), next_revision);
         self.status = IntentUnitStatus::Completed;
         Ok(())
+    }
+
+    /// Completes the unit only when `expected_revision` is still current.
+    ///
+    /// Revision comparison occurs before completion or terminal-state validation.
+    /// On success, this returns the newly committed revision.
+    pub fn complete_if_revision(
+        &mut self,
+        expected_revision: IntentUnitRevision,
+    ) -> Result<IntentUnitRevision, RevisionedCompletionError> {
+        if expected_revision != self.revision {
+            return Err(RevisionedCompletionError::Conflict(RevisionConflict::new(
+                expected_revision,
+                self.revision,
+            )));
+        }
+
+        self.complete()
+            .map_err(RevisionedCompletionError::Completion)?;
+        Ok(self.revision)
     }
 
     fn next_lifecycle_step(&self) -> (usize, IntentUnitRevision) {
@@ -319,6 +397,60 @@ impl fmt::Display for CompletionError {
 }
 
 impl Error for CompletionError {}
+
+/// Rejection from a revision-conditioned phase transition.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum RevisionedTransitionError {
+    /// The command's observed revision was no longer current.
+    Conflict(RevisionConflict),
+    /// The current command was rejected by normal transition validation.
+    Transition(TransitionError),
+}
+
+impl fmt::Display for RevisionedTransitionError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Conflict(conflict) => conflict.fmt(formatter),
+            Self::Transition(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl Error for RevisionedTransitionError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Conflict(conflict) => Some(conflict),
+            Self::Transition(error) => Some(error),
+        }
+    }
+}
+
+/// Rejection from a revision-conditioned terminal completion.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum RevisionedCompletionError {
+    /// The command's observed revision was no longer current.
+    Conflict(RevisionConflict),
+    /// The current command was rejected by normal completion validation.
+    Completion(CompletionError),
+}
+
+impl fmt::Display for RevisionedCompletionError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Conflict(conflict) => conflict.fmt(formatter),
+            Self::Completion(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl Error for RevisionedCompletionError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Conflict(conflict) => Some(conflict),
+            Self::Completion(error) => Some(error),
+        }
+    }
+}
 
 #[derive(serde::Deserialize)]
 struct IntentUnitRepr {
