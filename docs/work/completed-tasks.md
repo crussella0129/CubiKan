@@ -350,4 +350,4 @@
 - **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
 - **Completed:** 2026-08-09T23:33:51Z
 - **Files modified:** `crates/cubikan-backend/README.md`, `crates/cubikan-local/README.md`, `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `315fb711c6f84b06cdd2b363b682a7f1b394bbaf`
