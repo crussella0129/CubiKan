@@ -1,13 +1,16 @@
 use std::{path::Path, time::Duration};
 
-use cubikan_core::{IntentUnit, IntentUnitId, IntentUnitStatus};
+use cubikan_core::{
+    IntentUnit, IntentUnitId, IntentUnitRevision, IntentUnitStatus, RevisionedCompletionError,
+    RevisionedTransitionError,
+};
 use rusqlite::{
     Connection, ErrorCode, OpenFlags, OptionalExtension, Row, TransactionBehavior, params,
 };
 
 use crate::{
-    BackendError, CreateIntentUnit, IntentUnitPage, IntentUnitView, ListIntentUnits,
-    StorageFailure, query,
+    BackendError, CompleteIntentUnit, CreateIntentUnit, IntentUnitPage, IntentUnitView,
+    ListIntentUnits, MutationResult, StorageFailure, TransitionIntentUnit, query,
     schema::{self, Ownership},
     stored::{
         ENVELOPE_VERSION, decode_envelope, decode_revision_blob, encode_envelope,
@@ -113,24 +116,121 @@ impl SqliteBackend {
 
     /// Retrieves and replay-validates one Intent Unit by stable identity.
     pub fn get(&self, id: IntentUnitId) -> Result<IntentUnitView, BackendError> {
-        let row = self
-            .connection
-            .query_row(
-                "SELECT id, envelope_version, envelope, workflow_id, species, phase, status, revision
-                 FROM intent_units WHERE id=?1",
-                [id.to_string()],
-                StoredRow::from_row,
-            )
-            .optional()
-            .map_err(classify_runtime_error)?
-            .ok_or(BackendError::IntentUnitNotFound { id })?;
-        let unit = row.into_validated_unit()?;
+        let unit = load_validated_unit(&self.connection, id)?;
         Ok(IntentUnitView::from_intent_unit(&unit))
     }
 
     /// Lists one bounded, live keyset page of replay-validated summaries.
     pub fn list(&self, command: ListIntentUnits) -> Result<IntentUnitPage, BackendError> {
         query::list(&self.connection, &command)
+    }
+
+    /// Durably transitions one Intent Unit when its observed revision is current.
+    pub fn transition(
+        &mut self,
+        command: TransitionIntentUnit,
+    ) -> Result<MutationResult, BackendError> {
+        let id = command.id();
+        let expected_revision = command.expected_revision();
+        let target = command.target().clone();
+        self.mutate(id, expected_revision, |unit| {
+            unit.transition_to_if_revision(&target, expected_revision)
+                .map_err(classify_transition_error)
+        })
+    }
+
+    /// Durably completes one Intent Unit when its observed revision is current.
+    pub fn complete(
+        &mut self,
+        command: CompleteIntentUnit,
+    ) -> Result<MutationResult, BackendError> {
+        let id = command.id();
+        let expected_revision = command.expected_revision();
+        self.mutate(id, expected_revision, |unit| {
+            unit.complete_if_revision(expected_revision)
+                .map_err(classify_completion_error)
+        })
+    }
+
+    fn mutate(
+        &mut self,
+        id: IntentUnitId,
+        expected_revision: IntentUnitRevision,
+        apply: impl FnOnce(&mut IntentUnit) -> Result<IntentUnitRevision, BackendError>,
+    ) -> Result<MutationResult, BackendError> {
+        // Acquiring the writer before load serializes competing writers. Busy
+        // therefore takes precedence over stale evaluation, while the core's
+        // guarded command retains stale-before-domain precedence once locked.
+        let transaction = self
+            .connection
+            .transaction_with_behavior(TransactionBehavior::Immediate)
+            .map_err(classify_runtime_error)?;
+        let mut unit = load_validated_unit(&transaction, id)?;
+        let committed_revision = apply(&mut unit)?;
+        let successor = StoredRow::from_intent_unit(&unit)?;
+
+        let changed = transaction
+            .execute(
+                "UPDATE intent_units SET
+                    envelope_version=?1,
+                    envelope=?2,
+                    workflow_id=?3,
+                    species=?4,
+                    phase=?5,
+                    status=?6,
+                    revision=?7
+                 WHERE id=?8 AND revision=?9 AND envelope_version=1",
+                params![
+                    successor.envelope_version,
+                    &successor.envelope,
+                    &successor.workflow_id,
+                    &successor.species,
+                    &successor.phase,
+                    &successor.status,
+                    &successor.revision,
+                    &successor.id,
+                    encode_revision_blob(expected_revision),
+                ],
+            )
+            .map_err(classify_runtime_error)?;
+        if changed != 1 {
+            return Err(BackendError::ConcurrentStorageChange);
+        }
+
+        transaction.commit().map_err(classify_runtime_error)?;
+        let view = IntentUnitView::from_intent_unit(&unit);
+        Ok(MutationResult::new(committed_revision, view))
+    }
+}
+
+fn load_validated_unit(
+    connection: &Connection,
+    id: IntentUnitId,
+) -> Result<IntentUnit, BackendError> {
+    let row = connection
+        .query_row(
+            "SELECT id, envelope_version, envelope, workflow_id, species, phase, status, revision
+             FROM intent_units WHERE id=?1",
+            [id.to_string()],
+            StoredRow::from_row,
+        )
+        .optional()
+        .map_err(classify_runtime_error)?
+        .ok_or(BackendError::IntentUnitNotFound { id })?;
+    row.into_validated_unit()
+}
+
+fn classify_transition_error(error: RevisionedTransitionError) -> BackendError {
+    match error {
+        RevisionedTransitionError::Conflict(conflict) => BackendError::RevisionConflict(conflict),
+        RevisionedTransitionError::Transition(error) => BackendError::TransitionRejected(error),
+    }
+}
+
+fn classify_completion_error(error: RevisionedCompletionError) -> BackendError {
+    match error {
+        RevisionedCompletionError::Conflict(conflict) => BackendError::RevisionConflict(conflict),
+        RevisionedCompletionError::Completion(error) => BackendError::CompletionRejected(error),
     }
 }
 

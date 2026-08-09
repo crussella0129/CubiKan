@@ -316,3 +316,10 @@
 - **Completed:** 2026-08-09T22:14:51Z
 - **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/query.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/query.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `ecb434b0dd2ec26dc3d877d9608a8ae49fe1857b`
+
+## T-806 (sprint 8)
+- **Description:** Add revision-guarded transition and completion transactions
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md), preserving [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
+- **Completed:** 2026-08-09T22:27:01Z
+- **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/mutations.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
