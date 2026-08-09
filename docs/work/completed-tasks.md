@@ -337,3 +337,10 @@
 - **Completed:** 2026-08-09T23:12:26Z
 - **Files modified:** `crates/cubikan-local/src/lib.rs`, `crates/cubikan-local/src/main.rs`, `crates/cubikan-local/src/runner.rs`, `crates/cubikan-local/tests/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `9f8050f6347364c03a6b0c2c1bfa70b904a11e6e`
+
+## T-809 (sprint 8)
+- **Description:** Prove cross-process continuity and fail-closed process behavior
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md), preserving [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
+- **Completed:** 2026-08-09T23:20:44Z
+- **Files modified:** `crates/cubikan-local/tests/cli_e2e.rs`, `crates/cubikan-local/tests/fixtures/durable-lifecycle-v1.json`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

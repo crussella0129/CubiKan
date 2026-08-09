@@ -1,0 +1,117 @@
+{
+  "create_02": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "create",
+      "intent_unit": {
+        "id": "00000000-0000-0000-0000-000000000002",
+        "species": "feature"
+      },
+      "workflow": {
+        "id": "delivery",
+        "phases": ["queued", "doing", "done"],
+        "initial_phase": "queued",
+        "edges": [
+          {"from": "queued", "to": "doing"},
+          {"from": "doing", "to": "done"}
+        ],
+        "completion_phases": ["done"]
+      }
+    }
+  },
+  "create_01": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "create",
+      "intent_unit": {
+        "id": "00000000-0000-0000-0000-000000000001",
+        "species": "feature"
+      },
+      "workflow": {
+        "id": "delivery",
+        "phases": ["queued", "doing", "done"],
+        "initial_phase": "queued",
+        "edges": [
+          {"from": "queued", "to": "doing"},
+          {"from": "doing", "to": "done"}
+        ],
+        "completion_phases": ["done"]
+      }
+    }
+  },
+  "get_01": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "get",
+      "id": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  "get_02": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "get",
+      "id": "00000000-0000-0000-0000-000000000002"
+    }
+  },
+  "list_all_filters_page_1": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "list",
+      "filters": {
+        "workflow_id": "delivery",
+        "species": "feature",
+        "phase": "queued",
+        "status": "active"
+      },
+      "limit": 1
+    }
+  },
+  "list_all_filters_page_2": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "list",
+      "filters": {
+        "workflow_id": "delivery",
+        "species": "feature",
+        "phase": "queued",
+        "status": "active"
+      },
+      "limit": 1,
+      "after": "00000000-0000-0000-0000-000000000001"
+    }
+  },
+  "transition_01_doing_r0": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "transition",
+      "id": "00000000-0000-0000-0000-000000000001",
+      "target": "doing",
+      "expected_revision": "0"
+    }
+  },
+  "stale_complete_01_r0": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "complete",
+      "id": "00000000-0000-0000-0000-000000000001",
+      "expected_revision": "0"
+    }
+  },
+  "transition_01_done_r1": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "transition",
+      "id": "00000000-0000-0000-0000-000000000001",
+      "target": "done",
+      "expected_revision": "1"
+    }
+  },
+  "complete_01_r2": {
+    "protocol_version": 1,
+    "operation": {
+      "type": "complete",
+      "id": "00000000-0000-0000-0000-000000000001",
+      "expected_revision": "2"
+    }
+  }
+}
