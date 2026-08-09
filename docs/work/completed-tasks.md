@@ -238,3 +238,10 @@
 - **Completed:** 2026-08-09T03:39:13Z
 - **Files modified:** `docs/appendix/README.md`, `docs/appendix/potential-derivative-projects.md`, `docs/SUMMARY.md`, `docs/intents/INT-0007-define-cubikan-derivative-ecosystem.md`, `docs/intents/INT-0008-traceable-intent-instantiation.md`, `docs/intents/INT-0009-revisioned-lifecycle-commands.md`, `docs/intents/INT-0010-durable-intent-unit-backend.md`, `docs/intents/INT-0011-lifecycle-checkpoints-and-metric-evidence.md`, `docs/intents/INT-0012-intent-unit-relationships-and-board-projections.md`, `docs/sprints/s6/sprint-meta.md`, `docs/sprints/s6/sprint-research/research-report.md`, `docs/sprints/s6/sprint-plans/build-plan.md`, `docs/sprints/s6/sprint-plans/test-plan.md`, `docs/sprints/s6/sprint-plans/critique.md`, `docs/sprints/s6/sprint-tests/unit-tests.md`, `docs/sprints/s6/sprint-tests/integration-tests.md`, `docs/sprints/s6/sprint-tests/e2e-tests.md`, `docs/sprints/s6/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `5cc52aba625acc9e0361014eca8aec0edbe55554`
+
+## T-602 (sprint 6)
+- **Description:** Document Agent Ops, Observatory, and Animus Ledger
+- **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md)
+- **Completed:** 2026-08-09T03:49:20Z
+- **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
