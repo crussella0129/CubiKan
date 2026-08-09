@@ -322,4 +322,4 @@
 - **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md), preserving [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
 - **Completed:** 2026-08-09T22:27:01Z
 - **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/mutations.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `e4b7510659f502050598ec9b0b2b9aa5a92e673a`
