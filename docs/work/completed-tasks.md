@@ -294,4 +294,4 @@
 - **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
 - **Completed:** 2026-08-09T21:11:29Z
 - **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/stored.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `1550ccd2d9919b1e8b0d256bd62852bdbfc4fefe`
