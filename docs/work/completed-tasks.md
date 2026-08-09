@@ -329,4 +329,4 @@
 - **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
 - **Completed:** 2026-08-09T22:54:19Z
 - **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-local/Cargo.toml`, `crates/cubikan-local/src/lib.rs`, `crates/cubikan-local/src/protocol.rs`, `crates/cubikan-local/src/execution.rs`, `crates/cubikan-local/tests/protocol.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `7c56ce645303b554033d47ad9e23dd53ba7bbbe6`
