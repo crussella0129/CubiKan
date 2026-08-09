@@ -460,6 +460,7 @@ struct IntentUnitRepr {
     phase: PhaseId,
     status: IntentUnitStatus,
     history: Vec<LifecycleRecordRepr>,
+    revision: IntentUnitRevision,
 }
 
 #[derive(serde::Deserialize)]
@@ -487,6 +488,7 @@ impl TryFrom<IntentUnitRepr> for IntentUnit {
     fn try_from(repr: IntentUnitRepr) -> Result<Self, Self::Error> {
         let expected_phase = repr.phase;
         let expected_status = repr.status;
+        let expected_revision = repr.revision;
         let mut unit = Self::new(repr.id, repr.species, repr.workflow);
 
         for (index, record) in repr.history.into_iter().enumerate() {
@@ -527,6 +529,12 @@ impl TryFrom<IntentUnitRepr> for IntentUnit {
             }
         }
 
+        if unit.revision() != expected_revision {
+            return Err(RestoreIntentUnitError::RevisionMismatch {
+                serialized: expected_revision,
+                replayed: unit.revision(),
+            });
+        }
         if unit.phase() != &expected_phase {
             return Err(RestoreIntentUnitError::FinalPhaseMismatch {
                 expected: expected_phase,
@@ -570,6 +578,10 @@ enum RestoreIntentUnitError {
     },
     Transition(TransitionError),
     Completion(CompletionError),
+    RevisionMismatch {
+        serialized: IntentUnitRevision,
+        replayed: IntentUnitRevision,
+    },
     FinalPhaseMismatch {
         expected: PhaseId,
         actual: PhaseId,
@@ -597,6 +609,13 @@ impl fmt::Display for RestoreIntentUnitError {
             ),
             Self::Transition(error) => write!(formatter, "invalid transition record: {error}"),
             Self::Completion(error) => write!(formatter, "invalid completion record: {error}"),
+            Self::RevisionMismatch {
+                serialized,
+                replayed,
+            } => write!(
+                formatter,
+                "revision mismatch: serialized {serialized}, replayed {replayed}"
+            ),
             Self::FinalPhaseMismatch { expected, actual } => write!(
                 formatter,
                 "final phase mismatch: serialized `{expected}`, replayed `{actual}`"
