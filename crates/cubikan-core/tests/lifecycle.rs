@@ -212,19 +212,64 @@ fn test_failed_unconditioned_commands_preserve_revision_and_aggregate() {
 
 #[test]
 fn test_guarded_transition_returns_exact_successor_revision() {
-    let mut unit = linear_unit();
-    let expected_revision = unit.revision();
-    let previous_history_len = unit.history().len();
+    let queued = phase("queued");
+    let doing = phase("doing");
+    let done = phase("done");
+    let workflow = Workflow::new(
+        WorkflowId::new("guarded-rework").expect("workflow ID should be valid"),
+        vec![queued.clone(), doing.clone(), done.clone()],
+        queued.clone(),
+        vec![
+            WorkflowEdge::new(queued.clone(), doing.clone()),
+            WorkflowEdge::new(doing.clone(), queued.clone()),
+            WorkflowEdge::new(queued.clone(), queued.clone()),
+        ],
+        vec![done],
+    )
+    .expect("guarded transition fixture should be valid");
+    let mut unit = IntentUnit::new(fixed_id(), species(), workflow);
+    let id = unit.id();
+    let species = unit.species().clone();
+    let workflow = unit.workflow().clone();
+    let transitions = [
+        ("forward", queued.clone(), doing.clone()),
+        ("reverse", doing, queued.clone()),
+        ("self", queued.clone(), queued),
+    ];
 
-    let committed_revision = unit
-        .transition_to_if_revision(&phase("doing"), expected_revision)
-        .expect("current observer should be allowed to transition");
+    for (index, (edge_kind, expected_from, target)) in transitions.iter().enumerate() {
+        let expected_revision = unit.revision();
+        let previous_history = unit.history().to_vec();
+        assert_eq!(unit.phase(), expected_from, "{edge_kind} edge source");
 
-    assert_eq!(committed_revision, IntentUnitRevision::new(1));
-    assert_eq!(unit.revision(), committed_revision);
-    assert_eq!(unit.phase(), &phase("doing"));
-    assert_eq!(unit.status(), IntentUnitStatus::Active);
-    assert_one_lifecycle_advance(&unit, expected_revision, previous_history_len);
+        let committed_revision = unit
+            .transition_to_if_revision(target, expected_revision)
+            .unwrap_or_else(|error| panic!("declared {edge_kind} edge should succeed: {error}"));
+        let expected_sequence = index + 1;
+        let exact_successor = IntentUnitRevision::new(
+            u64::try_from(expected_sequence).expect("test sequence should fit in u64"),
+        );
+
+        assert_eq!(committed_revision, exact_successor);
+        assert_eq!(unit.revision(), committed_revision);
+        assert_one_lifecycle_advance(&unit, expected_revision, previous_history.len());
+        assert_eq!(unit.id(), id);
+        assert_eq!(unit.species(), &species);
+        assert_eq!(unit.workflow(), &workflow);
+        assert_eq!(unit.phase(), target);
+        assert_eq!(unit.status(), IntentUnitStatus::Active);
+        assert_eq!(
+            &unit.history()[..previous_history.len()],
+            previous_history.as_slice(),
+            "{edge_kind} edge should preserve the full history prefix"
+        );
+        let Some(LifecycleRecord::Transition(record)) = unit.history().last() else {
+            panic!("declared {edge_kind} edge should append a transition record");
+        };
+        assert_eq!(record.sequence(), expected_sequence);
+        assert_eq!(record.from(), expected_from);
+        assert_eq!(record.to(), target);
+    }
 }
 
 #[test]
@@ -234,22 +279,40 @@ fn test_guarded_completion_returns_exact_successor_revision() {
         .expect("completion phase should be reachable");
     unit.transition_to(&phase("done"))
         .expect("completion phase should be reachable");
+    let id = unit.id();
+    let species = unit.species().clone();
+    let workflow = unit.workflow().clone();
+    let final_phase = unit.phase().clone();
     let expected_revision = unit.revision();
-    let previous_history_len = unit.history().len();
+    let previous_history = unit.history().to_vec();
 
     let committed_revision = unit
         .complete_if_revision(expected_revision)
         .expect("current observer should be allowed to complete");
+    let exact_successor = IntentUnitRevision::new(
+        expected_revision
+            .value()
+            .checked_add(1)
+            .expect("test revision should have a successor"),
+    );
 
-    assert_eq!(committed_revision, IntentUnitRevision::new(3));
+    assert_eq!(committed_revision, exact_successor);
     assert_eq!(unit.revision(), committed_revision);
-    assert_eq!(unit.phase(), &phase("done"));
+    assert_one_lifecycle_advance(&unit, expected_revision, previous_history.len());
+    assert_eq!(unit.id(), id);
+    assert_eq!(unit.species(), &species);
+    assert_eq!(unit.workflow(), &workflow);
+    assert_eq!(unit.phase(), &final_phase);
     assert_eq!(unit.status(), IntentUnitStatus::Completed);
-    assert_one_lifecycle_advance(&unit, expected_revision, previous_history_len);
+    assert_eq!(
+        &unit.history()[..previous_history.len()],
+        previous_history.as_slice()
+    );
     let Some(LifecycleRecord::Completion(record)) = unit.history().last() else {
         panic!("successful guarded completion should append a completion record");
     };
-    assert_eq!(record.final_phase(), &phase("done"));
+    assert_eq!(record.sequence(), previous_history.len() + 1);
+    assert_eq!(record.final_phase(), &final_phase);
 }
 
 #[test]
