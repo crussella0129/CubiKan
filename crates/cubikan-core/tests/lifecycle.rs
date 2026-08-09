@@ -1,11 +1,134 @@
 mod common;
 
 use cubikan_core::{
-    CompletionError, IntentSpecies, IntentUnit, IntentUnitStatus, LifecycleRecord, PhaseId,
-    TransitionError, Workflow, WorkflowEdge, WorkflowId,
+    CompletionError, IntentSpecies, IntentUnit, IntentUnitRevision, IntentUnitStatus,
+    LifecycleRecord, PhaseId, TransitionError, Workflow, WorkflowEdge, WorkflowId,
 };
 
 use common::{fixed_id, linear_unit, phase, species};
+
+fn assert_one_lifecycle_advance(
+    unit: &IntentUnit,
+    previous_revision: IntentUnitRevision,
+    previous_history_len: usize,
+) {
+    let expected_revision = IntentUnitRevision::new(
+        previous_revision
+            .value()
+            .checked_add(1)
+            .expect("test revision should have a successor"),
+    );
+    assert_eq!(unit.revision(), expected_revision);
+    assert_eq!(unit.history().len(), previous_history_len + 1);
+    assert_eq!(
+        u64::try_from(
+            unit.history()
+                .last()
+                .expect("successful mutation should append a record")
+                .sequence(),
+        )
+        .expect("test sequence should fit in u64"),
+        unit.revision().value()
+    );
+}
+
+#[test]
+fn test_intent_unit_starts_at_zero_revision() {
+    let unit = linear_unit();
+
+    assert_eq!(unit.revision(), IntentUnitRevision::INITIAL);
+    assert_eq!(unit.revision(), IntentUnitRevision::new(0));
+    assert_eq!(unit.revision().value(), 0);
+    assert_eq!(unit.revision().to_string(), "0");
+    assert_eq!(unit.status(), IntentUnitStatus::Active);
+    assert_eq!(unit.phase(), &phase("queued"));
+    assert!(unit.history().is_empty());
+}
+
+#[test]
+fn test_unconditioned_mutations_advance_revision_once_per_record() {
+    let queued = phase("queued");
+    let doing = phase("doing");
+    let done = phase("done");
+    let workflow = Workflow::new(
+        WorkflowId::new("revisioned-rework").expect("workflow ID should be valid"),
+        vec![queued.clone(), doing.clone(), done.clone()],
+        queued.clone(),
+        vec![
+            WorkflowEdge::new(queued.clone(), doing.clone()),
+            WorkflowEdge::new(doing.clone(), queued.clone()),
+            WorkflowEdge::new(queued.clone(), queued.clone()),
+            WorkflowEdge::new(queued.clone(), done.clone()),
+        ],
+        vec![done.clone()],
+    )
+    .expect("revision fixture workflow should be valid");
+    let mut unit = IntentUnit::new(fixed_id(), species(), workflow);
+
+    for target in [&doing, &queued, &queued, &done] {
+        let previous_revision = unit.revision();
+        let previous_history_len = unit.history().len();
+        unit.transition_to(target)
+            .expect("declared transition should succeed");
+        assert_one_lifecycle_advance(&unit, previous_revision, previous_history_len);
+    }
+
+    let previous_revision = unit.revision();
+    let previous_history_len = unit.history().len();
+    unit.complete().expect("eligible completion should succeed");
+    assert_one_lifecycle_advance(&unit, previous_revision, previous_history_len);
+    assert_eq!(unit.status(), IntentUnitStatus::Completed);
+}
+
+#[test]
+fn test_failed_unconditioned_commands_preserve_revision_and_aggregate() {
+    let mut unit = linear_unit();
+
+    let before_unknown = unit.clone();
+    assert_eq!(
+        unit.transition_to(&phase("missing")),
+        Err(TransitionError::UnknownTarget {
+            target: phase("missing")
+        })
+    );
+    assert_eq!(unit, before_unknown);
+
+    let before_undeclared = unit.clone();
+    assert_eq!(
+        unit.transition_to(&phase("done")),
+        Err(TransitionError::NotAllowed {
+            from: phase("queued"),
+            to: phase("done")
+        })
+    );
+    assert_eq!(unit, before_undeclared);
+
+    let before_ineligible_completion = unit.clone();
+    assert_eq!(
+        unit.complete(),
+        Err(CompletionError::PhaseNotEligible {
+            phase: phase("queued")
+        })
+    );
+    assert_eq!(unit, before_ineligible_completion);
+
+    unit.transition_to(&phase("doing"))
+        .expect("first transition should succeed");
+    unit.transition_to(&phase("done"))
+        .expect("completion phase should be reachable");
+    unit.complete().expect("completion should succeed");
+
+    let before_terminal_transition = unit.clone();
+    assert_eq!(
+        unit.transition_to(&phase("queued")),
+        Err(TransitionError::AlreadyCompleted)
+    );
+    assert_eq!(unit, before_terminal_transition);
+
+    let before_repeated_completion = unit.clone();
+    assert_eq!(unit.complete(), Err(CompletionError::AlreadyCompleted));
+    assert_eq!(unit, before_repeated_completion);
+}
 
 #[test]
 fn test_custom_workflow_configuration_composes_domain_values() {

@@ -2,8 +2,8 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0009
-- **State:** proposed
-- **Work evidence:** none
+- **State:** active
+- **Work evidence:** [Sprint 7 build plan](../sprints/s7/sprint-plans/build-plan.md)
 - **Completion evidence:** none
 - **Code evidence:** none
 - **Test evidence:** none
@@ -71,3 +71,5 @@ revision match alone does not make repeated network delivery safe.
 
 - 2026-08-08: created as `proposed` after Sprint 6 research identified optimistic revision checks as the smallest backend-neutral prerequisite for durable multi-client CubiKan use.
 - 2026-08-08: revised while `proposed` to define stale-revision precedence before lifecycle command evaluation and require both combined negative paths.
+- 2026-08-09: moved to `planned` when Sprint 7 selected the additive core revision contract and mapped every acceptance criterion to T-701–T-704 and named verification.
+- 2026-08-09: moved to `active` immediately before T-701 began the explicit lifecycle-revision implementation.

@@ -2,6 +2,42 @@ use std::{error::Error, fmt};
 
 use crate::{IntentSpecies, IntentUnitId, PhaseId, Workflow, WorkflowId};
 
+/// Monotonic, clock-independent version of one Intent Unit's lifecycle state.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[serde(transparent)]
+pub struct IntentUnitRevision(u64);
+
+impl IntentUnitRevision {
+    /// Revision assigned to a newly constructed Intent Unit.
+    pub const INITIAL: Self = Self(0);
+
+    /// Creates a revision from its numeric representation.
+    #[must_use]
+    pub const fn new(value: u64) -> Self {
+        Self(value)
+    }
+
+    /// Returns the numeric revision value.
+    #[must_use]
+    pub const fn value(self) -> u64 {
+        self.0
+    }
+
+    #[must_use]
+    const fn checked_next(self) -> Option<Self> {
+        match self.0.checked_add(1) {
+            Some(value) => Some(Self(value)),
+            None => None,
+        }
+    }
+}
+
+impl fmt::Display for IntentUnitRevision {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+
 /// Whether an Intent Unit can still move through its workflow.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum IntentUnitStatus {
@@ -89,6 +125,7 @@ pub struct IntentUnit {
     phase: PhaseId,
     status: IntentUnitStatus,
     history: Vec<LifecycleRecord>,
+    revision: IntentUnitRevision,
 }
 
 impl IntentUnit {
@@ -103,6 +140,7 @@ impl IntentUnit {
             phase,
             status: IntentUnitStatus::Active,
             history: Vec::new(),
+            revision: IntentUnitRevision::INITIAL,
         }
     }
 
@@ -142,6 +180,12 @@ impl IntentUnit {
         self.status
     }
 
+    /// Returns the version of the unit's current lifecycle state.
+    #[must_use]
+    pub const fn revision(&self) -> IntentUnitRevision {
+        self.revision
+    }
+
     /// Returns immutable lifecycle records in sequence order.
     #[must_use]
     pub fn history(&self) -> &[LifecycleRecord] {
@@ -167,12 +211,13 @@ impl IntentUnit {
             });
         }
 
+        let (sequence, next_revision) = self.next_lifecycle_step();
         let record = TransitionRecord {
-            sequence: self.history.len() + 1,
+            sequence,
             from,
             to: target.clone(),
         };
-        self.history.push(LifecycleRecord::Transition(record));
+        self.commit_lifecycle_record(LifecycleRecord::Transition(record), next_revision);
         self.phase = target.clone();
         Ok(())
     }
@@ -188,13 +233,41 @@ impl IntentUnit {
             });
         }
 
+        let (sequence, next_revision) = self.next_lifecycle_step();
         let record = CompletionRecord {
-            sequence: self.history.len() + 1,
+            sequence,
             final_phase: self.phase.clone(),
         };
-        self.history.push(LifecycleRecord::Completion(record));
+        self.commit_lifecycle_record(LifecycleRecord::Completion(record), next_revision);
         self.status = IntentUnitStatus::Completed;
         Ok(())
+    }
+
+    fn next_lifecycle_step(&self) -> (usize, IntentUnitRevision) {
+        let next_revision = self
+            .revision
+            .checked_next()
+            .expect("a valid in-memory Intent Unit cannot exhaust its revision");
+        let sequence = self
+            .history
+            .len()
+            .checked_add(1)
+            .expect("a lifecycle history cannot exceed the addressable memory space");
+        debug_assert_eq!(
+            u64::try_from(sequence).expect("a lifecycle sequence must fit in u64"),
+            next_revision.value(),
+            "lifecycle history and revision must advance together"
+        );
+        (sequence, next_revision)
+    }
+
+    fn commit_lifecycle_record(
+        &mut self,
+        record: LifecycleRecord,
+        next_revision: IntentUnitRevision,
+    ) {
+        self.history.push(record);
+        self.revision = next_revision;
     }
 }
 
@@ -477,6 +550,14 @@ mod tests {
         assert_eq!(unit.phase(), &expected_phase);
         assert_eq!(unit.status(), IntentUnitStatus::Active);
         assert!(unit.history().is_empty());
+    }
+
+    #[test]
+    fn test_revision_checked_next_rejects_maximum_without_wrap() {
+        let maximum = IntentUnitRevision::new(u64::MAX);
+
+        assert_eq!(maximum.checked_next(), None);
+        assert_ne!(maximum.checked_next(), Some(IntentUnitRevision::INITIAL));
     }
 
     #[test]

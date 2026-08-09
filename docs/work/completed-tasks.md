@@ -253,3 +253,10 @@
 - **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/appendix/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `f38e974a903f9e4a0cac8a63778c0426877571b5`
 - **Evidence clarification:** `docs/appendix/README.md` changed only to remove a terminal blank line found by the locked whole-sprint `git diff --check` gate; its appendix-navigation content is unchanged.
+
+## T-701 (sprint 7)
+- **Description:** Add explicit lifecycle revision state and advance existing mutations
+- **Intent:** [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
+- **Completed:** 2026-08-09T06:40:40Z
+- **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`, `crates/cubikan-core/tests/lifecycle.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0009-revisioned-lifecycle-commands.md`, `docs/sprints/s7/sprint-meta.md`, `docs/sprints/s7/sprint-research/research-report.md`, `docs/sprints/s7/sprint-plans/build-plan.md`, `docs/sprints/s7/sprint-plans/test-plan.md`, `docs/sprints/s7/sprint-plans/critique.md`, `docs/sprints/s7/sprint-tests/unit-tests.md`, `docs/sprints/s7/sprint-tests/integration-tests.md`, `docs/sprints/s7/sprint-tests/e2e-tests.md`, `docs/sprints/s7/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

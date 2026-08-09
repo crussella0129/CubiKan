@@ -49,8 +49,8 @@ mod workflow;
 
 pub use id::{IntentUnitId, ParseIntentUnitIdError};
 pub use intent_unit::{
-    CompletionError, CompletionRecord, IntentUnit, IntentUnitStatus, LifecycleRecord,
-    TransitionError, TransitionRecord,
+    CompletionError, CompletionRecord, IntentUnit, IntentUnitRevision, IntentUnitStatus,
+    LifecycleRecord, TransitionError, TransitionRecord,
 };
 pub use vocabulary::{IntentSpecies, PhaseId, VocabularyError, WorkflowId};
 pub use workflow::{Workflow, WorkflowEdge, WorkflowError};
