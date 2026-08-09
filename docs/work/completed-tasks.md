@@ -344,3 +344,10 @@
 - **Completed:** 2026-08-09T23:20:44Z
 - **Files modified:** `crates/cubikan-local/tests/cli_e2e.rs`, `crates/cubikan-local/tests/fixtures/durable-lifecycle-v1.json`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `6e19edd75820fd8d62338f667217cf19f929f787`
+
+## T-810 (sprint 8)
+- **Description:** Document the first backend boundary and nonclaims
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T23:33:51Z
+- **Files modified:** `crates/cubikan-backend/README.md`, `crates/cubikan-local/README.md`, `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

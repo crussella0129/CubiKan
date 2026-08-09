@@ -6,11 +6,19 @@ caller-defined process phase until it reaches terminal completion.
 
 ## Current scope
 
-Sprint 0 provides `cubikan-core`, a chain-agnostic Rust library for defining and
-validating Intent Unit lifecycles. Sprint 1 adds `cubikan`, an experimental,
-stateless JSON command-line adapter that executes one complete caller-defined
-lifecycle scenario per process. Neither layer selects a blockchain, persistence
-model, service boundary, or user interface.
+`cubikan-core` is a chain-agnostic Rust library for defining and validating
+Intent Unit lifecycles. The `cubikan` executable is an experimental stateless
+JSON adapter that executes one complete caller-defined lifecycle scenario per
+process. `cubikan-backend` adds a synchronous, embedded SQLite boundary for
+multiple durable Intent Units, and the separate `cubikan-local` executable runs
+one versioned durable operation per process against an explicit caller-selected
+local database path.
+
+The durable layers select adapter-owned stored-envelope, SQLite-schema, and
+local-JSON contracts at version 1. They do not turn the provisional core Serde
+layout or the stateless `cubikan` protocol into storage authority. No current
+layer selects a blockchain, network service, deployment model, or user
+interface.
 
 ## Core model
 
@@ -63,14 +71,15 @@ derive one from the other.
 
 The unconditioned `transition_to` and `complete` methods remain convenient for a
 single owner that already has exclusive access to the in-memory aggregate. A
-future durable or multi-client adapter must instead receive the caller's
-previously observed revision and pass it to the conditioned operation. Reading
-the revision inside the adapter immediately before mutation would erase the
-stale-observation check. The core comparison alone does not make storage writes
-atomic: such an adapter must provide its own durable compare-and-set or
-transaction/isolation boundary.
+durable or multi-client adapter must instead receive the caller's previously
+observed revision and pass it to the conditioned operation. Reading the revision
+inside the adapter immediately before mutation would erase the stale-observation
+check. The core comparison alone does not make storage writes atomic.
+`cubikan-backend` supplies that boundary with one SQLite `BEGIN IMMEDIATE`
+transaction, a revision-qualified compare-and-set update, and commit before
+success returns; any future adapter must provide an equivalent guarantee.
 
-## Runnable JSON adapter
+## Stateless runnable JSON adapter
 
 Run the checked-in configure → create → transition → complete example
 from the repository root:
@@ -100,6 +109,52 @@ that the adapter is production-ready.
 This is intentionally one-shot and in-memory. It does not preserve state between
 invocations, and its experimental adapter-owned protocol is not a cross-version
 compatibility promise.
+
+## Durable local backend and process adapter
+
+`cubikan-backend` owns two exact version 1 persistence contracts: a strict JSON
+envelope containing the complete workflow snapshot and lifecycle history, and a
+single-table `STRICT` SQLite schema whose query projections are checked against
+the envelope after core replay. Every load reconstructs and validates the
+aggregate through `cubikan-core`; unsupported versions, corrupt representations,
+and projection mismatches fail closed.
+
+`cubikan-local` owns the third version 1 contract: one strict create, get, list,
+transition, or complete JSON operation per process. The only invocation form is
+an explicit database path:
+
+```sh
+cargo run -p cubikan-local --bin cubikan-local -- --database ./cubikan.sqlite3 < request.json
+```
+
+The local adapter validates the complete request before opening the path, caps
+raw stdin at 1 MiB, and writes one compact JSON response plus newline with one
+explicit stdout flush. Its exits are `0` for success, `1` for operational
+input/output delivery failure, `2` for usage/request rejection, `3` for
+command/domain rejection, and `4` for storage rejection.
+
+SQLite uses rollback-journal `DELETE`, `synchronous=EXTRA`, isolated/default
+connections, and a 5,000-millisecond busy timeout. Create and guarded mutations
+acquire a writer with `BEGIN IMMEDIATE`; transition and completion replay the
+stored unit, preserve the core's stale-before-domain check, update through a
+revision-qualified compare-and-set, and commit before success is written.
+Writer contention can therefore produce `storage_busy` before a stale revision
+is evaluated.
+
+List filters are exact, case-sensitive matches on workflow ID, species, phase,
+and status. Workflow-ID equality means the ID only, not equal topology. Limits
+range from 1 through 100; pages use ascending lexical canonical-ID order and an
+exclusive last-returned-ID cursor. Each request sees a live committed page, not
+a snapshot across requests, so mutations can change later membership.
+
+A commit can succeed before stdout body, newline, or flush delivery fails. In
+that case the client does not know the committed outcome from process delivery
+alone and must retrieve the unit and refresh its revision before deciding what
+to do; rollback, retry safety, and idempotency are not implied. See the
+[`cubikan-backend` contract](crates/cubikan-backend/README.md) and
+[`cubikan-local` protocol](crates/cubikan-local/README.md) for the exact
+envelope, schema, recovery, pagination, response, error-code, and exit
+contracts.
 
 ## Species provenance and future naming
 
@@ -132,27 +187,42 @@ the product boundaries below.
 
 ## Explicit current exclusions
 
-The current core does not choose or implement:
+The current durable boundary is a single-tenant, unencrypted, embedded SQLite
+file on a caller-controlled local filesystem. It does not support network
+filesystems or a network service. Multiple CubiKan backend connections and
+`cubikan-local` processes can use the same supported local database under
+SQLite's writer serialization; unrelated consumers are not allowed shared
+direct write access or row editing.
 
-- a blockchain, network, smart contract, or cryptographic audit proof;
-- database persistence, durable compare-and-set, transaction/isolation, workflow
-  registries, or workflow migration/versioning;
-- a service/API, Electron UI, or durable interactive application session;
-- ownership, authorization, or privacy policy;
-- locking, synchronization, cross-Intent-Unit atomicity, or durable multi-client
-  coordination;
-- idempotency keys, automatic retry behavior, or retry-safety guarantees;
-- clocks, timestamps, or global ordering across different Intent Units;
-- KPI evaluation or automatic transition authorization;
-- default phase topology, completed-unit naming syntax, or parent/child lineage;
-- stable core serialization or cross-version CLI wire-schema compatibility;
-- revision fields or revision-conditioned commands in the experimental CLI v1
-  protocol;
-- network-specific controls such as timeouts, rate limits, or concurrent-client
-  quotas; the local raw-byte ceiling does not make the CLI a network service.
+The current project does not provide:
 
-These boundaries keep the domain foundation testable and allow later adapters to
-be selected through evidence rather than embedded assumptions.
+- authentication or authorization, tenancy, encryption, or privacy policy;
+- backup, replication, automatic schema/envelope/protocol migration, repair,
+  import, or deletion;
+- direct persistence of the provisional core Serde representation;
+- automatic retries, idempotency keys, exactly-once execution, or retry-safety
+  guarantees;
+- cross-Intent-Unit transactions or relationship/parent-child graph policy;
+- indefinite stable schema, envelope, protocol, core-serialization, or CLI
+  compatibility;
+- a blockchain, network, smart contract, cryptographic audit/tamper proof, or
+  blockchain policy;
+- KPI/metrics evaluation or automatic transition authorization;
+- agent, actor, commit, blame, or other provenance tracking;
+- a service/API, UI, durable interactive application session, or deployment
+  model;
+- clocks, timestamps, or global chronological ordering across Intent Units; or
+- default phase topology or completed-unit naming syntax.
+
+The existing `cubikan` executable remains stateless and its version 1 protocol
+still has no revision fields or revision-conditioned commands. The durable
+contracts belong only to `cubikan-backend` and `cubikan-local`. Their local raw
+byte ceiling, busy timeout, rollback journal, and explicit flush do not claim a
+total request deadline, network controls, crash immunity, acknowledged response
+delivery, or production readiness.
+
+These boundaries keep the domain foundation testable and allow later product
+policy to be selected through explicit intent rather than embedded assumptions.
 
 ## License
 
