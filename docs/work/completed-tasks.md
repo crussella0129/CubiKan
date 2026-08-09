@@ -288,3 +288,10 @@
 - **Completed:** 2026-08-09T21:01:13Z
 - **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-backend/Cargo.toml`, `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/error.rs`, `crates/cubikan-backend/tests/model.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0010-durable-intent-unit-backend.md`, `docs/sprints/s8/sprint-meta.md`, `docs/sprints/s8/sprint-research/research-report.md`, `docs/sprints/s8/sprint-plans/build-plan.md`, `docs/sprints/s8/sprint-plans/test-plan.md`, `docs/sprints/s8/sprint-plans/critique.md`, `docs/sprints/s8/sprint-tests/unit-tests.md`, `docs/sprints/s8/sprint-tests/integration-tests.md`, `docs/sprints/s8/sprint-tests/e2e-tests.md`, `docs/sprints/s8/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `1934c5b6040e540cf40a82d0a3be8281283e2cf0`
+
+## T-802 (sprint 8)
+- **Description:** Implement the strict replay-validated storage envelope
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T21:11:29Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/stored.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

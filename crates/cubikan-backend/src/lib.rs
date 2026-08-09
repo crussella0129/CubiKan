@@ -8,6 +8,10 @@
 
 mod error;
 mod model;
+// T-802 deliberately lands the envelope before the SQLite tasks consume it.
+// Remove this allowance once persistence integration makes the module live.
+#[allow(dead_code)]
+mod stored;
 
 pub use error::{BackendError, ListCursorError, PageLimitError};
 pub use model::{
