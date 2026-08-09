@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0009
-- **State:** proposed
-- **Work evidence:** none
-- **Completion evidence:** none
-- **Code evidence:** none
-- **Test evidence:** none
-- **Documentation evidence:** none
+- **State:** realized
+- **Work evidence:** [Sprint 7 build plan](../sprints/s7/sprint-plans/build-plan.md)
+- **Completion evidence:** [T-701–T-704 completion ledger](../work/completed-tasks.md#t-701-sprint-7)
+- **Code evidence:** [`cubikan-core` revision and guarded lifecycle implementation](../../crates/cubikan-core/src/intent_unit.rs)
+- **Test evidence:** [Sprint 7 test report](../sprints/s7/sprint-tests/test-report.md)
+- **Documentation evidence:** [CubiKan README](../../README.md) and [`cubikan-core` public example](../../crates/cubikan-core/src/lib.rs)
 
 ## Intent
 
@@ -71,3 +71,6 @@ revision match alone does not make repeated network delivery safe.
 
 - 2026-08-08: created as `proposed` after Sprint 6 research identified optimistic revision checks as the smallest backend-neutral prerequisite for durable multi-client CubiKan use.
 - 2026-08-08: revised while `proposed` to define stale-revision precedence before lifecycle command evaluation and require both combined negative paths.
+- 2026-08-09: moved to `planned` when Sprint 7 selected the additive core revision contract and mapped every acceptance criterion to T-701–T-704 and named verification.
+- 2026-08-09: moved to `active` immediately before T-701 began the explicit lifecycle-revision implementation.
+- 2026-08-09: moved to `realized` after T-701–T-704 completed, the final Test Critic returned `clean`, 44 core unit tests, 21 public core integration tests, the six-process CLI regression, and one doctest passed, and GitHub Actions run 31301197841 succeeded at exact tested commit `55cbdea6a492e6b958f92fd9e6286f14bad737cb`.

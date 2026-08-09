@@ -2,6 +2,79 @@ use std::{error::Error, fmt};
 
 use crate::{IntentSpecies, IntentUnitId, PhaseId, Workflow, WorkflowId};
 
+/// Monotonic, clock-independent version of one Intent Unit's lifecycle state.
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+#[serde(transparent)]
+pub struct IntentUnitRevision(u64);
+
+impl IntentUnitRevision {
+    /// Revision assigned to a newly constructed Intent Unit.
+    pub const INITIAL: Self = Self(0);
+
+    /// Creates a revision from its numeric representation.
+    #[must_use]
+    pub const fn new(value: u64) -> Self {
+        Self(value)
+    }
+
+    /// Returns the numeric revision value.
+    #[must_use]
+    pub const fn value(self) -> u64 {
+        self.0
+    }
+
+    #[must_use]
+    const fn checked_next(self) -> Option<Self> {
+        match self.0.checked_add(1) {
+            Some(value) => Some(Self(value)),
+            None => None,
+        }
+    }
+}
+
+impl fmt::Display for IntentUnitRevision {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.0.fmt(formatter)
+    }
+}
+
+/// A rejected command whose observed revision no longer matches the aggregate.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RevisionConflict {
+    expected: IntentUnitRevision,
+    actual: IntentUnitRevision,
+}
+
+impl RevisionConflict {
+    fn new(expected: IntentUnitRevision, actual: IntentUnitRevision) -> Self {
+        Self { expected, actual }
+    }
+
+    /// Returns the revision supplied with the rejected command.
+    #[must_use]
+    pub const fn expected(&self) -> IntentUnitRevision {
+        self.expected
+    }
+
+    /// Returns the aggregate revision observed when the command was rejected.
+    #[must_use]
+    pub const fn actual(&self) -> IntentUnitRevision {
+        self.actual
+    }
+}
+
+impl fmt::Display for RevisionConflict {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            formatter,
+            "revision conflict: expected {}, actual {}",
+            self.expected, self.actual
+        )
+    }
+}
+
+impl Error for RevisionConflict {}
+
 /// Whether an Intent Unit can still move through its workflow.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum IntentUnitStatus {
@@ -89,6 +162,7 @@ pub struct IntentUnit {
     phase: PhaseId,
     status: IntentUnitStatus,
     history: Vec<LifecycleRecord>,
+    revision: IntentUnitRevision,
 }
 
 impl IntentUnit {
@@ -103,6 +177,7 @@ impl IntentUnit {
             phase,
             status: IntentUnitStatus::Active,
             history: Vec::new(),
+            revision: IntentUnitRevision::INITIAL,
         }
     }
 
@@ -142,6 +217,12 @@ impl IntentUnit {
         self.status
     }
 
+    /// Returns the version of the unit's current lifecycle state.
+    #[must_use]
+    pub const fn revision(&self) -> IntentUnitRevision {
+        self.revision
+    }
+
     /// Returns immutable lifecycle records in sequence order.
     #[must_use]
     pub fn history(&self) -> &[LifecycleRecord] {
@@ -167,14 +248,36 @@ impl IntentUnit {
             });
         }
 
+        let (sequence, next_revision) = self.next_lifecycle_step();
         let record = TransitionRecord {
-            sequence: self.history.len() + 1,
+            sequence,
             from,
             to: target.clone(),
         };
-        self.history.push(LifecycleRecord::Transition(record));
+        self.commit_lifecycle_record(LifecycleRecord::Transition(record), next_revision);
         self.phase = target.clone();
         Ok(())
+    }
+
+    /// Moves the unit only when `expected_revision` is still current.
+    ///
+    /// Revision comparison occurs before workflow or terminal-state validation.
+    /// On success, this returns the newly committed revision.
+    pub fn transition_to_if_revision(
+        &mut self,
+        target: &PhaseId,
+        expected_revision: IntentUnitRevision,
+    ) -> Result<IntentUnitRevision, RevisionedTransitionError> {
+        if expected_revision != self.revision {
+            return Err(RevisionedTransitionError::Conflict(RevisionConflict::new(
+                expected_revision,
+                self.revision,
+            )));
+        }
+
+        self.transition_to(target)
+            .map_err(RevisionedTransitionError::Transition)?;
+        Ok(self.revision)
     }
 
     /// Completes the unit when its current phase is marked eligible.
@@ -188,13 +291,61 @@ impl IntentUnit {
             });
         }
 
+        let (sequence, next_revision) = self.next_lifecycle_step();
         let record = CompletionRecord {
-            sequence: self.history.len() + 1,
+            sequence,
             final_phase: self.phase.clone(),
         };
-        self.history.push(LifecycleRecord::Completion(record));
+        self.commit_lifecycle_record(LifecycleRecord::Completion(record), next_revision);
         self.status = IntentUnitStatus::Completed;
         Ok(())
+    }
+
+    /// Completes the unit only when `expected_revision` is still current.
+    ///
+    /// Revision comparison occurs before completion or terminal-state validation.
+    /// On success, this returns the newly committed revision.
+    pub fn complete_if_revision(
+        &mut self,
+        expected_revision: IntentUnitRevision,
+    ) -> Result<IntentUnitRevision, RevisionedCompletionError> {
+        if expected_revision != self.revision {
+            return Err(RevisionedCompletionError::Conflict(RevisionConflict::new(
+                expected_revision,
+                self.revision,
+            )));
+        }
+
+        self.complete()
+            .map_err(RevisionedCompletionError::Completion)?;
+        Ok(self.revision)
+    }
+
+    fn next_lifecycle_step(&self) -> (usize, IntentUnitRevision) {
+        let next_revision = self
+            .revision
+            .checked_next()
+            .expect("a valid in-memory Intent Unit cannot exhaust its revision");
+        let sequence = self
+            .history
+            .len()
+            .checked_add(1)
+            .expect("a lifecycle history cannot exceed the addressable memory space");
+        debug_assert_eq!(
+            u64::try_from(sequence).expect("a lifecycle sequence must fit in u64"),
+            next_revision.value(),
+            "lifecycle history and revision must advance together"
+        );
+        (sequence, next_revision)
+    }
+
+    fn commit_lifecycle_record(
+        &mut self,
+        record: LifecycleRecord,
+        next_revision: IntentUnitRevision,
+    ) {
+        self.history.push(record);
+        self.revision = next_revision;
     }
 }
 
@@ -247,6 +398,60 @@ impl fmt::Display for CompletionError {
 
 impl Error for CompletionError {}
 
+/// Rejection from a revision-conditioned phase transition.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum RevisionedTransitionError {
+    /// The command's observed revision was no longer current.
+    Conflict(RevisionConflict),
+    /// The current command was rejected by normal transition validation.
+    Transition(TransitionError),
+}
+
+impl fmt::Display for RevisionedTransitionError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Conflict(conflict) => conflict.fmt(formatter),
+            Self::Transition(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl Error for RevisionedTransitionError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Conflict(conflict) => Some(conflict),
+            Self::Transition(error) => Some(error),
+        }
+    }
+}
+
+/// Rejection from a revision-conditioned terminal completion.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum RevisionedCompletionError {
+    /// The command's observed revision was no longer current.
+    Conflict(RevisionConflict),
+    /// The current command was rejected by normal completion validation.
+    Completion(CompletionError),
+}
+
+impl fmt::Display for RevisionedCompletionError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Conflict(conflict) => conflict.fmt(formatter),
+            Self::Completion(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl Error for RevisionedCompletionError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Conflict(conflict) => Some(conflict),
+            Self::Completion(error) => Some(error),
+        }
+    }
+}
+
 #[derive(serde::Deserialize)]
 struct IntentUnitRepr {
     id: IntentUnitId,
@@ -255,6 +460,7 @@ struct IntentUnitRepr {
     phase: PhaseId,
     status: IntentUnitStatus,
     history: Vec<LifecycleRecordRepr>,
+    revision: IntentUnitRevision,
 }
 
 #[derive(serde::Deserialize)]
@@ -282,6 +488,7 @@ impl TryFrom<IntentUnitRepr> for IntentUnit {
     fn try_from(repr: IntentUnitRepr) -> Result<Self, Self::Error> {
         let expected_phase = repr.phase;
         let expected_status = repr.status;
+        let expected_revision = repr.revision;
         let mut unit = Self::new(repr.id, repr.species, repr.workflow);
 
         for (index, record) in repr.history.into_iter().enumerate() {
@@ -322,6 +529,12 @@ impl TryFrom<IntentUnitRepr> for IntentUnit {
             }
         }
 
+        if unit.revision() != expected_revision {
+            return Err(RestoreIntentUnitError::RevisionMismatch {
+                serialized: expected_revision,
+                replayed: unit.revision(),
+            });
+        }
         if unit.phase() != &expected_phase {
             return Err(RestoreIntentUnitError::FinalPhaseMismatch {
                 expected: expected_phase,
@@ -365,6 +578,10 @@ enum RestoreIntentUnitError {
     },
     Transition(TransitionError),
     Completion(CompletionError),
+    RevisionMismatch {
+        serialized: IntentUnitRevision,
+        replayed: IntentUnitRevision,
+    },
     FinalPhaseMismatch {
         expected: PhaseId,
         actual: PhaseId,
@@ -392,6 +609,13 @@ impl fmt::Display for RestoreIntentUnitError {
             ),
             Self::Transition(error) => write!(formatter, "invalid transition record: {error}"),
             Self::Completion(error) => write!(formatter, "invalid completion record: {error}"),
+            Self::RevisionMismatch {
+                serialized,
+                replayed,
+            } => write!(
+                formatter,
+                "revision mismatch: serialized {serialized}, replayed {replayed}"
+            ),
             Self::FinalPhaseMismatch { expected, actual } => write!(
                 formatter,
                 "final phase mismatch: serialized `{expected}`, replayed `{actual}`"
@@ -477,6 +701,14 @@ mod tests {
         assert_eq!(unit.phase(), &expected_phase);
         assert_eq!(unit.status(), IntentUnitStatus::Active);
         assert!(unit.history().is_empty());
+    }
+
+    #[test]
+    fn test_revision_checked_next_rejects_maximum_without_wrap() {
+        let maximum = IntentUnitRevision::new(u64::MAX);
+
+        assert_eq!(maximum.checked_next(), None);
+        assert_ne!(maximum.checked_next(), Some(IntentUnitRevision::INITIAL));
     }
 
     #[test]

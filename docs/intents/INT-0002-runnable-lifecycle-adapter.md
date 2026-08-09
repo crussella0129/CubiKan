@@ -6,7 +6,7 @@
 - **Work evidence:** [Sprint 1 build plan](../sprints/s1/sprint-plans/build-plan.md)
 - **Completion evidence:** [T-101–T-107 completion ledger](../work/completed-tasks.md#t-101-sprint-1)
 - **Code evidence:** [`cubikan-cli` runner](../../crates/cubikan-cli/src/lib.rs) and [process shell](../../crates/cubikan-cli/src/main.rs)
-- **Test evidence:** [Sprint 1 test report](../sprints/s1/sprint-tests/test-report.md), [Sprint 4 CI regression report](../sprints/s4/sprint-tests/test-report.md), [Sprint 5 regression report](../sprints/s5/sprint-tests/test-report.md)
+- **Test evidence:** [Sprint 1 test report](../sprints/s1/sprint-tests/test-report.md), [Sprint 4 CI regression report](../sprints/s4/sprint-tests/test-report.md), [Sprint 5 regression report](../sprints/s5/sprint-tests/test-report.md), [Sprint 7 CLI regression report](../sprints/s7/sprint-tests/test-report.md)
 - **Documentation evidence:** [CubiKan CLI guide](../../crates/cubikan-cli/README.md) and [Sprint 1 research](../sprints/s1/sprint-research/research-report.md)
 
 ## Intent
