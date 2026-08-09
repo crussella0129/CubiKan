@@ -94,7 +94,8 @@ rebuildable projections, but they do not dual-write the source of truth.
 | Current in-process Intent Unit identity, workflow, phase, status, and lifecycle history | The validated `cubikan-core` aggregate | Adapters and derivatives invoke public lifecycle behavior; they do not construct competing state. |
 | Future durable unit state, revision, and bounded lifecycle queries | A future CubiKan backend selected under INT-0009 and INT-0010 | Derivatives use the versioned boundary, never shared writable storage. |
 | External Git objects, pull requests, and CI records | Their source provider | CubiKan stores namespaced references/evidence associations, not shadow provider objects. |
-| Manager/doer identity, assignment, tools, permissions, scheduling, retries, and approvals | The responsible derivative application | Intent Units represent lifecycle work without becoming an agent runtime. |
+| Manager/doer identity, decomposition, assignment readiness/priority, allowed-tool/sandbox/budget envelope, delegation retry/cancel policy, and approvals | Agent Ops | Intent Units represent lifecycle work without becoming an agent runtime; Agent Ops authorizes an execution envelope rather than owning node execution. |
+| Skill manifests, node readiness/scheduling, executor/tool selection within the approved envelope, attempts/leases, node retry/cancel/recovery, sandbox enforcement, and artifact routing | Skill Graph | These execution records reference canonical units and relations without becoming lifecycle state. |
 | Business records, PII, retention, RBAC, notifications, reports, and user experience | The bounded domain application | CubiKan owns only referenced lifecycle state and explicitly selected reusable relations. |
 | Business measurement definitions and authorization policy | The authoring process application or caller | A future backend may evaluate only caller-supplied versioned definitions; it does not invent business policy. |
 | Raw lifecycle-linked observations and deterministic metric results | A future CubiKan evidence backend under INT-0011 | Analytics consumers interpret results without rewriting the observations or lifecycle. |
@@ -181,20 +182,27 @@ provenance analytics, and Sprint Loops accounting.
   executable work item is represented by a CubiKan Intent Unit.
 - **Owned data:** Namespaced manager and doer identities; capability and
   availability profiles; decomposition and assignment records that reference
-  Book work and Intent Unit IDs; queue state; execution attempts; tool requests
-  and results; approval records; retry state; and raw time, token, tool, and
-  monetary-cost observations. It does not copy Book content or CubiKan
-  lifecycle state into a competing authority.
-- **Owned policy:** Manager/doer identity, decomposition, assignment, readiness,
-  scheduling, dispatch, tool selection, permissions, sandboxing, budgets,
-  retries, cancellation, approvals, escalation, and cost controls.
+  Book work and Intent Unit IDs; assignment queues; authorized execution
+  envelopes; approval records; aggregate attempt references; and assignment-level
+  time, token, tool-use, and monetary-cost summaries. Skill Graph or another
+  selected executor/provider owns underlying node/tool telemetry; an INT-0011
+  backend owns any accepted lifecycle-linked observation. Agent Ops retains
+  references or aggregates without copying those records, Book content, or
+  CubiKan lifecycle state into a competing authority.
+- **Owned policy:** Manager/doer identity, decomposition, assignment readiness
+  and priority, delegation-level scheduling/dispatch, permissions and the
+  allowed-tool/sandbox/budget envelope, delegation retry/cancel limits,
+  approvals, escalation, and aggregate cost controls. Skill Graph owns node-level
+  readiness, scheduling, executor/tool selection, sandbox enforcement, and
+  retry/recovery within that envelope.
 - **Inputs:** Read-only Book intent/task references and acceptance boundaries;
   CubiKan unit IDs and revisions; manager instructions; doer capability and
   tool manifests; human approval decisions; and execution artifacts or
   telemetry.
-- **Outputs:** Delegation decisions, ordered work queues, dispatch and approval
-  requests, execution-attempt and cost records, artifact references, and
-  versioned create/transition/complete commands for CubiKan.
+- **Outputs:** Delegation decisions, ordered assignment queues, authorized
+  execution envelopes, dispatch and approval requests, aggregate attempt/cost
+  references, artifact references, and versioned create/transition/complete
+  commands for CubiKan.
 - **CubiKan interaction:** CubiKan remains authoritative for Intent Unit
   identity and validated lifecycle state. Shared or resumable operation uses
   INT-0009 revisions and waits for INT-0010, whose bounded collection query can
@@ -355,3 +363,307 @@ provenance analytics, and Sprint Loops accounting.
   relations. Parent-child meaning, roll-up, and correction propagation remain
   open and are never inferred from `WorkflowEdge`, phase order, or lifecycle
   history.
+
+### 4. Process Studio — `cubikan-process-studio`
+
+- **Recommended repository:** `cubikan-process-studio`.
+- **Problem and outcome:** Give process owners an Electron-first desktop
+  workspace for designing, reviewing, versioning, and publishing reusable
+  process definitions without turning CubiKan into an editor or embedding one
+  industry's funnel in the lifecycle core. The result is a governed definition
+  package whose structural subset becomes an immutable, core-validated CubiKan
+  workflow and whose business measurements remain explicit and reviewable.
+- **Owned data:** Versioned process definitions; domain vocabulary and checkpoint
+  metadata; editor layout and draft state; measurement-definition versions;
+  business-authorization definitions; validation fixtures; publication records;
+  and supersession/migration guidance. Existing units remain pinned to their
+  original immutable workflow snapshot; Studio does not own unit state, raw
+  operational observations, or durable metric results.
+- **Owned policy:** Definition identity/versioning; author, reviewer, and
+  publisher permissions; draft, approval, publication, deprecation, and rollback
+  rules; business measurement semantics; and business authorization. Definitions
+  state units, denominators, windows, aggregation, event-time/source,
+  missing-data, duplicate, late-arrival, and correction behavior. Authorization
+  may govern who can request work but cannot make an undeclared edge valid or
+  bypass core validation.
+- **Inputs:** Process-owner stages and transitions; domain vocabulary; checkpoint
+  and observation requirements; units, denominators, windows, and source
+  semantics; authorization/review rules; existing definition packages; and an
+  explicitly selected core or future backend contract version.
+- **Outputs:** Immutable versioned process-definition packages; a phase/edge/
+  species subset translated through CubiKan validation; caller-supplied versioned
+  measurement definitions; business-authorization artifacts; validation
+  diagnostics/previews; and references suitable for later adapters. Publication
+  does not activate a shared workflow, rewrite units, or become lifecycle evidence.
+- **CubiKan interaction:** Local structural validation may embed the current
+  public core at an explicitly pinned crate version; that supplies neither
+  persistence nor KPI storage. A definition package may be reviewed or
+  distributed as a non-operational artifact, but every shared operational or KPI
+  activation waits for INT-0009 revisions, INT-0010's versioned durable
+  command/query boundary, and INT-0011 observation/evaluation behavior. Studio
+  authors and governs the caller-supplied versioned definitions and
+  authorization; the future backend stores raw lifecycle-linked observations
+  and deterministically evaluates only those definitions; Observatory consumes
+  the results for governed analysis. Studio never writes backend storage or
+  treats provisional Serde/the one-shot CLI as a durable contract.
+- **Prerequisites:** A definition identity/version and compatibility model;
+  workflow-version pinning rules; process-owner authorization; complete
+  measurement and correction semantics; privacy/retention treatment for
+  metadata; and a chosen pinned core version. Shared operational/KPI release also
+  requires realized INT-0009, INT-0010, and INT-0011 plus a versioned adapter.
+- **Creation trigger:** Create when an authorized team repeatedly needs to author
+  and govern multiple process definitions through a reusable Electron-first
+  experience, owns the definition/authorization model, and accepts immutable
+  workflow versioning. Local definition and validation may begin before
+  persistence; shared operations, observations, and KPI results may not.
+- **Separation rationale:** Interactive editing, desktop packaging, domain
+  vocabulary, formula/version governance, authorization UX, and definition
+  releases have different dependencies and trust concerns from a small
+  chain-agnostic Rust kernel and a durable backend.
+- **Explicit non-goals:** It is not a CubiKan database, unit authority, agent or
+  skill executor, organizational system of record, Observatory analytics engine,
+  or fixed Kanban/KPI/domain product. It does not put UI, formulas, business
+  authorization, clocks, PII, raw observations, or automatic-transition policy
+  into the core; rewrite immutable workflows/history; bypass edges; share
+  storage; or imply blockchain, transport, deployment, or cross-version API policy.
+- **Related intents:** [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md),
+  [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md), and
+  [INT-0011](../intents/INT-0011-lifecycle-checkpoints-and-metric-evidence.md).
+
+### 5. Skill Graph — `cubikan-skill-graph`
+
+- **Recommended repository:** `cubikan-skill-graph`.
+- **Problem and outcome:** Execute versioned, multi-board skill pipelines without
+  turning the lifecycle kernel into an agent runtime. The result is a reviewable
+  execution DAG that converts authorized assignments and canonical unit/relation
+  state into readiness, dispatch, fan-out/join, retry, and artifact-flow decisions.
+- **Owned data:** Versioned skill manifests and immutable digest references;
+  declared input/output schemas and runtime requirements; pipeline, node, and
+  execution-edge definitions; unit-to-node and board-gate bindings; readiness
+  and scheduling decisions; execution attempts/leases; retry, cancellation, and
+  recovery state; sandbox-profile references/results; artifact-routing manifests;
+  and telemetry. Source artifacts, CubiKan state, and actor identities stay with
+  their canonical providers.
+- **Owned policy:** Skill admission/version pinning; node readiness; pipeline and
+  board routing; node scheduling; fan-out/join; executor selection; retry,
+  timeout, cancellation, and partial failure; execution isolation/sandboxing;
+  and artifact validation, routing, retention, and promotion. These operate
+  inside the identity, tool, permission, and approval envelope from Agent Ops.
+- **Inputs:** Authorized assignments and executor references from Agent Ops;
+  unit IDs, revisions, and bounded query results from INT-0010; typed unit
+  relations and board projections from INT-0012; pinned skills; approved resource
+  envelopes; artifact references; cancellation/approval decisions; and optional
+  INT-0008 provenance associations.
+- **Outputs:** Versioned execution plans; readiness/routing decisions; dispatch
+  requests; attempt, retry, cancellation, and sandbox records; fan-out/join
+  results; artifact manifests/references; telemetry; and expected-revision
+  lifecycle commands that CubiKan may accept or reject.
+- **CubiKan interaction:** CubiKan owns unit identity, revisioned lifecycle state,
+  and transition/completion validation. INT-0012 owns canonical cross-unit
+  relations and projections. Agent Ops owns actor identity, delegation,
+  assignment, permission, and approval. Skill Graph owns skill, pipeline, node,
+  execution-attempt, readiness, and node-scheduling decisions. Pipeline edges
+  connect skill nodes; unit-dependency edges reference explicit INT-0012
+  relations; board-routing edges connect projection gates. None is a
+  `WorkflowEdge`, transfers lifecycle ownership, or makes an execution result a
+  lifecycle transition. Nested loops are explicit pipeline composition plus
+  typed relations, never lineage inferred from phase/history.
+- **Prerequisites:** Realized INT-0010 and INT-0012 for shared multi-unit work
+  (with INT-0009 supplying revisions); defined graph version/cycle behavior,
+  fan-out/join and failure semantics, retry/idempotency limits, executor trust,
+  capacity/cancellation, skill admission, secret handling, sandbox isolation,
+  artifact identity/retention, and the Agent Ops authorization contract. INT-0008
+  is needed when durable bidirectional artifact provenance is an outcome.
+- **Creation trigger:** Create when an authorized consumer repeatedly runs one
+  versioned skill graph across persisted units or board projections, INT-0010
+  and INT-0012 exist, and named owners accept the executor, sandbox, retry,
+  artifact, and authorization policies. A fixed process-local sequence or board
+  visualization alone is insufficient.
+- **Separation rationale:** Skill loading, untrusted execution, secrets,
+  sandboxing, retries, artifact movement, and executor recovery have a different
+  security model, runtime, deployment shape, and release cadence from lifecycle
+  validation, relation storage, and delegation.
+- **Explicit non-goals:** It is not the Book, actor/delegation authority,
+  lifecycle validator/database, board system of record, process/KPI author,
+  analytics/scoring layer, or accounting system. It does not reinterpret
+  `WorkflowEdge`; infer lineage; copy units between boards; bypass revisions;
+  certify artifacts; publish skills/packages by implication; edit shared
+  storage; or choose blockchain, database, transport, or deployment policy.
+- **Related intents:** [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md),
+  [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md),
+  [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md),
+  and conditionally
+  [INT-0008](../intents/INT-0008-traceable-intent-instantiation.md).
+
+### 6. Organizational App Kit — `cubikan-org-app-kit`
+
+- **Recommended repository:** `cubikan-org-app-kit`. This is the one primary
+  app-kit recommendation. Per-domain vertical repositories are an unnamed,
+  independently authorized future pattern—not extra catalog recommendations or
+  repositories claimed to exist.
+- **Problem and outcome:** Give bounded organizational applications reusable,
+  conformance-tested client and presentation primitives for CubiKan lifecycle
+  work without moving domain policy into the kernel or making every application
+  invent an incompatible backend integration. The result is a kit, not a hosted
+  organizational system.
+- **Owned data:** Versioned client-configuration schemas, backend-capability and
+  compatibility metadata, lifecycle view-model definitions, reference fixtures,
+  and conformance cases. Cached views are rebuildable projections; the kit owns
+  no operational unit or business record.
+- **Owned policy:** Client compatibility/extension contracts, translation of
+  versioned lifecycle responses into neutral view models, projection-cache
+  invalidation, secure-default integration guidance, and kit release policy. It
+  does not own a vertical's business rules, authorization, retention, or UX.
+- **Inputs:** A future versioned CubiKan command/query boundary; unit IDs,
+  revisions, lifecycle fields, and bounded paginated results; caller-owned
+  authorization context/domain references; and requirements supplied by an
+  independently authorized bounded-domain application.
+- **Outputs:** Reusable client bindings and command builders, neutral lifecycle
+  components/view models, basic list/queue/board projection helpers, integration
+  scaffolds, compatibility declarations, and conformance fixtures. Domain
+  events, notifications, reports, and applications remain domain outputs.
+- **CubiKan interaction:** Basic projections use INT-0010's bounded collection
+  query over stable lifecycle fields; advanced multi-board views or typed
+  relations wait for INT-0012. The kit sends revision-aware commands through a
+  versioned boundary and never edits storage, persists provisional Serde, treats
+  the one-shot CLI as a session, or infers relations from `WorkflowEdge`.
+- **Prerequisites:** Realized INT-0009 and INT-0010 for operational clients;
+  INT-0012 for advanced relations/boards; accepted client versioning and
+  compatibility; and bounded-domain decisions for identity, authorization,
+  privacy, retention, deployment, and support. A local demo may pin the current
+  core, but that is not a shared backend.
+- **Creation trigger:** Create only when independently authorized domain work
+  demonstrates repeated client, projection, and conformance needs across
+  applications and a usable INT-0010 boundary exists. A speculative frontend,
+  one bespoke screen, or a desire to preselect vertical repositories is not enough.
+- **Separation rationale:** Reusable client/frontend dependencies have a
+  different release cadence from the lifecycle kernel, while every vertical has
+  its own data classification, security, integrations, deployment, and product
+  cadence. The split permits reuse without making CubiKan a UI framework or the
+  kit an organizational monolith.
+- **Explicit non-goals:** It is not an organizational system of record, durable
+  backend, shared database, generic low-code platform, Process Studio, skill
+  executor, agent manager, analytics/reporting authority, identity provider,
+  notification service, deployment platform, or blockchain adapter. It does not
+  own domain records, PII, retention, RBAC, integrations, notifications, reports,
+  deployment, or vertical UX; define KPIs, workflows, relation taxonomies, or
+  scheduling; authorize a vertical repository; or copy lifecycle state into a
+  competing authority.
+- **Related intents:** [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md),
+  [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md), and
+  [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md).
+- **Vertical-repository pattern:** A future vertical requires its own selected
+  intent and repository authorization. That bounded domain owns records, PII,
+  retention/deletion, RBAC/authorization, integrations, notifications, reports,
+  deployment, and product UX; it stores only CubiKan IDs or rebuildable
+  projections where needed. No vertical slug is selected here.
+- **Frontend sequencing:** When an authorized vertical needs a cross-platform
+  desktop client, begin with Electron for functional iteration and consider
+  Tauri only after maturity justifies platform optimization. This is advice, not
+  evidence that either frontend exists or is scheduled.
+
+## Retained-theme traceability
+
+This table closes the bounded inventory from Sprint 6 Research. “Merged” means
+one idea informs multiple authorities; it does not create a hidden seventh repo.
+
+| Theme | Backend/adapter boundary | Derivative recommendation or disposition |
+|-------|--------------------------|------------------------------------------|
+| `DV-01` | INT-0010 provides the potential common lifecycle backend; the Book retains current semantic/history authority. | Agent Ops coordinates work; Animus Ledger reconciles evidenced work. |
+| `DV-02` | Book-to-unit mapping and future provenance remain namespaced. | Agent Ops owns manager/doer execution; Animus reads evidence but does not execute. |
+| `DV-03` | INT-0008 owns durable associations; Git/Book/CI connectors remain adapters. | Observatory owns trace views and governed analytical inference. |
+| `DV-04` | INT-0011 owns observations and deterministic evaluation of caller definitions. | Process Studio authors/governs definitions; Observatory analyzes results. |
+| `DV-05` | The data-authority map keeps the Book canonical until an explicit migration/projection intent. | Animus derives reconciliation without dual-writing Book history. |
+| `DV-06` | INT-0012 owns reusable relations/projections, never phase edges. | Skill Graph owns executable DAG policy and multi-board routing. |
+| `DV-07` | INT-0010 supplies durable lifecycle commands and bounded queries. | Process Studio and the Organizational App Kit remain separate frontends/policy surfaces. |
+| `DV-08` | Explicit INT-0012 relations may represent cross-unit composition; no core lineage is inferred. | Merged across Agent Ops delegation, Skill Graph execution, and Animus reconciliation; exact recursive semantics remain open. |
+| `DV-09` | Blockchain remains an unselected adapter concern with unresolved chain/trust/key/finality/data policy. | Deferred; no blockchain derivative repository is recommended. |
+
+## Sequencing and creation gates
+
+The ordering is evidence-driven and deliberately non-calendar-based:
+
+1. **Read-only discovery:** Observatory may prototype approved Book/Git trace
+   views after its privacy controls exist. Process Studio may validate local
+   definitions against a pinned core after its definition/version model exists.
+   Neither prototype claims a backend.
+2. **Reusable backend foundation:** Select and realize INT-0009 before INT-0010.
+   Storage, transport, schema, recovery, auth, tenancy, and deployment still
+   require human decisions. Full INT-0008 reverse provenance follows INT-0009
+   and INT-0010.
+3. **Shared operational applications:** Agent Ops and basic organizational
+   projections may begin only after their identity/security policies and an
+   INT-0010 boundary exist. Process Studio may distribute a definition as a
+   non-operational artifact earlier, but shared operational or KPI activation
+   waits for INT-0009, INT-0010, and INT-0011.
+4. **Measurements and graph composition:** Shared metric evidence needs INT-0011.
+   Advanced multi-board relations need INT-0012; Skill Graph additionally needs
+   an accepted executor, sandbox, retry, artifact, and authorization contract.
+5. **Governed reconciliation:** Animus Ledger follows trustworthy provenance and
+   an accepted accounting charter. It does not gain authority merely because
+   lifecycle data is available.
+
+These gates are necessary, not sufficient. Each repository still needs a
+separate selected intent, research/plan, owner, and explicit creation approval.
+
+## Merged, deferred, and rejected alternatives
+
+- A single “CubiKan platform” repository was rejected because lifecycle,
+  execution, analytics, desktop authoring, domain applications, and accounting
+  have incompatible trust/runtime/release boundaries.
+- A repository for every crate, provider connector, or board was rejected.
+  Provider adapters can begin inside their owning application until a distinct
+  runtime or release boundary is evidenced.
+- A standalone Git-only product is merged into Observatory's connector and
+  analysis boundary unless provider reuse later justifies separation.
+- Discord is retained only as the source medium for the supplied design
+  excerpts. No Discord runtime requirement or repository is inferred.
+- Per-domain organizational applications remain an unnamed pattern under the
+  App Kit boundary. Each needs its own product intent and authorization; none is
+  selected by this appendix.
+- Blockchain support is deferred. Selecting a chain or claiming immutable audit
+  would require explicit trust, key, fee, finality, reorganization, privacy, and
+  on-chain/off-chain decisions.
+- Replacing the Project Book or dual-writing Book/backend task truth was rejected
+  because it would create competing semantic and historical authorities.
+
+## Open questions
+
+- Which storage, transport, deployment, tenancy, authentication, authorization,
+  recovery, and schema-compatibility policies should realize INT-0010?
+- How should Book intent, Intent Unit, repository, and artifact namespaces be
+  identified, corrected, retained, and verified under INT-0008?
+- What projection/migration and reconciliation contract would be required before
+  operational task/completion truth moves away from the Book?
+- What manager/doer identity, permission, approval, cancellation, secret, and
+  cost model is acceptable for Agent Ops?
+- Which observation clocks, sources, denominators, windows, units, late-arrival,
+  correction, and authorization semantics make a measurement trustworthy?
+- Which relation types, endpoint/cycle/deletion rules, projection consistency,
+  and recursive-loop semantics belong under INT-0012?
+- What skill admission, executor trust, sandbox, artifact, retry/idempotency,
+  fan-out/join, and partial-failure model is safe enough for Skill Graph?
+- What unit of account, valuation, trust, correction, close/reopen, anti-gaming,
+  privacy, and approval model makes Animus accounting meaningful?
+- Which first Process Studio and organizational-app journeys justify their UI
+  surfaces, and what backend compatibility window do those clients require?
+- Is any blockchain property actually required after the provider-neutral
+  provenance and reconciliation boundaries are tested?
+
+## Appendix-wide non-goals
+
+This appendix does not:
+
+- create, publish, push, release, deploy, fund, or schedule any recommended
+  repository, package, service, desktop application, or blockchain adapter;
+- select a database, chain, network transport, host, identity provider, tenancy
+  model, deployment target, or durable compatibility policy;
+- promise cross-version Rust, storage, wire, client, or Book-schema compatibility;
+- redefine realized INT-0001–INT-0006 behavior or advance INT-0008–INT-0012 out
+  of `proposed`;
+- grant a projection, derivative, analytics result, or accounting view authority
+  over CubiKan lifecycle state or Project Book semantics;
+- treat Git blame, telemetry, scores, metrics, or linked evidence as causal proof,
+  certification, audit proof, or permission for automatic agent adaptation; or
+- serve as a delivery roadmap. Every future implementation remains subject to
+  its own intent lifecycle and the normal human approval checkpoint.

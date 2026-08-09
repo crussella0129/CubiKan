@@ -7,4 +7,3 @@ change a product contract.
 
 - [Potential Derivative Projects](potential-derivative-projects.md) — advisory
   repository boundaries and their prospective CubiKan integration needs.
-
