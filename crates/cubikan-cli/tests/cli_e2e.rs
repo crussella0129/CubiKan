@@ -6,6 +6,7 @@ use std::{
 use serde_json::{Value, json};
 
 use cubikan_cli::MAX_REQUEST_BYTES;
+use cubikan_core::IntentUnitId;
 
 const SUCCESS_FIXTURE: &[u8] = include_bytes!("fixtures/lifecycle-success-v1.json");
 
@@ -87,6 +88,88 @@ fn test_cli_configure_create_transition_complete() {
             }
         })
     );
+}
+
+#[test]
+fn test_cli_generates_id_when_member_is_omitted() {
+    let mut request: Value =
+        serde_json::from_slice(SUCCESS_FIXTURE).expect("fixture should be valid JSON");
+    request["intent_unit"]
+        .as_object_mut()
+        .expect("intent_unit fixture should be an object")
+        .remove("id");
+    let input = serde_json::to_vec(&request).expect("omission fixture should serialize");
+
+    let output = invoke(&input);
+    let response = response(&output);
+
+    assert_eq!(output.status.code(), Some(0));
+    let id_text = response["intent_unit"]["id"]
+        .as_str()
+        .expect("success response should contain an ID string")
+        .to_owned();
+    let id: IntentUnitId = id_text
+        .parse()
+        .expect("generated ID should parse through the core API");
+    assert!(!id.as_uuid().is_nil());
+    assert_eq!(id.as_uuid().get_version_num(), 4);
+    assert_eq!(
+        response,
+        json!({
+            "outcome": "success",
+            "protocol_version": 1,
+            "intent_unit": {
+                "id": id_text,
+                "species": "feature",
+                "workflow_id": "delivery",
+                "phase": "done",
+                "status": "completed",
+                "history": [
+                    {
+                        "type": "transition",
+                        "sequence": 1,
+                        "from": "queued",
+                        "to": "doing"
+                    },
+                    {
+                        "type": "transition",
+                        "sequence": 2,
+                        "from": "doing",
+                        "to": "done"
+                    },
+                    {
+                        "type": "completion",
+                        "sequence": 3,
+                        "phase": "done"
+                    }
+                ]
+            }
+        })
+    );
+}
+
+#[test]
+fn test_cli_reports_explicit_null_id_with_exit_2() {
+    let mut request: Value =
+        serde_json::from_slice(SUCCESS_FIXTURE).expect("fixture should be valid JSON");
+    request["intent_unit"]["id"] = Value::Null;
+    let input = serde_json::to_vec(&request).expect("explicit-null fixture should serialize");
+
+    let output = invoke(&input);
+    let response = response(&output);
+
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(response["outcome"], "error");
+    assert_eq!(response["protocol_version"], 1);
+    assert_eq!(response["error"]["code"], "invalid_request");
+    assert!(
+        response["error"]["message"]
+            .as_str()
+            .is_some_and(|message| !message.is_empty())
+    );
+    assert!(response.get("intent_unit").is_none());
+    assert!(response["error"].get("field").is_none());
+    assert!(response["error"].get("operation_number").is_none());
 }
 
 #[test]

@@ -31,8 +31,16 @@ pub(crate) struct EdgeInput {
 #[derive(Debug, Deserialize, Eq, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct IntentUnitInput {
+    #[serde(default, deserialize_with = "deserialize_present_id")]
     pub(crate) id: Option<String>,
     pub(crate) species: String,
+}
+
+fn deserialize_present_id<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    String::deserialize(deserializer).map(Some)
 }
 
 #[derive(Debug, Deserialize, Eq, PartialEq)]
@@ -151,9 +159,33 @@ pub(crate) enum HistoryEntry {
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
+    use serde_json::{Value, error::Category, json};
 
     use super::*;
+
+    fn request() -> Value {
+        json!({
+            "protocol_version": 1,
+            "workflow": {
+                "id": "  delivery  ",
+                "phases": ["queued", "doing", "done"],
+                "initial_phase": "queued",
+                "edges": [
+                    {"from": "queued", "to": "doing"},
+                    {"from": "doing", "to": "done"}
+                ],
+                "completion_phases": ["done"]
+            },
+            "intent_unit": {
+                "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
+                "species": "feature"
+            },
+            "operations": [
+                {"type": "transition", "target": "doing"},
+                {"type": "complete"}
+            ]
+        })
+    }
 
     fn snapshot(status: SnapshotStatus) -> IntentUnitSnapshot {
         IntentUnitSnapshot {
@@ -178,27 +210,7 @@ mod tests {
 
     #[test]
     fn test_protocol_decodes_complete_v1_scenario_strictly() {
-        let request = json!({
-            "protocol_version": 1,
-            "workflow": {
-                "id": "  delivery  ",
-                "phases": ["queued", "doing", "done"],
-                "initial_phase": "queued",
-                "edges": [
-                    {"from": "queued", "to": "doing"},
-                    {"from": "doing", "to": "done"}
-                ],
-                "completion_phases": ["done"]
-            },
-            "intent_unit": {
-                "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
-                "species": "feature"
-            },
-            "operations": [
-                {"type": "transition", "target": "doing"},
-                {"type": "complete"}
-            ]
-        });
+        let request = request();
 
         let decoded: ProtocolRequest =
             serde_json::from_value(request.clone()).expect("valid request should decode");
@@ -235,6 +247,60 @@ mod tests {
                 OperationInput::Complete(CompleteInput {})
             ]
         );
+    }
+
+    #[test]
+    fn test_protocol_distinguishes_absent_string_and_null_id() {
+        let mut absent = request();
+        absent["intent_unit"]
+            .as_object_mut()
+            .expect("intent_unit fixture should be an object")
+            .remove("id");
+        let decoded: ProtocolRequest =
+            serde_json::from_value(absent).expect("absent ID should decode as omission");
+        assert_eq!(decoded.intent_unit.id, None);
+
+        let mut string = request();
+        string["intent_unit"]["id"] = json!("  Preserve-ME  ");
+        let decoded: ProtocolRequest =
+            serde_json::from_value(string).expect("string ID should decode");
+        assert_eq!(decoded.intent_unit.id.as_deref(), Some("  Preserve-ME  "));
+
+        let cases = [
+            ("null", Value::Null),
+            ("Boolean", json!(true)),
+            ("number", json!(42)),
+            ("array", json!([])),
+            ("object", json!({})),
+        ];
+        for (name, id) in cases {
+            let mut candidate = request();
+            candidate["intent_unit"]["id"] = id;
+
+            let error = serde_json::from_value::<ProtocolRequest>(candidate)
+                .expect_err("present non-string ID should be rejected");
+
+            assert_eq!(error.classify(), Category::Data, "{name}");
+        }
+    }
+
+    #[test]
+    fn test_protocol_preserves_required_and_unknown_field_strictness() {
+        let request = request();
+
+        let mut absent_id = request.clone();
+        absent_id["intent_unit"]
+            .as_object_mut()
+            .expect("intent_unit fixture should be an object")
+            .remove("id");
+        assert!(serde_json::from_value::<ProtocolRequest>(absent_id).is_ok());
+
+        let mut missing_species = request.clone();
+        missing_species["intent_unit"]
+            .as_object_mut()
+            .expect("intent_unit fixture should be an object")
+            .remove("species");
+        assert!(serde_json::from_value::<ProtocolRequest>(missing_species).is_err());
 
         let mut unknown_root = request.clone();
         unknown_root["unexpected"] = json!(true);

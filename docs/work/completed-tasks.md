@@ -202,3 +202,32 @@
 - **Completed:** 2026-08-08T22:14:16Z
 - **Files modified:** `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `c4489cd35bfdce36600925918d73c215b0b2a891`
+
+## T-501 (sprint 5)
+- **Description:** Distinguish absent and present ID values in the version 1 decoder
+- **Intent:** [INT-0006](../intents/INT-0006-distinguish-omitted-cli-id.md)
+- **Completed:** 2026-08-08T23:42:50Z
+- **Files modified:** `crates/cubikan-cli/src/protocol.rs`, `crates/cubikan-cli/src/lib.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0006-distinguish-omitted-cli-id.md`, `docs/sprints/s5/sprint-meta.md`, `docs/sprints/s5/sprint-research/research-report.md`, `docs/sprints/s5/sprint-plans/build-plan.md`, `docs/sprints/s5/sprint-plans/test-plan.md`, `docs/sprints/s5/sprint-plans/critique.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `1a689edf525b02e05f44eb5027d6ff42d698fb0d`
+- **Evidence clarification:** The task commit also created the initialized zero-byte placeholders `docs/sprints/s5/sprint-tests/unit-tests.md`, `docs/sprints/s5/sprint-tests/integration-tests.md`, `docs/sprints/s5/sprint-tests/e2e-tests.md`, and `docs/sprints/s5/sprint-tests/test-report.md`.
+
+## T-502 (sprint 5)
+- **Description:** Prove the public runner identity boundary
+- **Intent:** [INT-0006](../intents/INT-0006-distinguish-omitted-cli-id.md)
+- **Completed:** 2026-08-08T23:48:26Z
+- **Files modified:** `crates/cubikan-cli/tests/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `e3cd97727752c05cf2c02702ff25bb8da3dbae9a`
+
+## T-503 (sprint 5)
+- **Description:** Prove the actual-process identity boundary
+- **Intent:** [INT-0006](../intents/INT-0006-distinguish-omitted-cli-id.md)
+- **Completed:** 2026-08-08T23:51:26Z
+- **Files modified:** `crates/cubikan-cli/tests/cli_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `3eadc3ac44d73c4aa6b67582dbbea6b6f33b629d`
+
+## T-504 (sprint 5)
+- **Description:** Document the ID-presence contract and preserve scope
+- **Intent:** [INT-0006](../intents/INT-0006-distinguish-omitted-cli-id.md)
+- **Completed:** 2026-08-08T23:53:36Z
+- **Files modified:** `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `4ce4ff88a8dfb05135ae2b088e900a5e49201a88`

@@ -40,7 +40,7 @@ mod process_tests {
             "edges": [],
             "completion_phases": []
         },
-        "intent_unit": {"id": null, "species": "feature"},
+        "intent_unit": {"species": "feature"},
         "operations": []
     }"#;
 
@@ -103,6 +103,14 @@ mod process_tests {
         fn flush(&mut self) -> io::Result<()> {
             Err(io::Error::other("fixture diagnostic failure"))
         }
+    }
+
+    #[test]
+    fn test_process_shell_fixture_uses_true_omission() {
+        let request: crate::protocol::ProtocolRequest =
+            serde_json::from_slice(VALID_REQUEST).expect("fixture should decode");
+
+        assert_eq!(request.intent_unit.id, None);
     }
 
     #[test]
