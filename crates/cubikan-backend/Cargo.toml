@@ -8,6 +8,7 @@ publish = false
 
 [dependencies]
 cubikan-core = { path = "../cubikan-core" }
+rusqlite.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 

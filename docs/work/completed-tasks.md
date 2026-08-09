@@ -295,3 +295,10 @@
 - **Completed:** 2026-08-09T21:11:29Z
 - **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/stored.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `1550ccd2d9919b1e8b0d256bd62852bdbfc4fefe`
+
+## T-803 (sprint 8)
+- **Description:** Own, initialize, and validate SQLite schema v1
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T21:41:15Z
+- **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-backend/Cargo.toml`, `crates/cubikan-backend/src/error.rs`, `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/schema.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/model.rs`, `crates/cubikan-backend/tests/schema.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-803 (sprint 8) [intent: INT-0010]: Own, initialize, and validate SQLite schema v1 — touches: backend SQLite dependency, schema/open implementation, schema tests
 - [ ] T-804 (sprint 8) [intent: INT-0010]: Add transactional durable create and replay-validated get — touches: backend CRUD implementation, persistence/corruption tests
 - [ ] T-805 (sprint 8) [intent: INT-0010]: Add bounded exact-filter live keyset pagination — touches: backend query model/SQL, pagination tests
 - [ ] T-806 (sprint 8) [intent: INT-0010, INT-0009]: Add revision-guarded transition and completion transactions — touches: backend mutation/CAS implementation, mutation/corruption tests

@@ -52,7 +52,9 @@ fn test_workspace_adds_isolated_backend_crate() {
     assert!(backend_manifest.contains("cubikan-core = { path = \"../cubikan-core\" }"));
     assert!(backend_manifest.contains("serde.workspace = true"));
     assert!(backend_manifest.contains("serde_json.workspace = true"));
-    assert!(!backend_manifest.contains("rusqlite"));
+    assert!(backend_manifest.contains("rusqlite.workspace = true"));
+    assert!(!core_manifest.contains("rusqlite"));
+    assert!(!cli_manifest.contains("rusqlite"));
     assert!(!core_manifest.contains("cubikan-backend"));
     assert!(!cli_manifest.contains("cubikan-backend"));
 }

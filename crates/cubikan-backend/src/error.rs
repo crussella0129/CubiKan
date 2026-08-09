@@ -1,4 +1,4 @@
-use std::{error::Error, fmt};
+use std::{error::Error, fmt, sync::Arc};
 
 use cubikan_core::{CompletionError, IntentUnitId, RevisionConflict, TransitionError};
 
@@ -50,11 +50,48 @@ impl fmt::Display for ListCursorError {
 
 impl Error for ListCursorError {}
 
+/// Opaque diagnostic retained for a SQLite or local-file failure.
+///
+/// Its human-readable SQLite message is deliberately available only through
+/// the standard error source chain; it is not part of the backend's stable
+/// classification or display text.
+#[derive(Clone, Debug)]
+pub struct StorageFailure {
+    source: Arc<rusqlite::Error>,
+}
+
+impl StorageFailure {
+    pub(crate) fn new(source: rusqlite::Error) -> Self {
+        Self {
+            source: Arc::new(source),
+        }
+    }
+}
+
+impl PartialEq for StorageFailure {
+    fn eq(&self, other: &Self) -> bool {
+        Arc::ptr_eq(&self.source, &other.source)
+    }
+}
+
+impl Eq for StorageFailure {}
+
+impl fmt::Display for StorageFailure {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.write_str("CubiKan storage operation failed")
+    }
+}
+
+impl Error for StorageFailure {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        Some(self.source.as_ref())
+    }
+}
+
 /// Typed failure returned by the durable backend boundary.
 ///
-/// Storage-specific variants are populated by later persistence tasks. The
-/// enum is intentionally adapter-owned so callers never need to classify raw
-/// SQLite messages or provisional core serialization errors.
+/// The enum is intentionally adapter-owned so callers never need to classify
+/// raw SQLite messages or provisional core serialization errors.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum BackendError {
     /// Create attempted to reuse an existing immutable identity.
@@ -80,11 +117,17 @@ pub enum BackendError {
     /// A checked SQL projection disagrees with the replayed aggregate.
     ProjectionMismatch,
     /// SQLite could not acquire its local writer within the configured bound.
-    StorageBusy,
+    StorageBusy(StorageFailure),
     /// A revision-qualified update violated the backend's CAS invariant.
     ConcurrentStorageChange,
     /// Another SQLite or local-filesystem operation failed.
-    Storage,
+    Storage(StorageFailure),
+}
+
+impl BackendError {
+    pub(crate) fn storage(error: rusqlite::Error) -> Self {
+        Self::Storage(StorageFailure::new(error))
+    }
 }
 
 impl fmt::Display for BackendError {
@@ -113,11 +156,11 @@ impl fmt::Display for BackendError {
             Self::ProjectionMismatch => {
                 formatter.write_str("stored Intent Unit projection disagrees with its envelope")
             }
-            Self::StorageBusy => formatter.write_str("CubiKan storage is busy"),
+            Self::StorageBusy(_) => formatter.write_str("CubiKan storage is busy"),
             Self::ConcurrentStorageChange => {
                 formatter.write_str("stored revision changed during guarded update")
             }
-            Self::Storage => formatter.write_str("CubiKan storage operation failed"),
+            Self::Storage(error) => error.fmt(formatter),
         }
     }
 }
@@ -128,6 +171,8 @@ impl Error for BackendError {
             Self::RevisionConflict(error) => Some(error),
             Self::TransitionRejected(error) => Some(error),
             Self::CompletionRejected(error) => Some(error),
+            Self::StorageBusy(error) => Some(error),
+            Self::Storage(error) => Some(error),
             _ => None,
         }
     }
