@@ -251,5 +251,5 @@
 - **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md)
 - **Completed:** 2026-08-09T04:05:24Z
 - **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/appendix/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `f38e974a903f9e4a0cac8a63778c0426877571b5`
 - **Evidence clarification:** `docs/appendix/README.md` changed only to remove a terminal blank line found by the locked whole-sprint `git diff --check` gate; its appendix-navigation content is unchanged.
