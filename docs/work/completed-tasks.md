@@ -323,3 +323,10 @@
 - **Completed:** 2026-08-09T22:27:01Z
 - **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/mutations.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `e4b7510659f502050598ec9b0b2b9aa5a92e673a`
+
+## T-807 (sprint 8)
+- **Description:** Define local protocol v1 and execute every backend command
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T22:54:19Z
+- **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-local/Cargo.toml`, `crates/cubikan-local/src/lib.rs`, `crates/cubikan-local/src/protocol.rs`, `crates/cubikan-local/src/execution.rs`, `crates/cubikan-local/tests/protocol.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
