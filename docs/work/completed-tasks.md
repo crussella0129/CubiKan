@@ -231,3 +231,25 @@
 - **Completed:** 2026-08-08T23:53:36Z
 - **Files modified:** `crates/cubikan-cli/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `4ce4ff88a8dfb05135ae2b088e900a5e49201a88`
+
+## T-601 (sprint 6)
+- **Description:** Establish appendix authority and CubiKan integration baseline
+- **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md)
+- **Completed:** 2026-08-09T03:39:13Z
+- **Files modified:** `docs/appendix/README.md`, `docs/appendix/potential-derivative-projects.md`, `docs/SUMMARY.md`, `docs/intents/INT-0007-define-cubikan-derivative-ecosystem.md`, `docs/intents/INT-0008-traceable-intent-instantiation.md`, `docs/intents/INT-0009-revisioned-lifecycle-commands.md`, `docs/intents/INT-0010-durable-intent-unit-backend.md`, `docs/intents/INT-0011-lifecycle-checkpoints-and-metric-evidence.md`, `docs/intents/INT-0012-intent-unit-relationships-and-board-projections.md`, `docs/sprints/s6/sprint-meta.md`, `docs/sprints/s6/sprint-research/research-report.md`, `docs/sprints/s6/sprint-plans/build-plan.md`, `docs/sprints/s6/sprint-plans/test-plan.md`, `docs/sprints/s6/sprint-plans/critique.md`, `docs/sprints/s6/sprint-tests/unit-tests.md`, `docs/sprints/s6/sprint-tests/integration-tests.md`, `docs/sprints/s6/sprint-tests/e2e-tests.md`, `docs/sprints/s6/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `5cc52aba625acc9e0361014eca8aec0edbe55554`
+
+## T-602 (sprint 6)
+- **Description:** Document Agent Ops, Observatory, and Animus Ledger
+- **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md)
+- **Completed:** 2026-08-09T03:49:20Z
+- **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `f1770f774bfafed538316f01c3cd05cd82270855`
+
+## T-603 (sprint 6)
+- **Description:** Complete the process, skill-graph, and organizational catalog
+- **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md)
+- **Completed:** 2026-08-09T04:05:24Z
+- **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/appendix/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `f38e974a903f9e4a0cac8a63778c0426877571b5`
+- **Evidence clarification:** `docs/appendix/README.md` changed only to remove a terminal blank line found by the locked whole-sprint `git diff --check` gate; its appendix-navigation content is unchanged.
