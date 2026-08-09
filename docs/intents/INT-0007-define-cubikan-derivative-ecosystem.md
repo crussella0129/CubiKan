@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0007
-- **State:** active
+- **State:** realized
 - **Work evidence:** [Sprint 6 build plan](../sprints/s6/sprint-plans/build-plan.md)
-- **Completion evidence:** none
+- **Completion evidence:** [T-601–T-603 completion ledger](../work/completed-tasks.md#t-601-sprint-6)
 - **Code evidence:** none
-- **Test evidence:** none
-- **Documentation evidence:** none
+- **Test evidence:** [Sprint 6 test report](../sprints/s6/sprint-tests/test-report.md)
+- **Documentation evidence:** [Potential Derivative Projects](../appendix/potential-derivative-projects.md)
 
 ## Intent
 
@@ -83,3 +83,4 @@ be merged, renamed, or never created when stronger evidence appears.
 - 2026-08-08: revised while `planned` after architecture review clarified pinned core compatibility and prohibited Book/backend split-brain authority.
 - 2026-08-08: revised while `planned` after evidence review separated locally provable scope from the recorded operational non-creation boundary for derivative repositories.
 - 2026-08-08: moved to `active` when Build queued T-601 through T-603 from the finalized clean Sprint 6 plans.
+- 2026-08-09: moved to `realized` after T-601–T-603 completed, the final Test Critic returned `clean`, 18 unit/repository checks, 5 integration checks, 2 E2E checks, 100 Rust tests, and one doctest passed, and GitHub Actions push run 31293927701 succeeded at exact Build head `b6daf73cf4c12e496466ebdcb393b3204e7ffeb7`.
