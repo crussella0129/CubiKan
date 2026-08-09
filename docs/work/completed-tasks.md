@@ -266,4 +266,4 @@
 - **Intent:** [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
 - **Completed:** 2026-08-09T06:49:09Z
 - **Files modified:** `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/src/lib.rs`, `crates/cubikan-core/tests/lifecycle.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `536b83ee3a2c58781a937c7e876e85a5c315a0a4`
