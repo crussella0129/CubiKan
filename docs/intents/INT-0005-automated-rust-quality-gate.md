@@ -6,7 +6,7 @@
 - **Work evidence:** [Sprint 4 build plan](../sprints/s4/sprint-plans/build-plan.md)
 - **Completion evidence:** [T-401–T-403 completion ledger](../work/completed-tasks.md#t-401-sprint-4)
 - **Code evidence:** [Rust CI workflow](../../.github/workflows/ci.yml)
-- **Test evidence:** [Sprint 4 test report](../sprints/s4/sprint-tests/test-report.md)
+- **Test evidence:** [Sprint 4 test report](../sprints/s4/sprint-tests/test-report.md), [Sprint 5 regression report](../sprints/s5/sprint-tests/test-report.md)
 - **Documentation evidence:** [CubiKan development guide](../../README.md)
 
 ## Intent

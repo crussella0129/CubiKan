@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0006
-- **State:** active
+- **State:** realized
 - **Work evidence:** [Sprint 5 build plan](../sprints/s5/sprint-plans/build-plan.md)
-- **Completion evidence:** none
-- **Code evidence:** none
-- **Test evidence:** none
-- **Documentation evidence:** none
+- **Completion evidence:** [T-501–T-504 completion ledger](../work/completed-tasks.md#t-501-sprint-5)
+- **Code evidence:** [strict ID-presence decoder](../../crates/cubikan-cli/src/protocol.rs), [public-runner boundary tests](../../crates/cubikan-cli/tests/runner.rs), and [actual-process boundary tests](../../crates/cubikan-cli/tests/cli_e2e.rs)
+- **Test evidence:** [Sprint 5 test report](../sprints/s5/sprint-tests/test-report.md)
+- **Documentation evidence:** [CubiKan CLI guide](../../crates/cubikan-cli/README.md)
 
 ## Intent
 
@@ -83,3 +83,4 @@ remains experimental and unchanged in version and response shape.
 - 2026-08-08: created as `proposed` after Sprint 5 research reproduced that explicit JSON `null` silently generated an ID despite the accepted omission-only and strict-type contract.
 - 2026-08-08: moved to `planned` when Sprint 5 decomposed the decoder, public runner, actual-process, and documentation boundaries into T-501–T-504 with named unit, integration, E2E, and hosted regression evidence.
 - 2026-08-08: moved to `active` immediately before Build began T-501 under the finalized Sprint 5 plans.
+- 2026-08-08: moved to `realized` after T-501–T-504 completed, the final Test Critic returned `clean`, 100 local and hosted all-target tests plus one doctest passed, and GitHub Actions push run 31285064082 succeeded at exact Build head `6979ca2217ac1b838c406bf21821e32b3a4f6227`.
