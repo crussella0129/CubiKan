@@ -47,8 +47,8 @@ The recommendations use four distinct layers:
 | Layer | Responsibility | Current status |
 |-------|----------------|----------------|
 | Lifecycle kernel | One-unit identity, immutable workflow, and validated transition/completion rules. | Realized in `cubikan-core`. |
-| CubiKan backend capability | Reusable provenance, revision, persistence/query, measurement-evidence, or relationship behavior shared by multiple consumers. | Proposed only in INT-0008–INT-0012. |
-| Adapter | Translation between CubiKan-owned concepts and an external provider or protocol, such as a Project Book parser or Git-host connector. | Future and provider-specific. |
+| CubiKan backend capability | Reusable provenance, revision, persistence/query, measurement-evidence, or relationship behavior shared by multiple consumers. | Revision, durable lifecycle storage/query, and relationships/projections are realized under INT-0009, INT-0010, and INT-0012. Provenance and measurement evidence remain proposed under INT-0008 and INT-0011. |
+| Adapter | Translation between CubiKan-owned concepts and an external provider or protocol, such as a Project Book parser or Git-host connector. | The stateless `cubikan` adapter and explicit-path `cubikan-local` lifecycle adapter exist; Book, Git-host, and other provider-specific adapters remain future work. |
 | Derivative application | User experience, orchestration, business records, analytics, privacy, and domain policy for a bounded problem. | Recommended only; none is created here. |
 
 A separate repository is justified when a surface has a distinct runtime,
@@ -103,7 +103,8 @@ rebuildable projections, but they do not dual-write the source of truth.
 |-------|---------------------|---------------|
 | Product intent, rationale, acceptance criteria, decisions, sprint plans, and current historical realization evidence | The Project Book | CubiKan and derivatives may reference or project it; they do not replace or dual-write it. |
 | Current in-process Intent Unit identity, workflow, phase, status, and lifecycle history | The validated `cubikan-core` aggregate | Adapters and derivatives invoke public lifecycle behavior; they do not construct competing state. |
-| Future durable unit state, revision, and bounded lifecycle queries | A future CubiKan backend selected under INT-0009 and INT-0010 | Derivatives use the versioned boundary, never shared writable storage. |
+| Durable Intent Unit state, revision, and bounded lifecycle queries | The replay-validated, versioned `cubikan-backend` storage and command/query boundary realized under INT-0009 and INT-0010 | Derivatives use the public boundary and never share or edit its writable storage. |
+| Versioned relationship definitions and accepted direct edges; ephemeral board or portfolio projections | The `cubikan-backend` relationship contract version 1 is canonical for accepted definitions and edges; projection query version 1 derives live views without creating another authority | Consumers submit and query explicit definitions, edges, and projections through the public Rust API; they do not copy membership into lifecycle state or infer execution policy. |
 | External Git objects, pull requests, and CI records | Their source provider | CubiKan stores namespaced references/evidence associations, not shadow provider objects. |
 | Manager/doer identity, decomposition, assignment readiness/priority, allowed-tool/sandbox/budget envelope, delegation retry/cancel policy, and approvals | Agent Ops | Intent Units represent lifecycle work without becoming an agent runtime; Agent Ops authorizes an execution envelope rather than owning node execution. |
 | Skill manifests, node readiness/scheduling, executor/tool selection within the approved envelope, attempts/leases, node retry/cancel/recovery, sandbox enforcement, and artifact routing | Skill Graph | These execution records reference canonical units and relations without becoming lifecycle state. |
@@ -112,51 +113,65 @@ rebuildable projections, but they do not dual-write the source of truth.
 | Raw lifecycle-linked observations and deterministic metric results | A future CubiKan evidence backend under INT-0011 | Analytics consumers interpret results without rewriting the observations or lifecycle. |
 | Analytical blame, attribution hypotheses, scores, and recommendations | The governed analytics derivative | They remain derived claims and never certify provenance or mutate agents automatically. |
 
-The Book is the current semantic and historical authority. Moving operational
-task or completion truth to a future backend requires a separately selected
-projection or migration intent with reconciliation and cutover rules. Book and
-backend dual-write is prohibited because it would create split-brain history.
+The Book remains the semantic and historical realization authority; the
+realized backend is authoritative only for the durable Intent Unit and
+relationship state accepted through its versioned boundaries. Treating backend
+state as operational task or completion truth for the Book still requires a
+separately selected projection or migration intent with reconciliation and
+cutover rules. Book and backend dual-write is prohibited because it would
+create split-brain history.
 
-## Proposed CubiKan capability map
+## CubiKan capability status map
 
-The following chapters preserve reusable outcomes but remain `proposed`, with no
-Work or Completion evidence:
+The following chapters own distinct reusable outcomes. Their Book states are
+authoritative: INT-0009, INT-0010, and INT-0012 are `realized`; INT-0008 and
+INT-0011 remain `proposed` with no Work or Completion evidence.
 
 - [INT-0008 — Traceable intent instantiation and artifact
-  provenance](../intents/INT-0008-traceable-intent-instantiation.md) owns
+  provenance](../intents/INT-0008-traceable-intent-instantiation.md) is
+  **proposed** and owns
   namespaced origin references and provider-neutral evidence associations. A
   read-only origin-reference experiment could proceed independently; full
-  revision-scoped and bidirectional provenance requires INT-0009 and INT-0010.
+  revision-scoped and bidirectional provenance can build on the realized
+  INT-0009 and INT-0010 primitives but is not itself realized by them.
 - [INT-0009 — Revisioned lifecycle commands and atomic conflict
-  rejection](../intents/INT-0009-revisioned-lifecycle-commands.md) owns the
-  optimistic revision primitive. A stale expected revision is checked before
-  command validity; with a current revision, existing domain errors remain
-  authoritative.
+  rejection](../intents/INT-0009-revisioned-lifecycle-commands.md) is
+  **realized** and owns the optimistic revision primitive. A stale expected
+  revision is checked before command validity; with a current revision,
+  existing domain errors remain authoritative.
 - [INT-0010 — Durable multi-unit CubiKan
-  backend](../intents/INT-0010-durable-intent-unit-backend.md) depends on
-  INT-0009 and owns durable validated restoration plus bounded, paginated
+  backend](../intents/INT-0010-durable-intent-unit-backend.md) is **realized**,
+  depends on realized INT-0009, and owns explicit-path SQLite persistence,
+  validated restoration, guarded lifecycle commands, and bounded, paginated
   collection queries over stable lifecycle fields.
 - [INT-0011 — Lifecycle checkpoints and metric
   evidence](../intents/INT-0011-lifecycle-checkpoints-and-metric-evidence.md)
-  depends on INT-0009 and INT-0010. It owns durable observations and
-  deterministic evaluation of caller-supplied measurement definitions, not
-  business policy or transition authorization.
+  is **proposed**. Its INT-0009 and INT-0010 dependencies are realized, but its
+  durable observations and deterministic evaluation of caller-supplied
+  measurement definitions are not. It does not own business policy or
+  transition authorization.
 - [INT-0012 — Intent Unit relationships and board
   projections](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
-  depends on INT-0010 and owns reusable typed cross-unit relations and
-  projections, not execution scheduling.
+  is **realized**, depends on realized INT-0010, and owns reusable typed
+  cross-unit relations and ephemeral projections through the
+  relationship contract version 1 and projection query version 1 Rust backend
+  boundary, not
+  execution scheduling.
 
 This is a partial order, not one mandatory linear roadmap:
 
 ```text
-read-only INT-0008 exploration
+[proposed] read-only INT-0008 origin-reference exploration
 
-INT-0009 revision contract
-    └── INT-0010 durable multi-unit backend
-          ├── full INT-0008 provenance index (also needs INT-0009)
-          ├── INT-0011 measurement evidence (also needs INT-0009)
-          └── INT-0012 relationships and board projections
+[realized] INT-0009 revision contract
+    └── [realized] INT-0010 durable multi-unit backend
+          ├── [proposed] full INT-0008 provenance index (also uses INT-0009)
+          ├── [proposed] INT-0011 measurement evidence (also uses INT-0009)
+          └── [realized] INT-0012 relationships and board projections
 ```
+
+Realized prerequisites satisfy only the recorded technical dependency edges;
+they do not resolve, select, or realize the proposed branches.
 
 ## Decisions required before backend work
 

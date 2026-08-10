@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-002 (sprint 0): Correct the appendix's capability status, dependency, and authority maps — touches: docs/appendix/potential-derivative-projects.md
 - [ ] T-003 (sprint 0): Correct the safe integration boundary while preserving current exclusions — touches: docs/appendix/potential-derivative-projects.md
 - [ ] T-004 (sprint 0): Replace stale per-entry waits on realized revision, backend, and relationship primitives — touches: docs/appendix/potential-derivative-projects.md
 - [ ] T-005 (sprint 0): Preserve conditional creation governance for every recommended repository — touches: docs/appendix/potential-derivative-projects.md
