@@ -29,3 +29,9 @@
 - **Completed:** 2026-08-10T13:42:16Z
 - **Files modified:** docs/appendix/potential-derivative-projects.md
 - **Commit:** `a2b3e61`
+
+## T-006 (sprint 0)
+- **Description:** Correct global sequencing, open questions, and status non-goals
+- **Completed:** 2026-08-10T13:49:46Z
+- **Files modified:** docs/appendix/potential-derivative-projects.md
+- **Commit:** `5e42830`

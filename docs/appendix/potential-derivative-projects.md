@@ -190,24 +190,29 @@ This is a partial order, not one mandatory linear roadmap:
 Realized prerequisites satisfy only the recorded technical dependency edges;
 they do not resolve, select, or realize the proposed branches.
 
-## Decisions required before backend work
+## Decisions still required for proposed capabilities and derivatives
 
-The proposed chapters do not choose these policies by implication:
+The realized local foundations settle revision behavior, SQLite schemas v1/v2,
+lifecycle storage and queries, and relationship/projection contract v1. They do
+not choose these still-unselected capabilities and derivative policies by
+implication:
 
-- storage engine, schema evolution, recovery, backup, and migration;
-- local versus network transport, deployment, tenancy, authentication, and
-  authorization;
-- concurrency, idempotency, retry, cancellation, and cross-unit atomicity;
+- recovery, backup, downgrade, future schema migration, and compatibility
+  beyond the exact realized local contracts;
+- network transport or service behavior, hosting, deployment, tenancy,
+  authentication, and authorization;
+- idempotency, retry, cancellation, and cross-unit atomicity beyond the
+  realized single-operation transaction and revision boundaries;
 - evidence identity, correction, verification, privacy, retention, and access;
 - measurement units, clocks, windows, denominators, correction, and approval;
-- relationship taxonomy, cycle/deletion semantics, projection consistency, and
-  scheduling authority; or
+- relationship authorization and definition lifecycle beyond contract v1,
+  historical or transitive queries, board policy, and scheduling authority; or
 - blockchain network, key custody, trust, fees, finality, reorganization, and
   on-chain/off-chain data placement.
 
-Each choice needs evidence, a selected intent, and the normal human checkpoint.
-This appendix supplies boundaries and creation triggers, not implementation
-authority.
+Each unresolved choice needs evidence, a selected intent, and the normal human
+checkpoint. This appendix supplies boundaries and creation triggers, not
+implementation authority.
 
 ## Recommended repository catalog
 
@@ -629,42 +634,50 @@ one idea informs multiple authorities; it does not create a hidden seventh repo.
 
 | Theme | Backend/adapter boundary | Derivative recommendation or disposition |
 |-------|--------------------------|------------------------------------------|
-| `DV-01` | INT-0010 provides the potential common lifecycle backend; the Book retains current semantic/history authority. | Agent Ops coordinates work; Animus Ledger reconciles evidenced work. |
+| `DV-01` | Realized INT-0010 makes the local common lifecycle backend available; the Book retains current semantic/history authority. | Agent Ops coordinates work; Animus Ledger reconciles evidenced work. |
 | `DV-02` | Book-to-unit mapping and future provenance remain namespaced. | Agent Ops owns manager/doer execution; Animus reads evidence but does not execute. |
 | `DV-03` | INT-0008 owns durable associations; Git/Book/CI connectors remain adapters. | Observatory owns trace views and governed analytical inference. |
 | `DV-04` | INT-0011 owns observations and deterministic evaluation of caller definitions. | Process Studio authors/governs definitions; Observatory analyzes results. |
 | `DV-05` | The data-authority map keeps the Book canonical until an explicit migration/projection intent. | Animus derives reconciliation without dual-writing Book history. |
-| `DV-06` | INT-0012 owns reusable relations/projections, never phase edges. | Skill Graph owns executable DAG policy and multi-board routing. |
-| `DV-07` | INT-0010 supplies durable lifecycle commands and bounded queries. | Process Studio and the Organizational App Kit remain separate frontends/policy surfaces. |
-| `DV-08` | Explicit INT-0012 relations may represent cross-unit composition; no core lineage is inferred. | Merged across Agent Ops delegation, Skill Graph execution, and Animus reconciliation; exact recursive semantics remain open. |
+| `DV-06` | The realized INT-0012 boundary provides reusable relations/projections, never phase edges. | Skill Graph owns executable DAG policy and multi-board routing. |
+| `DV-07` | The realized INT-0010 boundary supplies durable lifecycle commands and bounded queries. | Process Studio and the Organizational App Kit remain separate frontends/policy surfaces. |
+| `DV-08` | Explicit relations available through realized INT-0012 may represent cross-unit composition; no core lineage is inferred. | Merged across Agent Ops delegation, Skill Graph execution, and Animus reconciliation; exact recursive semantics remain open. |
 | `DV-09` | Blockchain remains an unselected adapter concern with unresolved chain/trust/key/finality/data policy. | Deferred; no blockchain derivative repository is recommended. |
 
 ## Sequencing and creation gates
 
-The ordering is evidence-driven and deliberately non-calendar-based:
+This sequence distinguishes completed technical foundations from remaining
+derivative creation gates. It is evidence-driven, deliberately
+non-calendar-based, and not a delivery roadmap:
 
 1. **Read-only discovery:** Observatory may prototype approved Book/Git trace
    views after its privacy controls exist. Process Studio may validate local
    definitions against a pinned core after its definition/version model exists.
    Neither prototype claims a backend.
-2. **Reusable backend foundation:** Select and realize INT-0009 before INT-0010.
-   Storage, transport, schema, recovery, auth, tenancy, and deployment still
-   require human decisions. Full INT-0008 reverse provenance follows INT-0009
-   and INT-0010.
+2. **Completed reusable backend foundation:** INT-0009 and its dependent
+   INT-0010 are realized; revisioned lifecycle commands and the explicit-path
+   local backend are available and do not need to be selected again. Recovery,
+   backup, compatibility beyond the exact local contracts, network service,
+   authentication, tenancy, and deployment remain unselected. Full INT-0008
+   provenance remains proposed and can build on the available foundations.
 3. **Shared operational applications:** Agent Ops and basic organizational
-   projections may begin only after their identity/security policies and an
-   INT-0010 boundary exist. Process Studio may distribute a definition as a
-   non-operational artifact earlier, but shared operational or KPI activation
-   waits for INT-0009, INT-0010, and INT-0011.
-4. **Measurements and graph composition:** Shared metric evidence needs INT-0011.
-   Advanced multi-board relations need INT-0012; Skill Graph additionally needs
-   an accepted executor, sandbox, retry, artifact, and authorization contract.
+   projections may use the available INT-0010 boundary only after their own
+   identity, security, and compatibility policies are accepted. Process Studio
+   may distribute a definition as a non-operational artifact earlier, but
+   shared operational or KPI activation still needs the proposed INT-0011
+   evidence capability; INT-0009 and INT-0010 are already available.
+4. **Measurements and graph composition:** Shared metric evidence remains gated
+   on proposed INT-0011. Advanced multi-board relations may use realized
+   INT-0012; Skill Graph additionally needs an accepted executor, sandbox,
+   retry, artifact, and authorization contract.
 5. **Governed reconciliation:** Animus Ledger follows trustworthy provenance and
    an accepted accounting charter. It does not gain authority merely because
    lifecycle data is available.
 
-These gates are necessary, not sufficient. Each repository still needs a
-separate selected intent, research/plan, owner, and explicit creation approval.
+Availability satisfies only the completed technical foundation gates; it is not
+sufficient to create any repository. Each repository still needs a separate
+selected intent, research/plan, owner, and explicit creation approval, and each
+remaining gate above must be satisfied where applicable.
 
 ## Merged, deferred, and rejected alternatives
 
@@ -689,8 +702,9 @@ separate selected intent, research/plan, owner, and explicit creation approval.
 
 ## Open questions
 
-- Which storage, transport, deployment, tenancy, authentication, authorization,
-  recovery, and schema-compatibility policies should realize INT-0010?
+- Which recovery, backup, future schema-migration, compatibility, network
+  transport or service, deployment, tenancy, authentication, and authorization
+  policies are required around or beyond the available local INT-0010 boundary?
 - How should Book intent, Intent Unit, repository, and artifact namespaces be
   identified, corrected, retained, and verified under INT-0008?
 - What projection/migration and reconciliation contract would be required before
@@ -699,8 +713,10 @@ separate selected intent, research/plan, owner, and explicit creation approval.
   cost model is acceptable for Agent Ops?
 - Which observation clocks, sources, denominators, windows, units, late-arrival,
   correction, and authorization semantics make a measurement trustworthy?
-- Which relation types, endpoint/cycle/deletion rules, projection consistency,
-  and recursive-loop semantics belong under INT-0012?
+- Which relationship authorization, definition-lifecycle, historical or
+  transitive query, cross-board composition, scheduling, and recursive-loop
+  policies are required beyond the realized INT-0012 relationship/projection
+  contract?
 - What skill admission, executor trust, sandbox, artifact, retry/idempotency,
   fan-out/join, and partial-failure model is safe enough for Skill Graph?
 - What unit of account, valuation, trust, correction, close/reopen, anti-gaming,
@@ -719,8 +735,8 @@ This appendix does not:
 - select a database, chain, network transport, host, identity provider, tenancy
   model, deployment target, or durable compatibility policy;
 - promise cross-version Rust, storage, wire, client, or Book-schema compatibility;
-- redefine realized INT-0001–INT-0006 behavior or advance INT-0008–INT-0012 out
-  of `proposed`;
+- redefine any realized intent, including INT-0001–INT-0007, INT-0009,
+  INT-0010, and INT-0012, or advance INT-0008 or INT-0011 out of `proposed`;
 - grant a projection, derivative, analytics result, or accounting view authority
   over CubiKan lifecycle state or Project Book semantics;
 - treat Git blame, telemetry, scores, metrics, or linked evidence as causal proof,
