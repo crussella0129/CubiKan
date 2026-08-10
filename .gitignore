@@ -1,7 +1,9 @@
 # Rust build output
 /target/
 # >>> sprint-loops >>>
-# The Book is tracked. Ignore only transient helper output.
+# The Book under docs/sprints is tracked. Ignore only the installed runtime's
+# root-level ephemeral sprint working memory and transient helper output.
+/sprints/
 *.tmp
 /guards-report.ndjson
 # <<< sprint-loops <<<
