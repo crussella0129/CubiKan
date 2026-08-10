@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0010
-- **State:** active
+- **State:** realized
 - **Work evidence:** [Sprint 8 build plan](../sprints/s8/sprint-plans/build-plan.md)
-- **Completion evidence:** none
-- **Code evidence:** none
+- **Completion evidence:** [T-801–T-810 completion ledger](../work/completed-tasks.md#t-801-sprint-8)
+- **Code evidence:** [`cubikan-backend` public boundary](../../crates/cubikan-backend/src/lib.rs) and [`cubikan-local` process adapter](../../crates/cubikan-local/src/lib.rs)
 - **Test evidence:** [Sprint 8 test report](../sprints/s8/sprint-tests/test-report.md)
-- **Documentation evidence:** none
+- **Documentation evidence:** [CubiKan README](../../README.md), [`cubikan-backend` guide](../../crates/cubikan-backend/README.md), and [`cubikan-local` guide](../../crates/cubikan-local/README.md)
 
 ## Intent
 
@@ -108,3 +108,4 @@ Advanced relationship/portfolio queries remain owned by
 - 2026-08-09: revised while `proposed` after INT-0009 realization to select an explicit-path local SQLite backend, a separate versioned process adapter, strict replay-validated storage, transactional stale-writer rejection, and live keyset pagination as the bounded first implementation.
 - 2026-08-09: moved to `planned` when Sprint 8 mapped the selected embedded backend, storage contract, query semantics, guarded mutations, process boundary, process proof, and documentation to T-801–T-810.
 - 2026-08-09: moved to `active` immediately before T-801 began the adapter-owned backend value contract.
+- 2026-08-10: moved to `realized` after T-801–T-810 completed, the final Test Critic returned `clean`, 165 workspace tests and one doctest passed, and GitHub Actions run 31344560356 succeeded at exact tested commit `065b71fa1b63ba6abce6effb23c9d20674171835`.
