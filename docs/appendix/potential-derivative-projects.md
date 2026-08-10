@@ -13,21 +13,32 @@ or original ordering of the user-provided discussion.
 
 ## Current CubiKan boundary
 
-Today CubiKan consists of two deliberately small surfaces:
+Today CubiKan consists of four deliberately bounded surfaces:
 
 - `cubikan-core` is a chain-agnostic Rust lifecycle kernel. It validates opaque
   Intent Unit identity, caller-defined workflow phases and directed
   transitions, active/completed status, and ordered lifecycle history for one
   aggregate.
-- `cubikan` is an experimental, one-shot, in-memory JSON CLI adapter. One
-  process configures a workflow, creates one unit, performs its requested
-  operations, emits one response, and exits.
+- `cubikan` is the experimental stateless, one-shot, in-memory JSON CLI
+  adapter. One process configures a workflow, creates one unit, performs its
+  requested operations, emits one response, and exits without preserving
+  state.
+- `cubikan-backend` is a synchronous, embedded SQLite Rust library for multiple
+  durable Intent Units at a caller-supplied local filesystem path. It supports
+  exact SQLite schema v1 for lifecycle storage and schema v2 for the durable
+  relationship extension; relationship contract v1 and projection query v1
+  are exposed through this Rust boundary only.
+- `cubikan-local` is the separate explicit-path durable JSON process adapter.
+  Each invocation executes one local protocol-v1 operation against the selected
+  SQLite file. Protocol v1 remains lifecycle-only: create, get, list,
+  transition, and complete; it does not expose relationship or projection
+  operations.
 
-Neither surface currently supplies persistence, a resumable service, actors,
-authorization, metrics, cross-unit relationships, multi-board queries, UI,
-deployment, or blockchain behavior. The current CLI is an execution boundary,
-not an application backend. The core's serialized form is provisional rather
-than a durable integration schema.
+These versioned durable contracts do not stabilize the provisional
+`cubikan-core` Serde form or turn either CLI into an application backend or
+resumable service. The current surfaces remain local and supply no network
+filesystem or network service, actors, authorization, metrics, UI, deployment,
+or blockchain behavior.
 
 ## Architectural layers
 
