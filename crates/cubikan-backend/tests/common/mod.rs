@@ -15,6 +15,24 @@ use cubikan_core::{
 use rusqlite::{Connection, params};
 use serde_json::{Value, json};
 
+const EXACT_V1_TABLE_SQL: &str = r#"CREATE TABLE intent_units (
+    id TEXT NOT NULL PRIMARY KEY COLLATE BINARY,
+    envelope_version INTEGER NOT NULL CHECK(envelope_version = 1),
+    envelope TEXT NOT NULL,
+    workflow_id TEXT NOT NULL COLLATE BINARY,
+    species TEXT NOT NULL COLLATE BINARY,
+    phase TEXT NOT NULL COLLATE BINARY,
+    status TEXT NOT NULL COLLATE BINARY CHECK(status IN ('active','completed')),
+    revision BLOB NOT NULL CHECK(length(revision) = 8)
+) STRICT"#;
+
+const EXACT_V1_INDEX_SQL: [&str; 4] = [
+    "CREATE INDEX intent_units_by_workflow ON intent_units(workflow_id,id)",
+    "CREATE INDEX intent_units_by_species ON intent_units(species,id)",
+    "CREATE INDEX intent_units_by_phase ON intent_units(phase,id)",
+    "CREATE INDEX intent_units_by_status ON intent_units(status,id)",
+];
+
 static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(0);
 
 pub struct TestDatabase {
@@ -57,10 +75,32 @@ impl Drop for TestDatabase {
     }
 }
 
+pub fn initialize_exact_v1(connection: &Connection) {
+    connection
+        .execute(EXACT_V1_TABLE_SQL, [])
+        .expect("exact v1 Intent Unit table should create");
+    for sql in EXACT_V1_INDEX_SQL {
+        connection
+            .execute(sql, [])
+            .expect("exact v1 Intent Unit index should create");
+    }
+    connection
+        .pragma_update(None, "user_version", 1_i64)
+        .expect("exact v1 schema marker should set");
+}
+
 pub fn fixed_id(value: &str) -> IntentUnitId {
     value
         .parse()
         .expect("fixture Intent Unit ID should be valid")
+}
+
+pub fn numbered_id(value: u64) -> IntentUnitId {
+    assert!(
+        value <= 0x0000_ffff_ffff_ffff,
+        "fixture value must fit the final UUID field"
+    );
+    fixed_id(&format!("00000000-0000-0000-0000-{value:012x}"))
 }
 
 pub fn phase(value: &str) -> PhaseId {
@@ -92,6 +132,25 @@ pub struct StoredRowSnapshot {
     pub revision: Vec<u8>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StoredRelationshipDefinitionSnapshot {
+    pub definition_id: String,
+    pub definition_version: Vec<u8>,
+    pub directed: i64,
+    pub source_species: Option<String>,
+    pub target_species: Option<String>,
+    pub self_policy: String,
+    pub cycle_policy: String,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StoredRelationshipSnapshot {
+    pub definition_id: String,
+    pub definition_version: Vec<u8>,
+    pub source_id: String,
+    pub target_id: String,
+}
+
 pub fn stored_rows(connection: &Connection) -> Vec<StoredRowSnapshot> {
     let mut statement = connection
         .prepare(
@@ -115,6 +174,65 @@ pub fn stored_rows(connection: &Connection) -> Vec<StoredRowSnapshot> {
         .expect("stored row query should execute")
         .collect::<Result<Vec<_>, _>>()
         .expect("stored rows should decode")
+}
+
+pub fn stored_relationship_definitions(
+    connection: &Connection,
+) -> Vec<StoredRelationshipDefinitionSnapshot> {
+    let mut statement = connection
+        .prepare(
+            "SELECT
+                definition_id,
+                definition_version,
+                directed,
+                source_species,
+                target_species,
+                self_policy,
+                cycle_policy
+             FROM relationship_definitions
+             ORDER BY definition_id COLLATE BINARY, definition_version",
+        )
+        .expect("stored relationship definitions should be readable");
+    statement
+        .query_map([], |row| {
+            Ok(StoredRelationshipDefinitionSnapshot {
+                definition_id: row.get(0)?,
+                definition_version: row.get(1)?,
+                directed: row.get(2)?,
+                source_species: row.get(3)?,
+                target_species: row.get(4)?,
+                self_policy: row.get(5)?,
+                cycle_policy: row.get(6)?,
+            })
+        })
+        .expect("stored relationship definition query should execute")
+        .collect::<Result<Vec<_>, _>>()
+        .expect("stored relationship definitions should decode")
+}
+
+pub fn stored_relationships(connection: &Connection) -> Vec<StoredRelationshipSnapshot> {
+    let mut statement = connection
+        .prepare(
+            "SELECT definition_id, definition_version, source_id, target_id
+             FROM intent_unit_relationships
+             ORDER BY definition_id COLLATE BINARY,
+                      definition_version,
+                      source_id COLLATE BINARY,
+                      target_id COLLATE BINARY",
+        )
+        .expect("stored relationships should be readable");
+    statement
+        .query_map([], |row| {
+            Ok(StoredRelationshipSnapshot {
+                definition_id: row.get(0)?,
+                definition_version: row.get(1)?,
+                source_id: row.get(2)?,
+                target_id: row.get(3)?,
+            })
+        })
+        .expect("stored relationship query should execute")
+        .collect::<Result<Vec<_>, _>>()
+        .expect("stored relationships should decode")
 }
 
 /// Replaces an existing row with a complete envelope derived from a core unit.

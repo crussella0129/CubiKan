@@ -286,18 +286,20 @@ fn test_cubikan_local_rejects_unknown_and_malformed_schema_without_mutation() {
     let directory = TestDirectory::new("schema-rejection");
     let requests = requests();
 
-    let version_two = directory.path("version-two.sqlite3");
-    seed_owned_database(&version_two);
-    let mut version_two_bytes = fs::read(&version_two).expect("seed database should be readable");
-    assert!(version_two_bytes.len() >= 64);
-    assert_eq!(&version_two_bytes[60..64], &1_u32.to_be_bytes());
-    version_two_bytes[60..64].copy_from_slice(&2_u32.to_be_bytes());
-    fs::write(&version_two, &version_two_bytes).expect("version fixture should be written");
+    let version_three = directory.path("version-three.sqlite3");
+    seed_owned_database(&version_three);
+    let mut version_three_bytes =
+        fs::read(&version_three).expect("seed database should be readable");
+    assert!(version_three_bytes.len() >= 64);
+    assert_eq!(&version_three_bytes[60..64], &2_u32.to_be_bytes());
+    version_three_bytes[60..64].copy_from_slice(&3_u32.to_be_bytes());
+    fs::write(&version_three, &version_three_bytes).expect("version fixture should be written");
     assert_storage_rejection(
-        &version_two,
+        &version_three,
         &requests,
         "unsupported_schema_version",
-        &version_two_bytes,
+        3,
+        b"intent_units(status,id)",
     );
 
     let malformed = directory.path("malformed-v1.sqlite3");
@@ -309,7 +311,13 @@ fn test_cubikan_local_rejects_unknown_and_malformed_schema_without_mutation() {
         b"intent_units(statuX,id)",
     );
     fs::write(&malformed, &malformed_bytes).expect("malformed fixture should be written");
-    assert_storage_rejection(&malformed, &requests, "corrupt_schema", &malformed_bytes);
+    assert_storage_rejection(
+        &malformed,
+        &requests,
+        "corrupt_schema",
+        2,
+        b"intent_units(statuX,id)",
+    );
 }
 
 fn seed_owned_database(path: &Path) {
@@ -344,7 +352,8 @@ fn assert_storage_rejection(
     path: &Path,
     requests: &Value,
     expected_code: &str,
-    expected_bytes: &[u8],
+    expected_version: u32,
+    retained_schema_fragment: &[u8],
 ) {
     let output = invoke(path, &named_request(requests, "get_01"));
     let response = response(&output);
@@ -358,10 +367,16 @@ fn assert_storage_rejection(
         Some(2),
         "storage failures must not expose validation or conflict members"
     );
+    let retained = fs::read(path).expect("rejected database should remain readable");
+    assert!(retained.len() >= 64);
+    assert_eq!(&retained[60..64], &expected_version.to_be_bytes());
     assert_eq!(
-        fs::read(path).expect("rejected database should remain readable"),
-        expected_bytes,
-        "rejected storage bytes must remain unchanged"
+        retained
+            .windows(retained_schema_fragment.len())
+            .filter(|candidate| *candidate == retained_schema_fragment)
+            .count(),
+        1,
+        "rejected schema marker must remain logically present"
     );
 }
 

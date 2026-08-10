@@ -7,8 +7,12 @@
 #![forbid(unsafe_code)]
 
 mod error;
+mod migration;
 mod model;
+mod projection;
 mod query;
+mod relationship;
+mod relationship_store;
 mod schema;
 mod sqlite;
 mod stored;
@@ -18,5 +22,14 @@ pub use model::{
     CompleteIntentUnit, CreateIntentUnit, GetIntentUnit, IntentUnitPage, IntentUnitSummary,
     IntentUnitView, ListCursor, ListFilters, ListIntentUnits, MutationResult, PageLimit,
     TransitionIntentUnit,
+};
+pub use projection::{DirectRelationshipPredicate, ProjectionPage, ProjectionQueryV1};
+pub use relationship::{
+    BackendSchemaVersion, CreateRelationship, CreateRelationshipDefinition, DeleteRelationship,
+    ListRelationships, MigrationError, RelationshipCursor, RelationshipDefinitionId,
+    RelationshipDefinitionIdError, RelationshipDefinitionKey, RelationshipDefinitionVersion,
+    RelationshipDefinitionVersionError, RelationshipDefinitionView, RelationshipDirection,
+    RelationshipEndpoint, RelationshipError, RelationshipIdentity, RelationshipPage,
+    RelationshipPolicy, RelationshipQueryError, RelationshipView,
 };
 pub use sqlite::SqliteBackend;

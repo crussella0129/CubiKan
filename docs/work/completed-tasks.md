@@ -351,3 +351,59 @@
 - **Completed:** 2026-08-09T23:33:51Z
 - **Files modified:** `crates/cubikan-backend/README.md`, `crates/cubikan-local/README.md`, `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `315fb711c6f84b06cdd2b363b682a7f1b394bbaf`
+
+## T-901 (sprint 9)
+- **Description:** Add the public relationship and projection value contract
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T02:58:02Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/relationship.rs`, `crates/cubikan-backend/src/projection.rs`, `crates/cubikan-backend/tests/relationship_model.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0012-intent-unit-relationships-and-board-projections.md`, `docs/sprints/s9/sprint-meta.md`, `docs/sprints/s9/sprint-research/research-report.md`, `docs/sprints/s9/sprint-plans/build-plan.md`, `docs/sprints/s9/sprint-plans/test-plan.md`, `docs/sprints/s9/sprint-plans/critique.md`, `docs/sprints/s9/sprint-tests/unit-tests.md`, `docs/sprints/s9/sprint-tests/integration-tests.md`, `docs/sprints/s9/sprint-tests/e2e-tests.md`, `docs/sprints/s9/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `3a7872465f43044389df617dce6b47244689dcc0`
+
+## T-902 (sprint 9)
+- **Description:** Introduce exact schema v2 and explicit atomic v1-to-v2 migration
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T03:32:34Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/error.rs`, `crates/cubikan-backend/src/schema.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/migration.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/schema.rs`, `crates/cubikan-backend/tests/migration.rs`, `crates/cubikan-local/tests/cli_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `d7a4d44d662691b713ed9f9e107a876d14e1af2f`
+
+## T-903 (sprint 9)
+- **Description:** Persist immutable relationship definitions
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T03:42:06Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_definitions.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `259431d3ecf87c12d22eca33b9c7fd31620f6f51`
+
+## T-904 (sprint 9)
+- **Description:** Create and delete validated directed relationships atomically
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T03:56:51Z
+- **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_mutations.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `7494f447e020d3cb59b803ac3a8a555d2624c1cf`
+
+## T-905 (sprint 9)
+- **Description:** Add bounded direct relationship queries
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T04:09:04Z
+- **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_query.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `a08c269e534aade7c876f9adc018a563ca9179db`
+
+## T-906 (sprint 9)
+- **Description:** Add ephemeral board-projection query version 1
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T04:25:46Z
+- **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/query.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/projection_query.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `83fb93e8f26cb0a560ea96cd5ac46d2e7d57b80a`
+
+## T-907 (sprint 9)
+- **Description:** Document relationship, migration, projection, and nonclaim boundaries
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T04:43:25Z
+- **Files modified:** `README.md`, `crates/cubikan-backend/README.md`, `crates/cubikan-local/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `c8b3a1af3bca2a8a67293e40fc7943f9dafa13f5`
+
+## T-908 (sprint 9)
+- **Description:** Prove the public-backend relationship and projection vertical across reopen
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T05:05:06Z
+- **Files modified:** `crates/cubikan-backend/tests/relationship_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `751aee2af457d17d01bfd07c343ea37a6b42d2f9`

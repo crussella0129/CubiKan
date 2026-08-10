@@ -1,7 +1,8 @@
 use rusqlite::{Connection, params_from_iter, types::Value};
 
 use crate::{
-    BackendError, IntentUnitPage, IntentUnitSummary, ListCursor, ListIntentUnits,
+    BackendError, IntentUnitPage, IntentUnitSummary, ListCursor, ListIntentUnits, ProjectionPage,
+    ProjectionQueryV1,
     sqlite::{StoredRow, classify_runtime_error, status_projection},
 };
 
@@ -80,4 +81,21 @@ pub(crate) fn list(
         None
     };
     Ok(IntentUnitPage::new(summaries, next_cursor))
+}
+
+/// Evaluates projection v1 when no relationship membership predicate is
+/// present. Reusing the lifecycle query keeps its filtering, replay, ordering,
+/// cursor, and live-page semantics identical while retaining the versioned
+/// projection query in the result.
+pub(crate) fn project_lifecycle(
+    connection: &Connection,
+    query: ProjectionQueryV1,
+) -> Result<ProjectionPage, BackendError> {
+    let command = ListIntentUnits::new(query.filters().clone(), query.limit(), query.after());
+    let page = list(connection, &command)?;
+    Ok(ProjectionPage::new(
+        query,
+        page.items().to_vec(),
+        page.next_cursor(),
+    ))
 }
