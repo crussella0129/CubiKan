@@ -372,3 +372,10 @@
 - **Completed:** 2026-08-10T03:42:06Z
 - **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_definitions.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `259431d3ecf87c12d22eca33b9c7fd31620f6f51`
+
+## T-904 (sprint 9)
+- **Description:** Create and delete validated directed relationships atomically
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T03:56:51Z
+- **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_mutations.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

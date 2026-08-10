@@ -135,6 +135,14 @@ pub struct StoredRelationshipDefinitionSnapshot {
     pub cycle_policy: String,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StoredRelationshipSnapshot {
+    pub definition_id: String,
+    pub definition_version: Vec<u8>,
+    pub source_id: String,
+    pub target_id: String,
+}
+
 pub fn stored_rows(connection: &Connection) -> Vec<StoredRowSnapshot> {
     let mut statement = connection
         .prepare(
@@ -192,6 +200,31 @@ pub fn stored_relationship_definitions(
         .expect("stored relationship definition query should execute")
         .collect::<Result<Vec<_>, _>>()
         .expect("stored relationship definitions should decode")
+}
+
+pub fn stored_relationships(connection: &Connection) -> Vec<StoredRelationshipSnapshot> {
+    let mut statement = connection
+        .prepare(
+            "SELECT definition_id, definition_version, source_id, target_id
+             FROM intent_unit_relationships
+             ORDER BY definition_id COLLATE BINARY,
+                      definition_version,
+                      source_id COLLATE BINARY,
+                      target_id COLLATE BINARY",
+        )
+        .expect("stored relationships should be readable");
+    statement
+        .query_map([], |row| {
+            Ok(StoredRelationshipSnapshot {
+                definition_id: row.get(0)?,
+                definition_version: row.get(1)?,
+                source_id: row.get(2)?,
+                target_id: row.get(3)?,
+            })
+        })
+        .expect("stored relationship query should execute")
+        .collect::<Result<Vec<_>, _>>()
+        .expect("stored relationships should decode")
 }
 
 /// Replaces an existing row with a complete envelope derived from a core unit.

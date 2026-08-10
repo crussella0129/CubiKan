@@ -1,12 +1,14 @@
 use std::str;
 
-use cubikan_core::IntentSpecies;
+use cubikan_core::{IntentSpecies, IntentUnit, IntentUnitId};
 use rusqlite::{Connection, OptionalExtension, Row, TransactionBehavior, params, types::ValueRef};
 
 use crate::{
-    BackendError, CreateRelationshipDefinition, RelationshipDefinitionId,
-    RelationshipDefinitionKey, RelationshipDefinitionVersion, RelationshipDefinitionView,
-    RelationshipDirection, RelationshipError, RelationshipPolicy, sqlite::classify_runtime_error,
+    BackendError, CreateRelationship, CreateRelationshipDefinition, DeleteRelationship,
+    RelationshipDefinitionId, RelationshipDefinitionKey, RelationshipDefinitionVersion,
+    RelationshipDefinitionView, RelationshipDirection, RelationshipEndpoint, RelationshipError,
+    RelationshipIdentity, RelationshipPolicy, RelationshipView,
+    sqlite::{classify_runtime_error, load_validated_unit},
 };
 
 const SELECT_DEFINITION_SQL: &str = "SELECT
@@ -19,6 +21,17 @@ const SELECT_DEFINITION_SQL: &str = "SELECT
     cycle_policy
  FROM relationship_definitions
  WHERE definition_id = ?1 COLLATE BINARY AND definition_version = ?2";
+
+const SELECT_RELATIONSHIP_SQL: &str = "SELECT
+    definition_id,
+    definition_version,
+    source_id,
+    target_id
+ FROM intent_unit_relationships
+ WHERE definition_id = ?1 COLLATE BINARY
+   AND definition_version = ?2
+   AND source_id = ?3 COLLATE BINARY
+   AND target_id = ?4 COLLATE BINARY";
 
 pub(crate) fn create_definition(
     connection: &mut Connection,
@@ -81,6 +94,261 @@ pub(crate) fn get_definition(
         }
     })?;
     stored.into_view(&key)
+}
+
+pub(crate) fn create_relationship(
+    connection: &mut Connection,
+    command: CreateRelationship,
+) -> Result<RelationshipView, RelationshipError> {
+    let relationship = command.relationship().clone();
+    let transaction = connection
+        .transaction_with_behavior(TransactionBehavior::Immediate)
+        .map_err(classify_runtime_error)?;
+
+    let definition = load_definition(&transaction, relationship.definition())?;
+    let source = load_endpoint(
+        &transaction,
+        RelationshipEndpoint::Source,
+        relationship.source(),
+    )?;
+    let target = load_endpoint(
+        &transaction,
+        RelationshipEndpoint::Target,
+        relationship.target(),
+    )?;
+    validate_endpoint_species(&definition, RelationshipEndpoint::Source, &source)?;
+    validate_endpoint_species(&definition, RelationshipEndpoint::Target, &target)?;
+
+    let is_self = relationship.source() == relationship.target();
+    if is_self && definition.self_policy() == RelationshipPolicy::Reject {
+        return Err(RelationshipError::SelfEdgeRejected { relationship });
+    }
+
+    if let Some(stored) = select_relationship(&transaction, &relationship)? {
+        stored.into_view(relationship.definition())?;
+        return Err(RelationshipError::DuplicateRelationship { relationship });
+    }
+
+    if !is_self && definition.cycle_policy() == RelationshipPolicy::Reject {
+        validate_reachability(&transaction, &relationship)?;
+    }
+
+    let encoded_version = encode_version(relationship.definition().version());
+    let changed = transaction
+        .execute(
+            "INSERT INTO intent_unit_relationships (
+                definition_id,
+                definition_version,
+                source_id,
+                target_id
+             ) VALUES (?1, ?2, ?3, ?4)",
+            params![
+                relationship.definition().id().as_str(),
+                encoded_version,
+                relationship.source().to_string(),
+                relationship.target().to_string(),
+            ],
+        )
+        .map_err(classify_runtime_error)?;
+    if changed != 1 {
+        return Err(RelationshipError::Backend(
+            BackendError::ConcurrentStorageChange,
+        ));
+    }
+
+    transaction.commit().map_err(classify_runtime_error)?;
+    Ok(RelationshipView::new(relationship))
+}
+
+pub(crate) fn delete_relationship(
+    connection: &mut Connection,
+    command: DeleteRelationship,
+) -> Result<RelationshipView, RelationshipError> {
+    let relationship = command.relationship().clone();
+    let transaction = connection
+        .transaction_with_behavior(TransactionBehavior::Immediate)
+        .map_err(classify_runtime_error)?;
+
+    let definition = load_definition(&transaction, relationship.definition())?;
+    let source = load_endpoint(
+        &transaction,
+        RelationshipEndpoint::Source,
+        relationship.source(),
+    )?;
+    let target = load_endpoint(
+        &transaction,
+        RelationshipEndpoint::Target,
+        relationship.target(),
+    )?;
+    validate_endpoint_species(&definition, RelationshipEndpoint::Source, &source)?;
+    validate_endpoint_species(&definition, RelationshipEndpoint::Target, &target)?;
+
+    let Some(stored) = select_relationship(&transaction, &relationship)? else {
+        return Err(RelationshipError::RelationshipNotFound { relationship });
+    };
+    stored.into_view(relationship.definition())?;
+
+    let encoded_version = encode_version(relationship.definition().version());
+    let changed = transaction
+        .execute(
+            "DELETE FROM intent_unit_relationships
+             WHERE definition_id = ?1 COLLATE BINARY
+               AND definition_version = ?2
+               AND source_id = ?3 COLLATE BINARY
+               AND target_id = ?4 COLLATE BINARY",
+            params![
+                relationship.definition().id().as_str(),
+                encoded_version,
+                relationship.source().to_string(),
+                relationship.target().to_string(),
+            ],
+        )
+        .map_err(classify_runtime_error)?;
+    if changed != 1 {
+        return Err(RelationshipError::Backend(
+            BackendError::ConcurrentStorageChange,
+        ));
+    }
+
+    transaction.commit().map_err(classify_runtime_error)?;
+    Ok(RelationshipView::new(relationship))
+}
+
+fn load_definition(
+    connection: &Connection,
+    key: &RelationshipDefinitionKey,
+) -> Result<RelationshipDefinitionView, RelationshipError> {
+    let encoded_version = encode_version(key.version());
+    let stored = select_definition(connection, key, &encoded_version)?.ok_or_else(|| {
+        RelationshipError::DefinitionNotFound {
+            definition: key.clone(),
+        }
+    })?;
+    stored.into_view(key)
+}
+
+fn load_endpoint(
+    connection: &Connection,
+    endpoint: RelationshipEndpoint,
+    id: IntentUnitId,
+) -> Result<IntentUnit, RelationshipError> {
+    match load_validated_unit(connection, id) {
+        Ok(unit) => Ok(unit),
+        Err(BackendError::IntentUnitNotFound { .. }) => {
+            Err(RelationshipError::EndpointNotFound { endpoint, id })
+        }
+        Err(
+            source @ (BackendError::UnsupportedEnvelopeVersion { .. }
+            | BackendError::CorruptEnvelope
+            | BackendError::ProjectionMismatch),
+        ) => Err(RelationshipError::EndpointCorrupt {
+            endpoint,
+            id,
+            source,
+        }),
+        Err(error) => Err(RelationshipError::Backend(error)),
+    }
+}
+
+fn validate_endpoint_species(
+    definition: &RelationshipDefinitionView,
+    endpoint: RelationshipEndpoint,
+    unit: &IntentUnit,
+) -> Result<(), RelationshipError> {
+    let expected = match endpoint {
+        RelationshipEndpoint::Source => definition.source_species(),
+        RelationshipEndpoint::Target => definition.target_species(),
+    };
+    if let Some(expected) = expected
+        && expected != unit.species()
+    {
+        return Err(RelationshipError::EndpointSpeciesMismatch {
+            endpoint,
+            id: unit.id(),
+            expected: expected.clone(),
+            actual: unit.species().clone(),
+        });
+    }
+    Ok(())
+}
+
+fn select_relationship(
+    connection: &Connection,
+    relationship: &RelationshipIdentity,
+) -> Result<Option<StoredRelationship>, RelationshipError> {
+    let encoded_version = encode_version(relationship.definition().version());
+    connection
+        .query_row(
+            SELECT_RELATIONSHIP_SQL,
+            params![
+                relationship.definition().id().as_str(),
+                encoded_version,
+                relationship.source().to_string(),
+                relationship.target().to_string(),
+            ],
+            StoredRelationship::from_row,
+        )
+        .optional()
+        .map_err(classify_runtime_error)
+        .map_err(RelationshipError::from)
+}
+
+fn validate_reachability(
+    connection: &Connection,
+    proposed: &RelationshipIdentity,
+) -> Result<(), RelationshipError> {
+    let encoded_version = encode_version(proposed.definition().version());
+    let mut statement = connection
+        .prepare(
+            "WITH RECURSIVE reachable(node) AS (
+                VALUES (?3)
+                UNION
+                SELECT edge.target_id
+                FROM intent_unit_relationships AS edge
+                JOIN reachable
+                  ON edge.source_id = reachable.node COLLATE BINARY
+                WHERE edge.definition_id = ?1 COLLATE BINARY
+                  AND edge.definition_version = ?2
+             )
+             SELECT
+                edge.definition_id,
+                edge.definition_version,
+                edge.source_id,
+                edge.target_id
+             FROM intent_unit_relationships AS edge
+             JOIN reachable
+               ON edge.source_id = reachable.node COLLATE BINARY
+             WHERE edge.definition_id = ?1 COLLATE BINARY
+               AND edge.definition_version = ?2
+             ORDER BY edge.source_id COLLATE BINARY, edge.target_id COLLATE BINARY",
+        )
+        .map_err(classify_runtime_error)?;
+    let rows = statement
+        .query_map(
+            params![
+                proposed.definition().id().as_str(),
+                encoded_version,
+                proposed.target().to_string(),
+            ],
+            StoredRelationship::from_row,
+        )
+        .map_err(classify_runtime_error)?;
+
+    let mut closes_cycle = false;
+    for row in rows {
+        let view = row
+            .map_err(classify_runtime_error)?
+            .into_view(proposed.definition())?;
+        if view.relationship().target() == proposed.source() {
+            closes_cycle = true;
+        }
+    }
+    if closes_cycle {
+        return Err(RelationshipError::CycleRejected {
+            relationship: proposed.clone(),
+        });
+    }
+    Ok(())
 }
 
 fn select_definition(
@@ -194,6 +462,57 @@ impl StoredDefinition {
 }
 
 #[derive(Debug)]
+struct StoredRelationship {
+    definition_id: StoredValue,
+    definition_version: StoredValue,
+    source_id: StoredValue,
+    target_id: StoredValue,
+}
+
+impl StoredRelationship {
+    fn from_row(row: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            definition_id: StoredValue::from_ref(row.get_ref(0)?),
+            definition_version: StoredValue::from_ref(row.get_ref(1)?),
+            source_id: StoredValue::from_ref(row.get_ref(2)?),
+            target_id: StoredValue::from_ref(row.get_ref(3)?),
+        })
+    }
+
+    fn into_view(
+        self,
+        expected_definition: &RelationshipDefinitionKey,
+    ) -> Result<RelationshipView, RelationshipError> {
+        let definition_id = decode_text(self.definition_id)
+            .and_then(|value| RelationshipDefinitionId::new(value).ok());
+        let definition_version = decode_blob(self.definition_version)
+            .and_then(|value| <[u8; 8]>::try_from(value).ok())
+            .and_then(|value| RelationshipDefinitionVersion::new(u64::from_be_bytes(value)).ok());
+        let source = decode_unit_id(self.source_id);
+        let target = decode_unit_id(self.target_id);
+        let Some((definition_id, definition_version, source, target)) = definition_id
+            .zip(definition_version)
+            .zip(source)
+            .zip(target)
+            .map(|(((id, version), source), target)| (id, version, source, target))
+        else {
+            return Err(RelationshipError::CorruptRelationship {
+                definition: expected_definition.clone(),
+            });
+        };
+        let definition = RelationshipDefinitionKey::new(definition_id, definition_version);
+        if &definition != expected_definition {
+            return Err(RelationshipError::CorruptRelationship {
+                definition: expected_definition.clone(),
+            });
+        }
+        Ok(RelationshipView::new(RelationshipIdentity::new(
+            definition, source, target,
+        )))
+    }
+}
+
+#[derive(Debug)]
 enum StoredValue {
     Null,
     Integer(i64),
@@ -226,6 +545,12 @@ fn decode_blob(value: StoredValue) -> Option<Vec<u8>> {
         return None;
     };
     Some(bytes)
+}
+
+fn decode_unit_id(value: StoredValue) -> Option<IntentUnitId> {
+    let value = decode_text(value)?;
+    let id = value.parse::<IntentUnitId>().ok()?;
+    (id.to_string() == value).then_some(id)
 }
 
 fn decode_species(value: StoredValue) -> Option<Option<IntentSpecies>> {

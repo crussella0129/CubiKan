@@ -9,10 +9,11 @@ use rusqlite::{
 };
 
 use crate::{
-    BackendError, BackendSchemaVersion, CompleteIntentUnit, CreateIntentUnit,
-    CreateRelationshipDefinition, IntentUnitPage, IntentUnitView, ListIntentUnits, MigrationError,
-    MutationResult, RelationshipDefinitionKey, RelationshipDefinitionView, RelationshipError,
-    StorageFailure, TransitionIntentUnit, migration, query, relationship_store,
+    BackendError, BackendSchemaVersion, CompleteIntentUnit, CreateIntentUnit, CreateRelationship,
+    CreateRelationshipDefinition, DeleteRelationship, IntentUnitPage, IntentUnitView,
+    ListIntentUnits, MigrationError, MutationResult, RelationshipDefinitionKey,
+    RelationshipDefinitionView, RelationshipError, RelationshipView, StorageFailure,
+    TransitionIntentUnit, migration, query, relationship_store,
     schema::{self, Ownership},
     stored::{
         ENVELOPE_VERSION, decode_envelope, decode_revision_blob, encode_envelope,
@@ -132,6 +133,24 @@ impl SqliteBackend {
     ) -> Result<RelationshipDefinitionView, RelationshipError> {
         self.require_relationship_schema()?;
         relationship_store::get_definition(&self.connection, key)
+    }
+
+    /// Durably creates one validated exact-version directed relationship.
+    pub fn create_relationship(
+        &mut self,
+        command: CreateRelationship,
+    ) -> Result<RelationshipView, RelationshipError> {
+        self.require_relationship_schema()?;
+        relationship_store::create_relationship(&mut self.connection, command)
+    }
+
+    /// Durably deletes one validated complete relationship identity.
+    pub fn delete_relationship(
+        &mut self,
+        command: DeleteRelationship,
+    ) -> Result<RelationshipView, RelationshipError> {
+        self.require_relationship_schema()?;
+        relationship_store::delete_relationship(&mut self.connection, command)
     }
 
     /// Durably creates one revision-zero Intent Unit.
@@ -256,7 +275,7 @@ impl SqliteBackend {
     }
 }
 
-fn load_validated_unit(
+pub(crate) fn load_validated_unit(
     connection: &Connection,
     id: IntentUnitId,
 ) -> Result<IntentUnit, BackendError> {
