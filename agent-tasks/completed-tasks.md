@@ -35,3 +35,9 @@
 - **Completed:** 2026-08-10T13:49:46Z
 - **Files modified:** docs/appendix/potential-derivative-projects.md
 - **Commit:** `5e42830`
+
+## T-007 (sprint 0)
+- **Description:** Close the derivative-appendix refresh backlog item
+- **Completed:** 2026-08-10T13:51:14Z
+- **Files modified:** docs/work/tasks.md, docs/work/completed-tasks.md
+- **Commit:** `4fa74a2`

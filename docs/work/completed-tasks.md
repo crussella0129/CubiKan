@@ -407,3 +407,11 @@
 - **Completed:** 2026-08-10T05:05:06Z
 - **Files modified:** `crates/cubikan-backend/tests/relationship_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `751aee2af457d17d01bfd07c343ea37a6b42d2f9`
+
+## MAINT-001 (post-Sprint 9)
+- **Description:** Refresh the advisory derivative-project appendix for the realized local backend and relationship/projection boundary
+- **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md) (realized documentation maintenance; no state transition)
+- **Completed:** 2026-08-10T13:51:14Z
+- **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Scope:** Corrected current-state and prerequisite language without changing intent ownership, runtime behavior, or derivative-repository authorization.
+- **Commit:** resolve by stable message `sprint-0: T-007 Close derivative appendix maintenance backlog`
