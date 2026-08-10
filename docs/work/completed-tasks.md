@@ -406,4 +406,4 @@
 - **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
 - **Completed:** 2026-08-10T05:05:06Z
 - **Files modified:** `crates/cubikan-backend/tests/relationship_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `751aee2af457d17d01bfd07c343ea37a6b42d2f9`
