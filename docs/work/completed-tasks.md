@@ -399,4 +399,4 @@
 - **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
 - **Completed:** 2026-08-10T04:43:25Z
 - **Files modified:** `README.md`, `crates/cubikan-backend/README.md`, `crates/cubikan-local/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `c8b3a1af3bca2a8a67293e40fc7943f9dafa13f5`
