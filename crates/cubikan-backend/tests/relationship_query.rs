@@ -296,6 +296,77 @@ fn test_relationship_query_enforces_bounds_complete_cursor_and_live_pages() {
         }
     );
 
+    // Pagination advances by the composite (source, target) key. The second
+    // source deliberately has targets that sort before the first source's
+    // cursor target, so target-only continuation would incorrectly omit it.
+    let boundary_database = TestDatabase::new("relationship-query-source-boundary");
+    let mut boundary_backend =
+        SqliteBackend::open(boundary_database.path()).expect("boundary database should initialize");
+    let boundary_definition = key("source-boundary", 1);
+    let first_source = numbered_id(10);
+    let second_source = numbered_id(20);
+    let first_target = numbered_id(900);
+    let cursor_target = numbered_id(901);
+    let lower_target = numbered_id(2);
+    let next_lower_target = numbered_id(3);
+    for id in [
+        first_source,
+        second_source,
+        first_target,
+        cursor_target,
+        lower_target,
+        next_lower_target,
+    ] {
+        create_unit(&mut boundary_backend, id, "node");
+    }
+    create_definition(&mut boundary_backend, &boundary_definition, None, None);
+    for (source, target) in [
+        (second_source, next_lower_target),
+        (first_source, cursor_target),
+        (second_source, lower_target),
+        (first_source, first_target),
+    ] {
+        create_edge(&mut boundary_backend, &boundary_definition, source, target);
+    }
+
+    let boundary_first = boundary_backend
+        .list_relationships(list_query(&boundary_definition, None, None, 2, None))
+        .expect("first source-boundary page should succeed");
+    assert_eq!(
+        pairs(&boundary_first),
+        [(first_source, first_target), (first_source, cursor_target)]
+    );
+    let boundary_cursor = boundary_first
+        .next_cursor()
+        .expect("source-boundary lookahead should expose a cursor")
+        .clone();
+    assert_eq!(boundary_cursor.relationship().source(), first_source);
+    assert_eq!(boundary_cursor.relationship().target(), cursor_target);
+
+    let boundary_second = boundary_backend
+        .list_relationships(list_query(
+            &boundary_definition,
+            None,
+            None,
+            2,
+            Some(boundary_cursor),
+        ))
+        .expect("second source-boundary page should succeed");
+    assert_eq!(
+        pairs(&boundary_second),
+        [
+            (second_source, lower_target),
+            (second_source, next_lower_target)
+        ]
+    );
+    assert!(boundary_second.next_cursor().is_none());
+    assert!(
+        boundary_first
+            .items()
+            .iter()
+            .all(|item| !boundary_second.items().contains(item))
+    );
+
     // Lookahead is fully endpoint-replay validated before a cursor is emitted.
     let lookahead_database = TestDatabase::new("relationship-query-lookahead");
     let mut lookahead_backend = SqliteBackend::open(lookahead_database.path())
@@ -626,6 +697,43 @@ fn test_relationship_query_rejects_selected_corruption_without_partial_results()
             RelationshipError::EndpointSpeciesMismatch {
                 endpoint: RelationshipEndpoint::Source,
                 id: source,
+                expected: species("other"),
+                actual: species("node"),
+            }
+        );
+        assert_eq!(snapshot(&database), before);
+    }
+    {
+        let database = TestDatabase::new("relationship-query-target-species");
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        let definition = key("target-species", 1);
+        let source = numbered_id(1);
+        let target = numbered_id(2);
+        for id in [source, target] {
+            create_unit(&mut backend, id, "node");
+        }
+        create_definition(&mut backend, &definition, Some("node"), Some("node"));
+        create_edge(&mut backend, &definition, source, target);
+        let changed = database
+            .connect()
+            .execute(
+                "UPDATE relationship_definitions SET target_species='other'
+                 WHERE definition_id=?1 COLLATE BINARY AND definition_version=?2",
+                params![
+                    definition.id().as_str(),
+                    definition.version().value().to_be_bytes(),
+                ],
+            )
+            .expect("fixture target species should change");
+        assert_eq!(changed, 1);
+        let before = snapshot(&database);
+        assert_eq!(
+            backend
+                .list_relationships(list_query(&definition, None, None, 100, None))
+                .expect_err("selected target species mismatch should reject"),
+            RelationshipError::EndpointSpeciesMismatch {
+                endpoint: RelationshipEndpoint::Target,
+                id: target,
                 expected: species("other"),
                 actual: species("node"),
             }

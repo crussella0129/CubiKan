@@ -556,10 +556,13 @@ fn test_relationship_model_does_not_expose_storage_or_execution_authority() {
     let relationship_source = include_str!("../src/relationship.rs");
     let projection_source = include_str!("../src/projection.rs");
     let library_source = include_str!("../src/lib.rs");
-    for source in [relationship_source, projection_source] {
+    for source in [relationship_source, projection_source, library_source] {
         for forbidden in [
             "rusqlite",
             "StoredRow",
+            "Board",
+            "StoredBoard",
+            "ExecutionGraph",
             "Serialize",
             "Deserialize",
             "SystemTime",

@@ -139,55 +139,60 @@ fn test_migration_rejects_unowned_corrupt_and_wrong_version_sources() {
         MigrationError::Backend(BackendError::UnownedDatabase),
     );
 
-    let corrupt_unit = TestDatabase::new("migration-corrupt-unit");
-    {
-        let connection = corrupt_unit.connect();
-        initialize_exact_v1(&connection);
+    for (fixture_label, corrupt_ordinal) in [
+        ("migration-corrupt-unit-first", 1),
+        ("migration-corrupt-unit-middle", 2),
+        ("migration-corrupt-unit-last", 3),
+    ] {
+        let corrupt_unit = TestDatabase::new(fixture_label);
+        {
+            let connection = corrupt_unit.connect();
+            initialize_exact_v1(&connection);
+        }
+        {
+            let mut backend =
+                SqliteBackend::open(corrupt_unit.path()).expect("exact v1 fixture should open");
+            for valid_ordinal in (1..=3).filter(|ordinal| *ordinal != corrupt_ordinal) {
+                let valid_id = numbered_id(valid_ordinal);
+                backend
+                    .create(CreateIntentUnit::new(
+                        Some(valid_id),
+                        IntentSpecies::new("feature").expect("fixture species should be valid"),
+                        linear_workflow("workflow", "queued", "done"),
+                    ))
+                    .expect("valid replay row should create through the public API");
+                backend
+                    .get(valid_id)
+                    .expect("valid row should replay before corruption is added");
+            }
+        }
+        {
+            let connection = corrupt_unit.connect();
+            connection
+                .execute(
+                    "INSERT INTO intent_units VALUES (?1,1,?2,'workflow','feature','queued','active',?3)",
+                    (numbered_id(corrupt_ordinal).to_string(), "not-json", [0_u8; 8]),
+                )
+                .expect("corrupt replay fixture should insert");
+        }
+        assert_eq!(
+            snapshot(&corrupt_unit.connect())
+                .rows
+                .iter()
+                .map(|row| row.id.as_str())
+                .collect::<Vec<_>>(),
+            [
+                "00000000-0000-0000-0000-000000000001",
+                "00000000-0000-0000-0000-000000000002",
+                "00000000-0000-0000-0000-000000000003",
+            ],
+            "canonical replay order must place the corrupt row at ordinal {corrupt_ordinal}"
+        );
+        assert_rejected_without_logical_change(
+            &corrupt_unit,
+            MigrationError::Backend(BackendError::CorruptEnvelope),
+        );
     }
-    {
-        let valid_id = numbered_id(1);
-        let mut backend =
-            SqliteBackend::open(corrupt_unit.path()).expect("exact v1 fixture should open");
-        backend
-            .create(CreateIntentUnit::new(
-                Some(valid_id),
-                IntentSpecies::new("feature").expect("fixture species should be valid"),
-                linear_workflow("workflow", "queued", "done"),
-            ))
-            .expect("earlier valid row should create");
-        backend
-            .get(valid_id)
-            .expect("earlier valid row should replay before corruption is added");
-    }
-    {
-        let connection = corrupt_unit.connect();
-        connection
-            .execute(
-                "INSERT INTO intent_units VALUES (?1,1,?2,'workflow','feature','queued','active',?3)",
-                (
-                    "00000000-0000-0000-0000-000000000002",
-                    "not-json",
-                    [0_u8; 8],
-                ),
-            )
-            .expect("corrupt replay fixture should insert");
-    }
-    assert_eq!(
-        snapshot(&corrupt_unit.connect())
-            .rows
-            .iter()
-            .map(|row| row.id.as_str())
-            .collect::<Vec<_>>(),
-        [
-            "00000000-0000-0000-0000-000000000001",
-            "00000000-0000-0000-0000-000000000002",
-        ],
-        "canonical replay order must place the valid row before the corrupt row"
-    );
-    assert_rejected_without_logical_change(
-        &corrupt_unit,
-        MigrationError::Backend(BackendError::CorruptEnvelope),
-    );
 
     let malformed_v1 = TestDatabase::new("migration-malformed-v1");
     {
