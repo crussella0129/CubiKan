@@ -351,3 +351,10 @@
 - **Completed:** 2026-08-09T23:33:51Z
 - **Files modified:** `crates/cubikan-backend/README.md`, `crates/cubikan-local/README.md`, `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `315fb711c6f84b06cdd2b363b682a7f1b394bbaf`
+
+## T-901 (sprint 9)
+- **Description:** Add the public relationship and projection value contract
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T02:58:02Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/relationship.rs`, `crates/cubikan-backend/src/projection.rs`, `crates/cubikan-backend/tests/relationship_model.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0012-intent-unit-relationships-and-board-projections.md`, `docs/sprints/s9/sprint-meta.md`, `docs/sprints/s9/sprint-research/research-report.md`, `docs/sprints/s9/sprint-plans/build-plan.md`, `docs/sprints/s9/sprint-plans/test-plan.md`, `docs/sprints/s9/sprint-plans/critique.md`, `docs/sprints/s9/sprint-tests/unit-tests.md`, `docs/sprints/s9/sprint-tests/integration-tests.md`, `docs/sprints/s9/sprint-tests/e2e-tests.md`, `docs/sprints/s9/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

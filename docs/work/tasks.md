@@ -1,4 +1,10 @@
 # Agent Tasks (Persistent Backlog)
 
-- (backlog) [INT-0012] Research and lock the smallest typed cross-unit relationship and board-projection contract now that INT-0010 is realized, including relation authority, cycles, correction, pagination, and consistency boundaries before implementation.
+- [ ] T-902 (sprint 9) [intent: INT-0012]: Introduce exact SQLite schema v2 and explicit atomic v1-to-v2 migration — touches: backend schema/migration/open code and schema/migration/local-fixture tests.
+- [ ] T-903 (sprint 9) [intent: INT-0012]: Persist immutable relationship definitions — touches: backend relationship storage/API and definition tests.
+- [ ] T-904 (sprint 9) [intent: INT-0012]: Create and delete validated directed relationships atomically — touches: backend relationship mutations/cycle validation and mutation tests.
+- [ ] T-905 (sprint 9) [intent: INT-0012]: Add bounded direct relationship queries — touches: backend relationship query/pagination code and query tests.
+- [ ] T-906 (sprint 9) [intent: INT-0012]: Add ephemeral board-projection query version 1 — touches: backend projection query code and projection tests.
+- [ ] T-907 (sprint 9) [intent: INT-0012]: Document the relationship, migration, projection, and nonclaim boundaries — touches: root/backend/local guides.
+- [ ] T-908 (sprint 9) [intent: INT-0012]: Prove the public-backend relationship/projection vertical across reopen — touches: backend real-file composition tests.
 - (backlog) [INT-0007] Refresh the non-authoritative derivative-project appendix's current-state and prerequisite language to recognize the realized local backend without changing intent ownership or implying that any derivative repository exists.
