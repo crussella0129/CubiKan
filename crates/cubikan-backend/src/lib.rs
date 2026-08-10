@@ -7,6 +7,7 @@
 #![forbid(unsafe_code)]
 
 mod error;
+mod migration;
 mod model;
 mod projection;
 mod query;

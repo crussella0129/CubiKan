@@ -9,8 +9,9 @@ use rusqlite::{
 };
 
 use crate::{
-    BackendError, CompleteIntentUnit, CreateIntentUnit, IntentUnitPage, IntentUnitView,
-    ListIntentUnits, MutationResult, StorageFailure, TransitionIntentUnit, query,
+    BackendError, BackendSchemaVersion, CompleteIntentUnit, CreateIntentUnit, IntentUnitPage,
+    IntentUnitView, ListIntentUnits, MigrationError, MutationResult, RelationshipError,
+    StorageFailure, TransitionIntentUnit, migration, query,
     schema::{self, Ownership},
     stored::{
         ENVELOPE_VERSION, decode_envelope, decode_revision_blob, encode_envelope,
@@ -24,23 +25,19 @@ const SYNCHRONOUS_EXTRA: i64 = 3;
 
 /// Synchronous local SQLite backend for durable CubiKan Intent Units.
 ///
-/// Version 1 deliberately owns one caller-selected on-disk database. Opening a
-/// path validates ownership and the exact schema before returning; it never
-/// adopts or migrates an unknown database.
+/// One handle owns one caller-selected on-disk database. Opening validates exact
+/// v1 or v2 ownership before returning; it never adopts or implicitly migrates.
 #[derive(Debug)]
 pub struct SqliteBackend {
     connection: Connection,
+    schema_version: BackendSchemaVersion,
 }
 
 impl SqliteBackend {
     /// Opens, initializes when truly empty, and validates an owned local store.
     pub fn open(path: impl AsRef<Path>) -> Result<Self, BackendError> {
         let path = path.as_ref();
-        if path.as_os_str().is_empty() || path == Path::new(":memory:") {
-            return Err(BackendError::storage(rusqlite::Error::InvalidPath(
-                path.to_path_buf(),
-            )));
-        }
+        validate_database_path(path)?;
 
         // Deliberately omit URI and shared-cache flags. A caller-selected path
         // is a literal local filesystem path, not a SQLite URI.
@@ -61,24 +58,65 @@ impl SqliteBackend {
             .transaction_with_behavior(TransactionBehavior::Immediate)
             .map_err(classify_runtime_error)?;
         let after_lock = schema::inspect(&transaction)?;
-        match (before_lock, after_lock) {
-            (Ownership::Empty, Ownership::Empty) => schema::initialize(&transaction)?,
-            (Ownership::Empty | Ownership::OwnedV1, Ownership::OwnedV1) => {}
-            (Ownership::OwnedV1, Ownership::Empty) => {
+        let accepted = match (before_lock, after_lock) {
+            (Ownership::Empty, Ownership::Empty) => {
+                schema::initialize_v2(&transaction)?;
+                Ownership::OwnedV2
+            }
+            (Ownership::Empty, owned @ (Ownership::OwnedV1 | Ownership::OwnedV2)) => owned,
+            (Ownership::OwnedV1, owned @ (Ownership::OwnedV1 | Ownership::OwnedV2)) => owned,
+            (Ownership::OwnedV2, Ownership::OwnedV2) => Ownership::OwnedV2,
+            (Ownership::OwnedV1 | Ownership::OwnedV2, Ownership::Empty)
+            | (Ownership::OwnedV2, Ownership::OwnedV1) => {
                 return Err(BackendError::CorruptSchema);
             }
-        }
-        if schema::inspect(&transaction)? != Ownership::OwnedV1 {
+        };
+        if schema::inspect(&transaction)? != accepted {
             return Err(BackendError::CorruptSchema);
         }
+        let schema_version = accepted
+            .capability()
+            .expect("accepted owned schema must have a capability");
         transaction.commit().map_err(classify_runtime_error)?;
 
-        if schema::inspect(&connection)? != Ownership::OwnedV1 {
+        let after_commit = schema::inspect(&connection)?;
+        if after_commit != accepted
+            && !(accepted == Ownership::OwnedV1 && after_commit == Ownership::OwnedV2)
+        {
             return Err(BackendError::CorruptSchema);
         }
         verify_connection_configuration(&connection)?;
 
-        Ok(Self { connection })
+        Ok(Self {
+            connection,
+            schema_version,
+        })
+    }
+
+    /// Returns the exact durable-schema capability cached when this handle opened.
+    #[must_use]
+    pub const fn schema_version(&self) -> BackendSchemaVersion {
+        self.schema_version
+    }
+
+    /// Explicitly migrates one exact schema-v1 file to exact schema v2.
+    pub fn migrate_v1_to_v2(path: impl AsRef<Path>) -> Result<(), MigrationError> {
+        migration::migrate_v1_to_v2(path.as_ref())
+    }
+
+    #[allow(
+        dead_code,
+        reason = "consumed by relationship operations beginning in T-903"
+    )]
+    pub(crate) fn require_relationship_schema(&self) -> Result<(), RelationshipError> {
+        if self.schema_version == BackendSchemaVersion::V2 {
+            Ok(())
+        } else {
+            Err(RelationshipError::MigrationRequired {
+                found: self.schema_version,
+                required: BackendSchemaVersion::V2,
+            })
+        }
     }
 
     /// Durably creates one revision-zero Intent Unit.
@@ -322,7 +360,19 @@ fn classify_insert_error(error: rusqlite::Error, id: IntentUnitId) -> BackendErr
     }
 }
 
-fn configure_connection_local_safety(connection: &Connection) -> Result<(), BackendError> {
+pub(crate) fn validate_database_path(path: &Path) -> Result<(), BackendError> {
+    if path.as_os_str().is_empty() || path == Path::new(":memory:") {
+        Err(BackendError::storage(rusqlite::Error::InvalidPath(
+            path.to_path_buf(),
+        )))
+    } else {
+        Ok(())
+    }
+}
+
+pub(crate) fn configure_connection_local_safety(
+    connection: &Connection,
+) -> Result<(), BackendError> {
     connection
         .busy_timeout(BUSY_TIMEOUT)
         .map_err(classify_runtime_error)?;
@@ -341,7 +391,7 @@ fn configure_connection_local_safety(connection: &Connection) -> Result<(), Back
     Ok(())
 }
 
-fn configure_accepted_database(connection: &Connection) -> Result<(), BackendError> {
+pub(crate) fn configure_accepted_database(connection: &Connection) -> Result<(), BackendError> {
     let journal_mode: String = connection
         .query_row("PRAGMA main.journal_mode = DELETE", [], |row| row.get(0))
         .map_err(classify_runtime_error)?;
@@ -354,7 +404,7 @@ fn configure_accepted_database(connection: &Connection) -> Result<(), BackendErr
     Ok(())
 }
 
-fn verify_connection_configuration(connection: &Connection) -> Result<(), BackendError> {
+pub(crate) fn verify_connection_configuration(connection: &Connection) -> Result<(), BackendError> {
     let journal_mode: String = connection
         .pragma_query_value(None, "journal_mode", |row| row.get(0))
         .map_err(classify_runtime_error)?;
@@ -414,8 +464,11 @@ pub(crate) fn is_corrupt_database_error(error: &rusqlite::Error) -> bool {
 mod tests {
     use std::{
         fs,
+        path::PathBuf,
         sync::atomic::{AtomicU64, Ordering},
     };
+
+    use cubikan_core::{IntentSpecies, PhaseId, Workflow, WorkflowEdge, WorkflowId};
 
     use super::*;
 
@@ -429,10 +482,134 @@ mod tests {
         ))
     }
 
+    struct TestDatabase {
+        root: PathBuf,
+        path: PathBuf,
+    }
+
+    impl TestDatabase {
+        fn new(label: &str) -> Self {
+            let ordinal = NEXT_PATH.fetch_add(1, Ordering::Relaxed);
+            let root = std::env::temp_dir().join(format!(
+                "cubikan-backend-unit-{label}-{}-{ordinal}",
+                std::process::id()
+            ));
+            fs::create_dir(&root).expect("test directory should be created");
+            let path = root.join("cubikan.sqlite3");
+            Self { root, path }
+        }
+    }
+
+    impl Drop for TestDatabase {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.root);
+        }
+    }
+
     #[test]
-    fn test_new_empty_database_initializes_exact_schema_v1_and_pragmas() {
+    fn test_exact_v1_retains_unit_operations_and_caches_relationship_migration_guard() {
+        let database = TestDatabase::new("v1-capability");
+        let connection = Connection::open(&database.path).expect("v1 fixture should open");
+        connection
+            .execute(schema::CREATE_INTENT_UNITS_SQL, [])
+            .expect("v1 table should create");
+        for sql in schema::CREATE_INTENT_UNIT_INDEX_SQL {
+            connection.execute(sql, []).expect("v1 index should create");
+        }
+        schema::set_user_version(&connection, 1).expect("v1 marker should set");
+        drop(connection);
+
+        let queued = PhaseId::new("queued").unwrap();
+        let done = PhaseId::new("done").unwrap();
+        let workflow = Workflow::new(
+            WorkflowId::new("delivery").unwrap(),
+            vec![done.clone(), queued.clone()],
+            queued,
+            vec![WorkflowEdge::new(
+                PhaseId::new("queued").unwrap(),
+                done.clone(),
+            )],
+            vec![done.clone()],
+        )
+        .unwrap();
+        let id: IntentUnitId = "00000000-0000-0000-0000-000000000001".parse().unwrap();
+        let mut backend = SqliteBackend::open(&database.path).expect("exact v1 should open");
+        assert_eq!(backend.schema_version(), BackendSchemaVersion::V1);
+        backend
+            .create(CreateIntentUnit::new(
+                Some(id),
+                IntentSpecies::new("feature").unwrap(),
+                workflow,
+            ))
+            .unwrap();
+        assert_eq!(backend.get(id).unwrap().id(), id);
+        assert_eq!(
+            backend
+                .list(ListIntentUnits::new(
+                    crate::ListFilters::default(),
+                    crate::PageLimit::new(100).unwrap(),
+                    None,
+                ))
+                .unwrap()
+                .items()
+                .len(),
+            1
+        );
+        let transitioned = backend
+            .transition(TransitionIntentUnit::new(
+                id,
+                done,
+                IntentUnitRevision::INITIAL,
+            ))
+            .unwrap();
+        backend
+            .complete(CompleteIntentUnit::new(
+                id,
+                transitioned.committed_revision(),
+            ))
+            .unwrap();
+        let before = backend
+            .connection
+            .query_row(
+                "SELECT id,envelope_version,envelope,workflow_id,species,phase,status,revision
+                 FROM intent_units WHERE id=?1",
+                [id.to_string()],
+                StoredRow::from_row,
+            )
+            .unwrap();
+        assert_eq!(
+            schema::inspect(&backend.connection).unwrap(),
+            Ownership::OwnedV1
+        );
+        assert_eq!(
+            backend.require_relationship_schema(),
+            Err(RelationshipError::MigrationRequired {
+                found: BackendSchemaVersion::V1,
+                required: BackendSchemaVersion::V2,
+            })
+        );
+        let after = backend
+            .connection
+            .query_row(
+                "SELECT id,envelope_version,envelope,workflow_id,species,phase,status,revision
+                 FROM intent_units WHERE id=?1",
+                [id.to_string()],
+                StoredRow::from_row,
+            )
+            .unwrap();
+        assert_eq!(after, before);
+        assert_eq!(
+            schema::inspect(&backend.connection).unwrap(),
+            Ownership::OwnedV1
+        );
+        verify_connection_configuration(&backend.connection).unwrap();
+    }
+
+    #[test]
+    fn test_new_empty_database_initializes_exact_schema_v2_and_pragmas() {
         let path = test_path();
         let backend = SqliteBackend::open(&path).expect("new database should open");
+        assert_eq!(backend.schema_version(), BackendSchemaVersion::V2);
 
         verify_connection_configuration(&backend.connection)
             .expect("returned connection should retain exact configuration");
@@ -462,6 +639,11 @@ mod tests {
         );
 
         drop(backend);
+        let reopened = SqliteBackend::open(&path).expect("exact v2 database should reopen");
+        assert_eq!(reopened.schema_version(), BackendSchemaVersion::V2);
+        verify_connection_configuration(&reopened.connection)
+            .expect("reopened connection should retain exact configuration");
+        drop(reopened);
         let _ = fs::remove_file(path);
     }
 }

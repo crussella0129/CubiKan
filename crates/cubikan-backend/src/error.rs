@@ -108,7 +108,7 @@ pub enum BackendError {
     UnownedDatabase,
     /// The SQLite schema version is not supported.
     UnsupportedSchemaVersion { found: i64 },
-    /// Schema version 1 does not match the exact owned shape.
+    /// A supported schema version does not match its exact owned shape.
     CorruptSchema,
     /// The stored envelope version is not supported.
     UnsupportedEnvelopeVersion { found: u64 },

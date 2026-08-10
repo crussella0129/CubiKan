@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-902 (sprint 9) [intent: INT-0012]: Introduce exact SQLite schema v2 and explicit atomic v1-to-v2 migration — touches: backend schema/migration/open code and schema/migration/local-fixture tests.
 - [ ] T-903 (sprint 9) [intent: INT-0012]: Persist immutable relationship definitions — touches: backend relationship storage/API and definition tests.
 - [ ] T-904 (sprint 9) [intent: INT-0012]: Create and delete validated directed relationships atomically — touches: backend relationship mutations/cycle validation and mutation tests.
 - [ ] T-905 (sprint 9) [intent: INT-0012]: Add bounded direct relationship queries — touches: backend relationship query/pagination code and query tests.

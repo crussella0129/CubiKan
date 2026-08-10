@@ -15,6 +15,24 @@ use cubikan_core::{
 use rusqlite::{Connection, params};
 use serde_json::{Value, json};
 
+const EXACT_V1_TABLE_SQL: &str = r#"CREATE TABLE intent_units (
+    id TEXT NOT NULL PRIMARY KEY COLLATE BINARY,
+    envelope_version INTEGER NOT NULL CHECK(envelope_version = 1),
+    envelope TEXT NOT NULL,
+    workflow_id TEXT NOT NULL COLLATE BINARY,
+    species TEXT NOT NULL COLLATE BINARY,
+    phase TEXT NOT NULL COLLATE BINARY,
+    status TEXT NOT NULL COLLATE BINARY CHECK(status IN ('active','completed')),
+    revision BLOB NOT NULL CHECK(length(revision) = 8)
+) STRICT"#;
+
+const EXACT_V1_INDEX_SQL: [&str; 4] = [
+    "CREATE INDEX intent_units_by_workflow ON intent_units(workflow_id,id)",
+    "CREATE INDEX intent_units_by_species ON intent_units(species,id)",
+    "CREATE INDEX intent_units_by_phase ON intent_units(phase,id)",
+    "CREATE INDEX intent_units_by_status ON intent_units(status,id)",
+];
+
 static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(0);
 
 pub struct TestDatabase {
@@ -55,6 +73,20 @@ impl Drop for TestDatabase {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.directory);
     }
+}
+
+pub fn initialize_exact_v1(connection: &Connection) {
+    connection
+        .execute(EXACT_V1_TABLE_SQL, [])
+        .expect("exact v1 Intent Unit table should create");
+    for sql in EXACT_V1_INDEX_SQL {
+        connection
+            .execute(sql, [])
+            .expect("exact v1 Intent Unit index should create");
+    }
+    connection
+        .pragma_update(None, "user_version", 1_i64)
+        .expect("exact v1 schema marker should set");
 }
 
 pub fn fixed_id(value: &str) -> IntentUnitId {
