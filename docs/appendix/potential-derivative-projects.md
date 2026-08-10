@@ -216,6 +216,13 @@ creation request. Shared inputs are named explicitly; canonical data and policy
 ownership must not conflict. The first group covers agent operations,
 provenance analytics, and Sprint Loops accounting.
 
+Every recommendation remains conditional: creating its named repository still
+requires its own selected intent and explicit authorization, named owners who
+accept its data, policy, and security boundaries, compatible versioned
+integration contracts, and satisfaction of its entry-specific creation trigger.
+Naming the boundary supplies none of those approvals and asserts neither that
+the repository exists nor that its creation is scheduled.
+
 ### 1. Agent Ops — `cubikan-agent-ops`
 
 - **Recommended repository:** `cubikan-agent-ops`.

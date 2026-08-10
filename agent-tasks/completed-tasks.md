@@ -23,3 +23,9 @@
 - **Completed:** 2026-08-10T13:38:12Z
 - **Files modified:** docs/appendix/potential-derivative-projects.md
 - **Commit:** `1bf569f`
+
+## T-005 (sprint 0)
+- **Description:** Preserve conditional creation governance for every recommended repository
+- **Completed:** 2026-08-10T13:42:16Z
+- **Files modified:** docs/appendix/potential-derivative-projects.md
+- **Commit:** `a2b3e61`
