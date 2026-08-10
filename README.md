@@ -14,8 +14,12 @@ multiple durable Intent Units, and the separate `cubikan-local` executable runs
 one versioned durable operation per process against an explicit caller-selected
 local database path.
 
-The durable layers select adapter-owned stored-envelope, SQLite-schema, and
-local-JSON contracts at version 1. They do not turn the provisional core Serde
+The durable layers version their contracts independently. The stored Intent
+Unit envelope remains version 1; SQLite schema versions 1 and 2 are supported;
+the relationship contract and ephemeral projection query are each version 1;
+and the `cubikan-local` JSON protocol remains version 1. Schema v2 adds durable
+relationship definitions and edges without changing existing envelope bytes or
+the local protocol. None of these contracts turns the provisional core Serde
 layout or the stateless `cubikan` protocol into storage authority. No current
 layer selects a blockchain, network service, deployment model, or user
 interface.
@@ -112,20 +116,54 @@ compatibility promise.
 
 ## Durable local backend and process adapter
 
-`cubikan-backend` owns two exact version 1 persistence contracts: a strict JSON
-envelope containing the complete workflow snapshot and lifecycle history, and a
-single-table `STRICT` SQLite schema whose query projections are checked against
-the envelope after core replay. Every load reconstructs and validates the
-aggregate through `cubikan-core`; unsupported versions, corrupt representations,
-and projection mismatches fail closed.
+The durable boundary uses this version matrix:
 
-`cubikan-local` owns the third version 1 contract: one strict create, get, list,
-transition, or complete JSON operation per process. The only invocation form is
+| Contract | Supported version | Scope |
+|----------|-------------------|-------|
+| Stored Intent Unit envelope | 1 | Complete workflow snapshot and replayable lifecycle history |
+| SQLite schema | 1 and 2 | Exact v1 lifecycle store; exact v2 adds relationship definitions and edges |
+| Relationship contract | 1 | Immutable directed definition versions and exact current-state edges |
+| Projection query | 1 | Ephemeral lifecycle/relationship views |
+| `cubikan-local` JSON protocol | 1 | Create, get, list, transition, and complete only |
+
+Every unit load reconstructs and validates the aggregate through
+`cubikan-core`; unsupported envelopes, corrupt representations, and SQL
+projection mismatches fail closed. `cubikan-local` continues to execute one
+strict protocol-v1 lifecycle operation per process. The only invocation form is
 an explicit database path:
 
 ```sh
 cargo run -p cubikan-local --bin cubikan-local -- --database ./cubikan.sqlite3 < request.json
 ```
+
+A fresh or truly empty path initializes exact schema v2. An exact schema-v1
+file still opens without implicit schema migration, preserves its logical
+schema and rows, and retains create, get, list, transition, and complete;
+relationship-definition, edge, relationship-query, and projection methods
+instead return typed migration-required. Migration never runs during
+`open` or through `cubikan-local`. A Rust caller must explicitly invoke
+`SqliteBackend::migrate_v1_to_v2(path)`, then drop and reopen backend handles.
+An already-open v1 handle keeps its cached v1 capability after another
+connection migrates the file: its existing lifecycle operations remain usable,
+but its relationship/projection operations continue to report migration
+required until reopen.
+
+Migration opens an existing file read/write without creating a missing path,
+acquires one immediate writer transaction, revalidates exact v1 and every
+stored unit, adds only the exact v2 relationship objects, advances
+`user_version` last, validates v2, and commits once. It preserves every
+`intent_units` column value byte-for-byte; that is not a whole-file byte-layout
+promise. There is no automatic retry. A busy or interrupted attempt against
+accepted exact v1 leaves exact v1; in a race, one migrator may commit exact v2
+and the loser then reports that its source is no longer version 1. A source
+that was not acceptable exact v1—such as unowned, unsupported, malformed, or
+non-SQLite input—is rejected in its unchanged prior logical state, which is not
+claimed to be exact v1 or v2. Before migration, operators should quiesce writers
+and preserve any desired recovery copy outside CubiKan. On rejection, preserve
+and diagnose or restore the file, then reopen only an exact supported schema.
+See the
+[`cubikan-backend` migration and recovery contract](crates/cubikan-backend/README.md#explicit-v1-to-v2-migration)
+for the complete procedure and exclusions.
 
 The local adapter validates the complete request before opening the path, caps
 raw stdin at 1 MiB, and writes one compact JSON response plus newline with one
@@ -146,6 +184,38 @@ and status. Workflow-ID equality means the ID only, not equal topology. Limits
 range from 1 through 100; pages use ascending lexical canonical-ID order and an
 exclusive last-returned-ID cursor. Each request sees a live committed page, not
 a snapshot across requests, so mutations can change later membership.
+
+Relationship contract v1 stores immutable, directed definitions identified by
+caller-owned `(definition ID, definition version)` and current-state edges
+identified by `(definition ID, definition version, source Intent Unit ID,
+target Intent Unit ID)`. Definition versions are positive `u64` labels, not a
+latest-version sequence. A definition can constrain source and target species
+and independently allow or reject self-edges and non-self cycles. Accepted
+edges do not change either endpoint's workflow, phase, status, revision, or
+history. Creation validates the definition, source, target, species, self-edge,
+duplicate, and cycle conditions in the documented transaction order. Busy
+writer acquisition can occur before those semantic checks.
+
+Deletion requires and validates the complete edge identity, definition, both
+replay-valid endpoints, and endpoint species before removing exactly one edge.
+It is physical, non-cascading semantic removal. Correction is a committed
+delete followed by a separate committed create, so it is neither an atomic
+replacement nor idempotent and can expose an intermediate absence.
+
+Direct relationship queries name one exact definition version, optionally AND
+source and target filters, and return direct edges only in canonical
+`(source,target)` order. Limits are 1 through 100 and the exclusive cursor
+retains the complete edge identity; it is ordering state and need not name a
+currently stored edge. Each request is a live committed page, not a snapshot.
+
+Projection query v1 ANDs existing lifecycle filters with at most one direct
+predicate: outgoing returns an anchor's direct targets, and incoming returns an
+anchor's direct sources. Results are validated unit summaries in canonical ID
+order with the existing bounded exclusive cursor. Queries and results are not
+stored board membership. The same unit can appear in multiple projections
+without copied state or ownership transfer. Unchanged canonical state produces
+the same result, while later committed lifecycle or edge changes can change a
+later live page. Projection is a read model, not a scheduler or execution graph.
 
 A commit can succeed before stdout body, newline, or flush delivery fails. In
 that case the client does not know the committed outcome from process delivery
@@ -197,14 +267,22 @@ direct write access or row editing.
 The current project does not provide:
 
 - authentication or authorization, tenancy, encryption, or privacy policy;
-- backup, replication, automatic schema/envelope/protocol migration, repair,
-  import, or deletion;
+- automatic migration, backup, replication, repair, import, downgrade, reverse
+  migration, migration progress/resume/cancellation, or a fixed migration
+  duration;
 - direct persistence of the provisional core Serde representation;
 - automatic retries, idempotency keys, exactly-once execution, or retry-safety
   guarantees;
-- cross-Intent-Unit transactions or relationship/parent-child graph policy;
-- indefinite stable schema, envelope, protocol, core-serialization, or CLI
-  compatibility;
+- definition listing/deletion, latest-version inference, definition or
+  relationship history, relationship revisions, actors, timestamps, idempotent
+  correction, atomic edge replacement, cascade deletion, Intent Unit deletion,
+  or forensic-erasure guarantees;
+- stored boards, stored query results, cross-request snapshots, transitive
+  traversal, or an arbitrary Boolean graph-query language;
+- delegation, readiness, scheduling, retries, fan-out/join, WIP limits, skill
+  loading, artifact routing, or executor policy;
+- old-binary readability or indefinite stable schema, envelope, relationship,
+  projection, protocol, core-serialization, or CLI compatibility;
 - a blockchain, network, smart contract, cryptographic audit/tamper proof, or
   blockchain policy;
 - KPI/metrics evaluation or automatic transition authorization;
@@ -216,10 +294,15 @@ The current project does not provide:
 
 The existing `cubikan` executable remains stateless and its version 1 protocol
 still has no revision fields or revision-conditioned commands. The durable
-contracts belong only to `cubikan-backend` and `cubikan-local`. Their local raw
-byte ceiling, busy timeout, rollback journal, and explicit flush do not claim a
-total request deadline, network controls, crash immunity, acknowledged response
-delivery, or production readiness.
+relationship and projection APIs are currently a public Rust
+`cubikan-backend` boundary only; `cubikan-local` protocol v1 adds no relationship
+operations, fields, results, or error codes. The stored envelope-v1 codec,
+`cubikan-core`, stateless `cubikan`, workspace manifests/lockfile, and CI
+workflow remain outside the schema-v2 relationship change. The local E2E
+unsupported-schema fixture alone now uses version 3 because version 2 is
+supported. The local raw byte ceiling, busy timeout, rollback journal, and
+explicit flush do not claim a total request deadline, network controls, crash
+immunity, acknowledged response delivery, or production readiness.
 
 These boundaries keep the domain foundation testable and allow later product
 policy to be selected through explicit intent rather than embedded assumptions.
