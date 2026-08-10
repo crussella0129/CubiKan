@@ -543,11 +543,37 @@ fn test_relationship_query_rejects_selected_corruption_without_partial_results()
         assert_eq!(snapshot(&database), before);
     }
 
-    // Replay and endpoint-species validation apply to every selected edge.
+    // Replay and endpoint-species validation apply to both roles on every
+    // selected edge.
     {
-        let database = TestDatabase::new("relationship-query-corrupt-endpoint");
+        let database = TestDatabase::new("relationship-query-corrupt-source");
         let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
-        let definition = key("corrupt-endpoint", 1);
+        let definition = key("corrupt-source", 1);
+        let source = numbered_id(1);
+        let target = numbered_id(2);
+        for id in [source, target] {
+            create_unit(&mut backend, id, "node");
+        }
+        create_definition(&mut backend, &definition, Some("node"), Some("node"));
+        create_edge(&mut backend, &definition, source, target);
+        corrupt_envelope(&database, source);
+        let before = snapshot(&database);
+        assert_eq!(
+            backend
+                .list_relationships(list_query(&definition, None, None, 100, None))
+                .expect_err("corrupt selected source should reject"),
+            RelationshipError::EndpointCorrupt {
+                endpoint: RelationshipEndpoint::Source,
+                id: source,
+                source: BackendError::CorruptEnvelope,
+            }
+        );
+        assert_eq!(snapshot(&database), before);
+    }
+    {
+        let database = TestDatabase::new("relationship-query-corrupt-target");
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        let definition = key("corrupt-target", 1);
         let source = numbered_id(1);
         let target = numbered_id(2);
         for id in [source, target] {
@@ -560,7 +586,7 @@ fn test_relationship_query_rejects_selected_corruption_without_partial_results()
         assert_eq!(
             backend
                 .list_relationships(list_query(&definition, None, None, 100, None))
-                .expect_err("corrupt selected endpoint should reject"),
+                .expect_err("corrupt selected target should reject"),
             RelationshipError::EndpointCorrupt {
                 endpoint: RelationshipEndpoint::Target,
                 id: target,

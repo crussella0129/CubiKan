@@ -2,14 +2,16 @@ mod common;
 
 use std::fs;
 
-use common::{TestDatabase, initialize_exact_v1};
-use cubikan_backend::{BackendError, MigrationError, SqliteBackend};
+use common::{TestDatabase, initialize_exact_v1, linear_workflow, numbered_id};
+use cubikan_backend::{BackendError, CreateIntentUnit, MigrationError, SqliteBackend};
+use cubikan_core::IntentSpecies;
 use rusqlite::Connection;
 
 #[derive(Debug, Eq, PartialEq)]
 struct LogicalSnapshot {
     version: i64,
     objects: Vec<(String, String, String, Option<String>)>,
+    foreign_values: Vec<String>,
     rows: Vec<StoredRowSnapshot>,
 }
 
@@ -42,6 +44,21 @@ fn snapshot(connection: &Connection) -> LogicalSnapshot {
     let has_units = objects
         .iter()
         .any(|row| row.0 == "table" && row.1 == "intent_units");
+    let has_foreign_data = objects
+        .iter()
+        .any(|row| row.0 == "table" && row.1 == "foreign_data");
+    let foreign_values = if has_foreign_data {
+        connection
+            .prepare("SELECT value FROM foreign_data ORDER BY rowid")
+            .and_then(|mut statement| {
+                statement
+                    .query_map([], |row| row.get(0))?
+                    .collect::<Result<Vec<_>, _>>()
+            })
+            .expect("foreign row snapshot should be readable")
+    } else {
+        Vec::new()
+    };
     let rows = if has_units {
         connection
             .prepare(
@@ -71,6 +88,7 @@ fn snapshot(connection: &Connection) -> LogicalSnapshot {
     LogicalSnapshot {
         version,
         objects,
+        foreign_values,
         rows,
     }
 }
@@ -111,6 +129,11 @@ fn test_migration_rejects_unowned_corrupt_and_wrong_version_sources() {
             "CREATE TABLE foreign_data(value TEXT); INSERT INTO foreign_data VALUES ('keep');",
         )
         .expect("unowned fixture should create");
+    assert_eq!(
+        snapshot(&unowned.connect()).foreign_values,
+        vec!["keep".to_owned()],
+        "the rollback snapshot must include the unowned row content"
+    );
     assert_rejected_without_logical_change(
         &unowned,
         MigrationError::Backend(BackendError::UnownedDatabase),
@@ -120,17 +143,47 @@ fn test_migration_rejects_unowned_corrupt_and_wrong_version_sources() {
     {
         let connection = corrupt_unit.connect();
         initialize_exact_v1(&connection);
+    }
+    {
+        let valid_id = numbered_id(1);
+        let mut backend =
+            SqliteBackend::open(corrupt_unit.path()).expect("exact v1 fixture should open");
+        backend
+            .create(CreateIntentUnit::new(
+                Some(valid_id),
+                IntentSpecies::new("feature").expect("fixture species should be valid"),
+                linear_workflow("workflow", "queued", "done"),
+            ))
+            .expect("earlier valid row should create");
+        backend
+            .get(valid_id)
+            .expect("earlier valid row should replay before corruption is added");
+    }
+    {
+        let connection = corrupt_unit.connect();
         connection
             .execute(
                 "INSERT INTO intent_units VALUES (?1,1,?2,'workflow','feature','queued','active',?3)",
                 (
-                    "00000000-0000-0000-0000-000000000001",
+                    "00000000-0000-0000-0000-000000000002",
                     "not-json",
                     [0_u8; 8],
                 ),
             )
             .expect("corrupt replay fixture should insert");
     }
+    assert_eq!(
+        snapshot(&corrupt_unit.connect())
+            .rows
+            .iter()
+            .map(|row| row.id.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+        ],
+        "canonical replay order must place the valid row before the corrupt row"
+    );
     assert_rejected_without_logical_change(
         &corrupt_unit,
         MigrationError::Backend(BackendError::CorruptEnvelope),

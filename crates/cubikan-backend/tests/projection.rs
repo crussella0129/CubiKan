@@ -778,4 +778,140 @@ fn test_projection_v1_missing_and_corrupt_inputs_fail_whole_page() {
             }
         );
     }
+
+    // Incoming projections validate their target anchor before replaying each
+    // source candidate, and preserve those direction-specific roles.
+    {
+        let database = TestDatabase::new("projection-corrupt-incoming-anchor");
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        let definition = key("incoming-anchor", 1);
+        let source = numbered_id(1);
+        let anchor = numbered_id(100);
+        for id in [source, anchor] {
+            create_unit(&mut backend, id, "node", "incoming-anchor-flow");
+        }
+        create_definition(&mut backend, &definition, Some("node"), Some("node"));
+        create_edge(&mut backend, &definition, source, anchor);
+        corrupt_envelope(&database, anchor);
+        let before = snapshot(&database);
+        assert_eq!(
+            backend
+                .project(projection(
+                    ListFilters::default(),
+                    Some(incoming(&definition, anchor)),
+                    100,
+                    None,
+                ))
+                .expect_err("corrupt incoming anchor should reject before candidates"),
+            RelationshipError::EndpointCorrupt {
+                endpoint: RelationshipEndpoint::Target,
+                id: anchor,
+                source: BackendError::CorruptEnvelope,
+            }
+        );
+        assert_eq!(snapshot(&database), before);
+    }
+    {
+        let database = TestDatabase::new("projection-corrupt-incoming-candidate");
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        let definition = key("incoming-candidate", 1);
+        let source = numbered_id(1);
+        let anchor = numbered_id(100);
+        for id in [source, anchor] {
+            create_unit(&mut backend, id, "node", "incoming-candidate-flow");
+        }
+        create_definition(&mut backend, &definition, Some("node"), Some("node"));
+        create_edge(&mut backend, &definition, source, anchor);
+        corrupt_envelope(&database, source);
+        let before = snapshot(&database);
+        assert_eq!(
+            backend
+                .project(projection(
+                    ListFilters::default(),
+                    Some(incoming(&definition, anchor)),
+                    100,
+                    None,
+                ))
+                .expect_err("corrupt incoming source candidate should reject whole page"),
+            RelationshipError::EndpointCorrupt {
+                endpoint: RelationshipEndpoint::Source,
+                id: source,
+                source: BackendError::CorruptEnvelope,
+            }
+        );
+        assert_eq!(snapshot(&database), before);
+    }
+
+    // Incoming direction applies target species to the anchor and source
+    // species to each candidate; neither role may be swapped or skipped.
+    for (label, column, endpoint, id, expected) in [
+        (
+            "projection-incoming-target-species",
+            "target_species",
+            RelationshipEndpoint::Target,
+            numbered_id(100),
+            "other-target",
+        ),
+        (
+            "projection-incoming-source-species",
+            "source_species",
+            RelationshipEndpoint::Source,
+            numbered_id(1),
+            "other-source",
+        ),
+    ] {
+        let database = TestDatabase::new(label);
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        let definition = key("incoming-species", 1);
+        let source = numbered_id(1);
+        let anchor = numbered_id(100);
+        create_unit(&mut backend, source, "source", "incoming-species-flow");
+        create_unit(&mut backend, anchor, "target", "incoming-species-flow");
+        create_definition(&mut backend, &definition, Some("source"), Some("target"));
+        create_edge(&mut backend, &definition, source, anchor);
+        let sql = match column {
+            "target_species" => {
+                "UPDATE relationship_definitions SET target_species=?1
+                 WHERE definition_id=?2 COLLATE BINARY AND definition_version=?3"
+            }
+            "source_species" => {
+                "UPDATE relationship_definitions SET source_species=?1
+                 WHERE definition_id=?2 COLLATE BINARY AND definition_version=?3"
+            }
+            _ => unreachable!("fixture column is locked"),
+        };
+        let changed = database
+            .connect()
+            .execute(
+                sql,
+                params![
+                    expected,
+                    definition.id().as_str(),
+                    definition.version().value().to_be_bytes(),
+                ],
+            )
+            .expect("fixture definition species should change");
+        assert_eq!(changed, 1);
+        let before = snapshot(&database);
+        assert_eq!(
+            backend
+                .project(projection(
+                    ListFilters::default(),
+                    Some(incoming(&definition, anchor)),
+                    100,
+                    None,
+                ))
+                .expect_err("incoming role-specific species mismatch should reject"),
+            RelationshipError::EndpointSpeciesMismatch {
+                endpoint,
+                id,
+                expected: species(expected),
+                actual: match endpoint {
+                    RelationshipEndpoint::Source => species("source"),
+                    RelationshipEndpoint::Target => species("target"),
+                },
+            }
+        );
+        assert_eq!(snapshot(&database), before);
+    }
 }

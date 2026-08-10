@@ -4,16 +4,17 @@ use std::sync::{Arc, Barrier};
 
 use common::{
     StoredRelationshipDefinitionSnapshot, StoredRelationshipSnapshot, StoredRowSnapshot,
-    TestDatabase, fixed_id, linear_workflow, stored_relationship_definitions, stored_relationships,
-    stored_rows,
+    TestDatabase, fixed_id, linear_workflow, phase, stored_relationship_definitions,
+    stored_relationships, stored_rows,
 };
 use cubikan_backend::{
-    BackendError, CreateIntentUnit, CreateRelationship, CreateRelationshipDefinition,
-    DeleteRelationship, RelationshipDefinitionId, RelationshipDefinitionKey,
-    RelationshipDefinitionVersion, RelationshipDirection, RelationshipEndpoint, RelationshipError,
-    RelationshipIdentity, RelationshipPolicy, RelationshipView, SqliteBackend,
+    BackendError, CompleteIntentUnit, CreateIntentUnit, CreateRelationship,
+    CreateRelationshipDefinition, DeleteRelationship, RelationshipDefinitionId,
+    RelationshipDefinitionKey, RelationshipDefinitionVersion, RelationshipDirection,
+    RelationshipEndpoint, RelationshipError, RelationshipIdentity, RelationshipPolicy,
+    RelationshipView, SqliteBackend, TransitionIntentUnit,
 };
-use cubikan_core::{IntentSpecies, IntentUnitId};
+use cubikan_core::{IntentSpecies, IntentUnitId, IntentUnitRevision, IntentUnitStatus};
 use rusqlite::params;
 
 const A: &str = "10000000-0000-0000-0000-000000000001";
@@ -248,6 +249,44 @@ fn test_edge_create_commits_without_mutating_endpoints() {
 
     let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
     create_standard_units(&mut backend);
+    let transitioned_source = backend
+        .transition(TransitionIntentUnit::new(
+            fixed_id(A),
+            phase("done"),
+            IntentUnitRevision::INITIAL,
+        ))
+        .expect("source endpoint should transition before relationship creation");
+    let transitioned_target = backend
+        .transition(TransitionIntentUnit::new(
+            fixed_id(B),
+            phase("done"),
+            IntentUnitRevision::INITIAL,
+        ))
+        .expect("target endpoint should transition before relationship creation");
+    let completed_target = backend
+        .complete(CompleteIntentUnit::new(
+            fixed_id(B),
+            transitioned_target.committed_revision(),
+        ))
+        .expect("target endpoint should complete before relationship creation");
+    assert_eq!(
+        transitioned_source.committed_revision(),
+        IntentUnitRevision::new(1)
+    );
+    assert_eq!(transitioned_source.intent_unit().phase(), &phase("done"));
+    assert_eq!(
+        transitioned_source.intent_unit().status(),
+        IntentUnitStatus::Active
+    );
+    assert_eq!(
+        completed_target.committed_revision(),
+        IntentUnitRevision::new(2)
+    );
+    assert_eq!(completed_target.intent_unit().phase(), &phase("done"));
+    assert_eq!(
+        completed_target.intent_unit().status(),
+        IntentUnitStatus::Completed
+    );
     create_definition(
         &mut backend,
         &definition,
@@ -282,6 +321,7 @@ fn test_edge_create_commits_without_mutating_endpoints() {
             .expect("reopened backend should observe committed edge"),
         expected
     );
+    assert_eq!(stored_rows(&database.connect()), before_units);
     assert_eq!(create_edge(&mut reopened, &edge), expected);
     assert_eq!(stored_rows(&database.connect()), before_units);
     assert_eq!(
@@ -292,11 +332,10 @@ fn test_edge_create_commits_without_mutating_endpoints() {
 
 #[test]
 fn test_edge_policy_rejections_are_atomic() {
-    // Missing definition precedes every endpoint lookup.
+    // Missing definition precedes two missing endpoints.
     {
         let database = TestDatabase::new("edge-missing-definition");
         let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
-        create_standard_units(&mut backend);
         let definition = key("missing", 1);
         let edge = relationship(&definition, A, B);
         assert_create_rejected_atomically(
@@ -307,7 +346,7 @@ fn test_edge_policy_rejections_are_atomic() {
         );
     }
 
-    // A selected corrupt definition outranks endpoint and policy work.
+    // A selected corrupt definition outranks two corrupt endpoints.
     {
         let database = TestDatabase::new("edge-corrupt-definition");
         let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
@@ -322,6 +361,8 @@ fn test_edge_policy_rejections_are_atomic() {
             RelationshipPolicy::Reject,
         );
         corrupt_definition_policy(&database, &definition);
+        corrupt_envelope(&database, fixed_id(A));
+        corrupt_envelope(&database, fixed_id(B));
         let edge = relationship(&definition, A, B);
         assert_create_rejected_atomically(
             &mut backend,
@@ -333,11 +374,10 @@ fn test_edge_policy_rejections_are_atomic() {
         );
     }
 
-    // Source replay precedes target replay.
+    // Source replay precedes target replay when both endpoints fail identically.
     {
-        let database = TestDatabase::new("edge-missing-source");
+        let database = TestDatabase::new("edge-missing-both-endpoints");
         let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
-        create_unit(&mut backend, B, "deliverable");
         let definition = key("endpoints", 1);
         create_definition(
             &mut backend,
@@ -347,7 +387,7 @@ fn test_edge_policy_rejections_are_atomic() {
             RelationshipPolicy::Allow,
             RelationshipPolicy::Allow,
         );
-        let edge = relationship(&definition, A, C);
+        let edge = relationship(&definition, A, B);
         assert_create_rejected_atomically(
             &mut backend,
             &database,
@@ -359,7 +399,7 @@ fn test_edge_policy_rejections_are_atomic() {
         );
     }
     {
-        let database = TestDatabase::new("edge-corrupt-source");
+        let database = TestDatabase::new("edge-corrupt-both-endpoints");
         let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
         create_standard_units(&mut backend);
         let definition = key("endpoints", 1);
@@ -372,7 +412,8 @@ fn test_edge_policy_rejections_are_atomic() {
             RelationshipPolicy::Allow,
         );
         corrupt_envelope(&database, fixed_id(A));
-        let edge = relationship(&definition, A, "40000000-0000-0000-0000-000000000004");
+        corrupt_envelope(&database, fixed_id(B));
+        let edge = relationship(&definition, A, B);
         assert_create_rejected_atomically(
             &mut backend,
             &database,
@@ -384,16 +425,18 @@ fn test_edge_policy_rejections_are_atomic() {
             },
         );
     }
+
+    // Target replay precedes source species when the target is absent.
     {
-        let database = TestDatabase::new("edge-missing-target");
+        let database = TestDatabase::new("edge-target-replay-before-source-species");
         let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
-        create_unit(&mut backend, A, "feature");
+        create_unit(&mut backend, A, "wrong-source");
         let definition = key("endpoints", 1);
         create_definition(
             &mut backend,
             &definition,
-            None,
-            None,
+            Some("feature"),
+            Some("deliverable"),
             RelationshipPolicy::Allow,
             RelationshipPolicy::Allow,
         );
@@ -408,16 +451,19 @@ fn test_edge_policy_rejections_are_atomic() {
             },
         );
     }
+
+    // Target replay precedes both species checks when its envelope is corrupt.
     {
-        let database = TestDatabase::new("edge-corrupt-target");
+        let database = TestDatabase::new("edge-target-replay-before-both-species");
         let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
-        create_standard_units(&mut backend);
+        create_unit(&mut backend, A, "wrong-source");
+        create_unit(&mut backend, B, "wrong-target");
         let definition = key("endpoints", 1);
         create_definition(
             &mut backend,
             &definition,
-            None,
-            None,
+            Some("feature"),
+            Some("deliverable"),
             RelationshipPolicy::Allow,
             RelationshipPolicy::Allow,
         );
@@ -435,15 +481,15 @@ fn test_edge_policy_rejections_are_atomic() {
         );
     }
 
-    // Role-specific species checks precede self, duplicate, and cycle checks.
+    // Source species precedes target species; both precede policy checks.
     for (label, source_kind, target_kind, endpoint, expected, actual) in [
         (
-            "edge-source-species",
-            "wrong",
-            "deliverable",
+            "edge-source-before-target-species",
+            "wrong-source",
+            "wrong-target",
             RelationshipEndpoint::Source,
             "feature",
-            "wrong",
+            "wrong-source",
         ),
         (
             "edge-target-species",
@@ -485,7 +531,73 @@ fn test_edge_policy_rejections_are_atomic() {
         );
     }
 
-    // Self rejection precedes duplicate/cycle; duplicate precedes reachability.
+    // Target species precedes self policy on a self proposal whose source role matches.
+    {
+        let database = TestDatabase::new("edge-target-species-before-self");
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        create_unit(&mut backend, A, "feature");
+        let definition = key("species-before-self", 1);
+        create_definition(
+            &mut backend,
+            &definition,
+            Some("feature"),
+            Some("deliverable"),
+            RelationshipPolicy::Reject,
+            RelationshipPolicy::Reject,
+        );
+        let edge = relationship(&definition, A, A);
+        assert_create_rejected_atomically(
+            &mut backend,
+            &database,
+            edge,
+            RelationshipError::EndpointSpeciesMismatch {
+                endpoint: RelationshipEndpoint::Target,
+                id: fixed_id(A),
+                expected: species("deliverable"),
+                actual: species("feature"),
+            },
+        );
+    }
+
+    // Self rejection precedes duplicate/cycle on an existing self edge.
+    {
+        let database = TestDatabase::new("edge-self-before-duplicate-cycle");
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        create_standard_units(&mut backend);
+        let definition = key("self-precedes", 1);
+        create_definition(
+            &mut backend,
+            &definition,
+            None,
+            None,
+            RelationshipPolicy::Allow,
+            RelationshipPolicy::Reject,
+        );
+        let self_edge = relationship(&definition, A, A);
+        create_edge(&mut backend, &self_edge);
+        let changed = database
+            .connect()
+            .execute(
+                "UPDATE relationship_definitions SET self_policy='reject'
+                 WHERE definition_id=?1 COLLATE BINARY AND definition_version=?2",
+                params![
+                    definition.id().as_str(),
+                    definition.version().value().to_be_bytes(),
+                ],
+            )
+            .expect("fixture self policy should become rejecting");
+        assert_eq!(changed, 1);
+        assert_create_rejected_atomically(
+            &mut backend,
+            &database,
+            self_edge.clone(),
+            RelationshipError::SelfEdgeRejected {
+                relationship: self_edge,
+            },
+        );
+    }
+
+    // Duplicate precedes reachability, including corrupt visited edge identity.
     {
         let database = TestDatabase::new("edge-self-duplicate");
         let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
@@ -499,16 +611,6 @@ fn test_edge_policy_rejections_are_atomic() {
             RelationshipPolicy::Reject,
             RelationshipPolicy::Reject,
         );
-        let self_edge = relationship(&definition, A, A);
-        assert_create_rejected_atomically(
-            &mut backend,
-            &database,
-            self_edge.clone(),
-            RelationshipError::SelfEdgeRejected {
-                relationship: self_edge,
-            },
-        );
-
         let accepted = relationship(&definition, A, B);
         create_edge(&mut backend, &accepted);
         insert_malformed_reachable_edge(&database, &definition, B);
@@ -527,6 +629,32 @@ fn test_edge_policy_rejections_are_atomic() {
             reaches_corruption,
             RelationshipError::CorruptRelationship {
                 definition: definition.clone(),
+            },
+        );
+    }
+
+    // An otherwise-valid non-self edge that closes a cycle rejects atomically.
+    {
+        let database = TestDatabase::new("edge-explicit-cycle-rejection");
+        let mut backend = SqliteBackend::open(database.path()).expect("database should initialize");
+        create_standard_units(&mut backend);
+        let definition = key("explicit-cycle", 1);
+        create_definition(
+            &mut backend,
+            &definition,
+            Some("feature"),
+            Some("feature"),
+            RelationshipPolicy::Allow,
+            RelationshipPolicy::Reject,
+        );
+        create_edge(&mut backend, &relationship(&definition, A, C));
+        let proposed = relationship(&definition, C, A);
+        assert_create_rejected_atomically(
+            &mut backend,
+            &database,
+            proposed.clone(),
+            RelationshipError::CycleRejected {
+                relationship: proposed,
             },
         );
     }
