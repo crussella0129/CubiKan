@@ -17,3 +17,9 @@
 - **Completed:** 2026-08-10T13:31:46Z
 - **Files modified:** docs/appendix/potential-derivative-projects.md
 - **Commit:** `4312ee7`
+
+## T-004 (sprint 0)
+- **Description:** Replace stale per-entry waits on realized revision, backend, and relationship primitives
+- **Completed:** 2026-08-10T13:38:12Z
+- **Files modified:** docs/appendix/potential-derivative-projects.md
+- **Commit:** `1bf569f`

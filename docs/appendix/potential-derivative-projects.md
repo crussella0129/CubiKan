@@ -247,18 +247,21 @@ provenance analytics, and Sprint Loops accounting.
   references, artifact references, and versioned create/transition/complete
   commands for CubiKan.
 - **CubiKan interaction:** CubiKan remains authoritative for Intent Unit
-  identity and validated lifecycle state. Shared or resumable operation uses
-  INT-0009 revisions and waits for INT-0010, whose bounded collection query can
-  support basic queues. Advanced decomposition dependencies, nested-loop
-  composition, or multi-board projections require INT-0012. Delegation and
-  execution edges never become `WorkflowEdge` or implicit core lineage. A local
-  experiment may embed an explicitly pinned current core version, but that does
-  not supply persistence or an agent service.
+  identity and validated lifecycle state. Shared or resumable operation can use
+  the realized INT-0009 revision contract and INT-0010 durable command/query
+  boundary, including its bounded collection query for basic queues. The
+  realized INT-0012 relationship and projection primitives can support advanced
+  decomposition dependencies, nested-loop composition, or multi-board views;
+  Agent Ops still owns those semantics. Delegation and execution edges never
+  become `WorkflowEdge` or implicit core lineage. A local experiment may embed
+  an explicitly pinned current core version, but that does not supply an agent
+  service.
 - **Prerequisites:** An explicit manager/doer identity and authorization model;
   Book-to-unit reference and reconciliation rules; privacy, retention,
-  secret-handling, approval, and cost semantics; INT-0009 plus INT-0010 for
-  shared operation; INT-0012 for durable advanced relationships; and INT-0008
-  when assignments participate in reusable intent-to-artifact provenance.
+  secret-handling, approval, and cost semantics; the realized INT-0009 and
+  INT-0010 primitives for shared operation; the realized INT-0012 primitives
+  for durable advanced relationships; and INT-0008 when assignments participate
+  in reusable intent-to-artifact provenance.
 - **Creation trigger:** Create only when an authorized project needs
   coordinated, resumable work across multiple managers or doers and has named
   owners for identity, permissions, approvals, and the INT-0010-backed
@@ -311,15 +314,17 @@ provenance analytics, and Sprint Loops accounting.
   directly mutate lifecycle state or an agent.
 - **CubiKan interaction:** A bootstrap can read existing Book and Git evidence
   without writing CubiKan. Full revision-scoped, bidirectional provenance uses
-  a future versioned evidence boundary only after INT-0008, INT-0009, and
-  INT-0010 are selected and realized. Observatory never edits backend storage,
-  persists provisional core Serde as a contract, or treats the one-shot CLI as
-  a service.
+  a future versioned evidence boundary only after INT-0008 is selected and
+  realized; its lifecycle revisions and bounded durable queries are already
+  available under realized INT-0009 and INT-0010. Observatory never edits
+  backend storage, persists provisional core Serde as a contract, or treats the
+  one-shot CLI as a service.
 - **Prerequisites:** Read-only bootstrapping needs explicit namespace rules,
   provider connectors that preserve immutable full identities, and access
-  controls for every sensitive source. Full bidirectional provenance needs
-  INT-0008 plus INT-0009 and INT-0010; no analytical projection substitutes for
-  their canonical association.
+  controls for every sensitive source. Full bidirectional provenance still
+  needs INT-0008; its revision and durable-query prerequisites are already
+  realized under INT-0009 and INT-0010. No analytical projection substitutes
+  for the canonical association.
 - **Creation trigger:** Create when repeated cross-project trace questions
   justify a connector-heavy analytics runtime with its own privacy and release
   boundary; a read-only Book/Git prototype may establish that need before a
@@ -369,12 +374,13 @@ provenance analytics, and Sprint Loops accounting.
   cost and credit views; correction and approval trails; and explicit missing-
   evidence, trust, or anti-gaming exceptions. Each output identifies the
   accounting-model version and evidence set that produced it.
-- **CubiKan interaction:** Consume a future versioned query/evidence boundary
-  backed by INT-0008, INT-0009, and INT-0010, referencing exact units and
-  revisions without editing CubiKan storage. INT-0011 may supply revision-linked
-  observations, but Animus owns their accounting interpretation. CubiKan
-  lifecycle history is sequence evidence—not a financial ledger, audit journal,
-  valuation record, or proof that work occurred.
+- **CubiKan interaction:** Consume the realized INT-0009 revision and INT-0010
+  durable query boundary to reference exact units and revisions without editing
+  CubiKan storage. Revision-scoped artifact provenance still requires INT-0008,
+  and INT-0011 may later supply lifecycle-linked observations, but Animus owns
+  their accounting interpretation. CubiKan lifecycle history is sequence
+  evidence—not a financial ledger, audit journal, valuation record, or proof
+  that work occurred.
 - **Prerequisites:** An accepted accounting charter defining the unit of account,
   cost/credit semantics, trustworthy-provenance threshold, corrections,
   anti-gaming treatment, access/retention controls, and human approval roles;
@@ -401,7 +407,7 @@ provenance analytics, and Sprint Loops accounting.
   and [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md).
 - **Recursive-loop boundary:** Agent Ops owns manager/doer delegation and loop
   initiation; Skill Graph owns readiness, fan-out/join, retries, and execution
-  composition; INT-0012 may later preserve explicit cross-unit grouping or
+  composition; realized INT-0012 can preserve explicit cross-unit grouping or
   dependency relations. Animus can reconcile only explicit loop identities and
   relations. Parent-child meaning, roll-up, and correction propagation remain
   open and are never inferred from `WorkflowEdge`, phase order, or lifecycle
@@ -441,19 +447,21 @@ provenance analytics, and Sprint Loops accounting.
 - **CubiKan interaction:** Local structural validation may embed the current
   public core at an explicitly pinned crate version; that supplies neither
   persistence nor KPI storage. A definition package may be reviewed or
-  distributed as a non-operational artifact, but every shared operational or KPI
-  activation waits for INT-0009 revisions, INT-0010's versioned durable
-  command/query boundary, and INT-0011 observation/evaluation behavior. Studio
-  authors and governs the caller-supplied versioned definitions and
-  authorization; the future backend stores raw lifecycle-linked observations
-  and deterministically evaluates only those definitions; Observatory consumes
-  the results for governed analysis. Studio never writes backend storage or
-  treats provisional Serde/the one-shot CLI as a durable contract.
+  distributed as a non-operational artifact. The revision and durable
+  command/query primitives needed for shared operation are available under
+  realized INT-0009 and INT-0010; KPI activation still waits for INT-0011
+  observation/evaluation behavior. Studio authors and governs the caller-supplied
+  versioned definitions and authorization; the future evidence backend stores
+  raw lifecycle-linked observations and deterministically evaluates only those
+  definitions; Observatory consumes the results for governed analysis. Studio
+  never writes backend storage or treats provisional Serde/the one-shot CLI as
+  a durable contract.
 - **Prerequisites:** A definition identity/version and compatibility model;
   workflow-version pinning rules; process-owner authorization; complete
   measurement and correction semantics; privacy/retention treatment for
-  metadata; and a chosen pinned core version. Shared operational/KPI release also
-  requires realized INT-0009, INT-0010, and INT-0011 plus a versioned adapter.
+  metadata; and a chosen pinned core version. A shared operational release can
+  build on realized INT-0009 and INT-0010 but still needs a versioned adapter;
+  shared KPI release additionally requires realization of INT-0011.
 - **Creation trigger:** Create when an authorized team repeatedly needs to author
   and govern multiple process definitions through a reusable Electron-first
   experience, owns the definition/authorization model, and accepts immutable
@@ -557,22 +565,24 @@ provenance analytics, and Sprint Loops accounting.
   versioned lifecycle responses into neutral view models, projection-cache
   invalidation, secure-default integration guidance, and kit release policy. It
   does not own a vertical's business rules, authorization, retention, or UX.
-- **Inputs:** A future versioned CubiKan command/query boundary; unit IDs,
-  revisions, lifecycle fields, and bounded paginated results; caller-owned
-  authorization context/domain references; and requirements supplied by an
-  independently authorized bounded-domain application.
+- **Inputs:** The realized INT-0010 versioned command/query boundary through the
+  explicit-path local adapter; unit IDs, revisions, lifecycle fields, and
+  bounded paginated results; caller-owned authorization context/domain
+  references; and requirements supplied by an independently authorized
+  bounded-domain application.
 - **Outputs:** Reusable client bindings and command builders, neutral lifecycle
   components/view models, basic list/queue/board projection helpers, integration
   scaffolds, compatibility declarations, and conformance fixtures. Domain
   events, notifications, reports, and applications remain domain outputs.
 - **CubiKan interaction:** Basic projections use INT-0010's bounded collection
   query over stable lifecycle fields; advanced multi-board views or typed
-  relations wait for INT-0012. The kit sends revision-aware commands through a
-  versioned boundary and never edits storage, persists provisional Serde, treats
-  the one-shot CLI as a session, or infers relations from `WorkflowEdge`.
-- **Prerequisites:** Realized INT-0009 and INT-0010 for operational clients;
-  INT-0012 for advanced relations/boards; accepted client versioning and
-  compatibility; and bounded-domain decisions for identity, authorization,
+  relations use the realized INT-0012 relationship/projection boundary. The kit
+  sends revision-aware commands through the realized versioned boundary and
+  never edits storage, persists provisional Serde, treats the one-shot CLI as a
+  session, or infers relations from `WorkflowEdge`.
+- **Prerequisites:** Realized INT-0009 and INT-0010 for operational clients, and
+  realized INT-0012 for advanced relations/boards; accepted client versioning
+  and compatibility; and bounded-domain decisions for identity, authorization,
   privacy, retention, deployment, and support. A local demo may pin the current
   core, but that is not a shared backend.
 - **Creation trigger:** Create only when independently authorized domain work
