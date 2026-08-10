@@ -8,11 +8,12 @@ use rusqlite::{
 
 use crate::{
     BackendError, CreateRelationship, CreateRelationshipDefinition, DeleteRelationship,
-    ListRelationships, RelationshipCursor, RelationshipDefinitionId, RelationshipDefinitionKey,
+    DirectRelationshipPredicate, IntentUnitSummary, ListCursor, ListRelationships, ProjectionPage,
+    ProjectionQueryV1, RelationshipCursor, RelationshipDefinitionId, RelationshipDefinitionKey,
     RelationshipDefinitionVersion, RelationshipDefinitionView, RelationshipDirection,
     RelationshipEndpoint, RelationshipError, RelationshipIdentity, RelationshipPage,
-    RelationshipPolicy, RelationshipView,
-    sqlite::{classify_runtime_error, load_validated_unit},
+    RelationshipPolicy, RelationshipView, query,
+    sqlite::{StoredRow, classify_runtime_error, load_validated_unit, status_projection},
 };
 
 const SELECT_DEFINITION_SQL: &str = "SELECT
@@ -53,6 +54,55 @@ const RELATIONSHIP_CURSOR_SQL: &str = " AND (
    )";
 const RELATIONSHIP_ORDER_AND_LIMIT_SQL: &str =
     " ORDER BY source_id COLLATE BINARY, target_id COLLATE BINARY LIMIT ?";
+
+const SELECT_OUTGOING_PROJECTION_SQL: &str = "SELECT
+    edge.definition_id,
+    edge.definition_version,
+    edge.source_id,
+    edge.target_id,
+    unit.id,
+    unit.envelope_version,
+    unit.envelope,
+    unit.workflow_id,
+    unit.species,
+    unit.phase,
+    unit.status,
+    unit.revision
+ FROM intent_unit_relationships AS edge
+ LEFT JOIN intent_units AS unit
+   ON unit.id COLLATE BINARY = edge.target_id COLLATE BINARY
+ WHERE edge.definition_id = ? COLLATE BINARY
+   AND edge.definition_version = ?
+   AND edge.source_id = ? COLLATE BINARY";
+const SELECT_INCOMING_PROJECTION_SQL: &str = "SELECT
+    edge.definition_id,
+    edge.definition_version,
+    edge.source_id,
+    edge.target_id,
+    unit.id,
+    unit.envelope_version,
+    unit.envelope,
+    unit.workflow_id,
+    unit.species,
+    unit.phase,
+    unit.status,
+    unit.revision
+ FROM intent_unit_relationships AS edge
+ LEFT JOIN intent_units AS unit
+   ON unit.id COLLATE BINARY = edge.source_id COLLATE BINARY
+ WHERE edge.definition_id = ? COLLATE BINARY
+   AND edge.definition_version = ?
+   AND edge.target_id = ? COLLATE BINARY";
+const PROJECTION_WORKFLOW_FILTER_SQL: &str = " AND unit.workflow_id COLLATE BINARY = ?";
+const PROJECTION_SPECIES_FILTER_SQL: &str = " AND unit.species COLLATE BINARY = ?";
+const PROJECTION_PHASE_FILTER_SQL: &str = " AND unit.phase COLLATE BINARY = ?";
+const PROJECTION_STATUS_FILTER_SQL: &str = " AND unit.status COLLATE BINARY = ?";
+const OUTGOING_PROJECTION_CURSOR_SQL: &str = " AND edge.target_id COLLATE BINARY > ?";
+const INCOMING_PROJECTION_CURSOR_SQL: &str = " AND edge.source_id COLLATE BINARY > ?";
+const OUTGOING_PROJECTION_ORDER_AND_LIMIT_SQL: &str =
+    " ORDER BY edge.target_id COLLATE BINARY ASC LIMIT ?";
+const INCOMING_PROJECTION_ORDER_AND_LIMIT_SQL: &str =
+    " ORDER BY edge.source_id COLLATE BINARY ASC LIMIT ?";
 
 pub(crate) fn create_definition(
     connection: &mut Connection,
@@ -249,6 +299,158 @@ pub(crate) fn list_relationships(
     Ok(page)
 }
 
+pub(crate) fn project(
+    connection: &Connection,
+    projection_query: ProjectionQueryV1,
+) -> Result<ProjectionPage, RelationshipError> {
+    if projection_query.predicate().is_none() {
+        return query::project_lifecycle(connection, projection_query)
+            .map_err(RelationshipError::Backend);
+    }
+
+    // Definition, anchor, edge, and candidate reads form one committed view.
+    // Every later page starts a new read transaction and is intentionally live.
+    let transaction = connection
+        .unchecked_transaction()
+        .map_err(classify_runtime_error)?;
+    let page = project_relationships_in_snapshot(&transaction, projection_query)?;
+    transaction.commit().map_err(classify_runtime_error)?;
+    Ok(page)
+}
+
+fn project_relationships_in_snapshot(
+    connection: &Connection,
+    projection_query: ProjectionQueryV1,
+) -> Result<ProjectionPage, RelationshipError> {
+    let predicate = projection_query
+        .predicate()
+        .expect("relationship projection dispatch requires a predicate");
+    let definition = load_definition(connection, predicate.definition())?;
+    let (anchor_role, candidate_role, sql, cursor_sql, order_and_limit_sql) = match predicate {
+        DirectRelationshipPredicate::Outgoing { .. } => (
+            RelationshipEndpoint::Source,
+            RelationshipEndpoint::Target,
+            SELECT_OUTGOING_PROJECTION_SQL,
+            OUTGOING_PROJECTION_CURSOR_SQL,
+            OUTGOING_PROJECTION_ORDER_AND_LIMIT_SQL,
+        ),
+        DirectRelationshipPredicate::Incoming { .. } => (
+            RelationshipEndpoint::Target,
+            RelationshipEndpoint::Source,
+            SELECT_INCOMING_PROJECTION_SQL,
+            INCOMING_PROJECTION_CURSOR_SQL,
+            INCOMING_PROJECTION_ORDER_AND_LIMIT_SQL,
+        ),
+    };
+    let anchor = load_endpoint(connection, anchor_role, predicate.anchor())?;
+    validate_endpoint_species(&definition, anchor_role, &anchor)?;
+
+    let mut sql = String::from(sql);
+    let mut values = Vec::with_capacity(9);
+    values.push(Value::Text(predicate.definition().id().as_str().to_owned()));
+    values.push(Value::Blob(
+        encode_version(predicate.definition().version()).to_vec(),
+    ));
+    values.push(Value::Text(predicate.anchor().to_string()));
+
+    let filters = projection_query.filters();
+    if let Some(workflow_id) = filters.workflow_id() {
+        sql.push_str(PROJECTION_WORKFLOW_FILTER_SQL);
+        values.push(Value::Text(workflow_id.as_str().to_owned()));
+    }
+    if let Some(species) = filters.species() {
+        sql.push_str(PROJECTION_SPECIES_FILTER_SQL);
+        values.push(Value::Text(species.as_str().to_owned()));
+    }
+    if let Some(phase) = filters.phase() {
+        sql.push_str(PROJECTION_PHASE_FILTER_SQL);
+        values.push(Value::Text(phase.as_str().to_owned()));
+    }
+    if let Some(status) = filters.status() {
+        sql.push_str(PROJECTION_STATUS_FILTER_SQL);
+        values.push(Value::Text(status_projection(status).to_owned()));
+    }
+    if let Some(after) = projection_query.after() {
+        sql.push_str(cursor_sql);
+        values.push(Value::Text(after.to_string()));
+    }
+    sql.push_str(order_and_limit_sql);
+
+    let limit = projection_query.limit().value();
+    let fetch_limit = limit
+        .checked_add(1)
+        .expect("validated projection page limit plus lookahead must fit usize");
+    values.push(Value::Integer(i64::try_from(fetch_limit).expect(
+        "projection page limit plus lookahead must fit SQLite INTEGER",
+    )));
+
+    let candidates = {
+        let mut statement = connection.prepare(&sql).map_err(classify_runtime_error)?;
+        statement
+            .query_map(
+                params_from_iter(values.iter()),
+                StoredProjectionCandidate::from_row,
+            )
+            .map_err(classify_runtime_error)?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(classify_runtime_error)?
+    };
+
+    // Replay and validate the entire limit-plus-lookahead selection before a
+    // partial page or cursor can escape.
+    let mut items = Vec::with_capacity(fetch_limit);
+    for candidate in candidates {
+        let relationship = candidate.relationship.into_view(predicate.definition())?;
+        let relationship = relationship.relationship();
+        let (stored_anchor, candidate_id) = match predicate {
+            DirectRelationshipPredicate::Outgoing { .. } => {
+                (relationship.source(), relationship.target())
+            }
+            DirectRelationshipPredicate::Incoming { .. } => {
+                (relationship.target(), relationship.source())
+            }
+        };
+        if stored_anchor != predicate.anchor() {
+            return Err(RelationshipError::CorruptRelationship {
+                definition: predicate.definition().clone(),
+            });
+        }
+
+        let unit = validate_projection_endpoint(candidate.unit, candidate_role, candidate_id)?;
+        if unit.id() != candidate_id {
+            return Err(RelationshipError::CorruptRelationship {
+                definition: predicate.definition().clone(),
+            });
+        }
+        validate_endpoint_species(&definition, candidate_role, &unit)?;
+        items.push(IntentUnitSummary::from_intent_unit(&unit));
+    }
+
+    let has_more = items.len() > limit;
+    items.truncate(limit);
+    let next_cursor = if has_more {
+        items
+            .last()
+            .map(|summary| ListCursor::from_id(summary.id()))
+    } else {
+        None
+    };
+    Ok(ProjectionPage::new(projection_query, items, next_cursor))
+}
+
+fn validate_projection_endpoint(
+    stored: Option<StoredRow>,
+    endpoint: RelationshipEndpoint,
+    id: IntentUnitId,
+) -> Result<IntentUnit, RelationshipError> {
+    let Some(stored) = stored else {
+        return Err(RelationshipError::EndpointNotFound { endpoint, id });
+    };
+    stored
+        .into_validated_unit()
+        .map_err(|source| classify_endpoint_error(endpoint, id, source))
+}
+
 fn list_relationships_in_snapshot(
     connection: &Connection,
     query: ListRelationships,
@@ -356,16 +558,24 @@ fn load_endpoint(
         Err(BackendError::IntentUnitNotFound { .. }) => {
             Err(RelationshipError::EndpointNotFound { endpoint, id })
         }
-        Err(
-            source @ (BackendError::UnsupportedEnvelopeVersion { .. }
-            | BackendError::CorruptEnvelope
-            | BackendError::ProjectionMismatch),
-        ) => Err(RelationshipError::EndpointCorrupt {
+        Err(source) => Err(classify_endpoint_error(endpoint, id, source)),
+    }
+}
+
+fn classify_endpoint_error(
+    endpoint: RelationshipEndpoint,
+    id: IntentUnitId,
+    source: BackendError,
+) -> RelationshipError {
+    match source {
+        source @ (BackendError::UnsupportedEnvelopeVersion { .. }
+        | BackendError::CorruptEnvelope
+        | BackendError::ProjectionMismatch) => RelationshipError::EndpointCorrupt {
             endpoint,
             id,
             source,
-        }),
-        Err(error) => Err(RelationshipError::Backend(error)),
+        },
+        error => RelationshipError::Backend(error),
     }
 }
 
@@ -586,6 +796,21 @@ struct StoredRelationship {
     definition_version: StoredValue,
     source_id: StoredValue,
     target_id: StoredValue,
+}
+
+#[derive(Debug)]
+struct StoredProjectionCandidate {
+    relationship: StoredRelationship,
+    unit: Option<StoredRow>,
+}
+
+impl StoredProjectionCandidate {
+    fn from_row(row: &Row<'_>) -> rusqlite::Result<Self> {
+        Ok(Self {
+            relationship: StoredRelationship::from_row(row)?,
+            unit: StoredRow::optional_from_row_at(row, 4)?,
+        })
+    }
 }
 
 impl StoredRelationship {

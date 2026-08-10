@@ -386,3 +386,10 @@
 - **Completed:** 2026-08-10T04:09:04Z
 - **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_query.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `a08c269e534aade7c876f9adc018a563ca9179db`
+
+## T-906 (sprint 9)
+- **Description:** Add ephemeral board-projection query version 1
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T04:25:46Z
+- **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/query.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/projection_query.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

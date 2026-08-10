@@ -11,9 +11,10 @@ use rusqlite::{
 use crate::{
     BackendError, BackendSchemaVersion, CompleteIntentUnit, CreateIntentUnit, CreateRelationship,
     CreateRelationshipDefinition, DeleteRelationship, IntentUnitPage, IntentUnitView,
-    ListIntentUnits, ListRelationships, MigrationError, MutationResult, RelationshipDefinitionKey,
-    RelationshipDefinitionView, RelationshipError, RelationshipPage, RelationshipView,
-    StorageFailure, TransitionIntentUnit, migration, query, relationship_store,
+    ListIntentUnits, ListRelationships, MigrationError, MutationResult, ProjectionPage,
+    ProjectionQueryV1, RelationshipDefinitionKey, RelationshipDefinitionView, RelationshipError,
+    RelationshipPage, RelationshipView, StorageFailure, TransitionIntentUnit, migration, query,
+    relationship_store,
     schema::{self, Ownership},
     stored::{
         ENVELOPE_VERSION, decode_envelope, decode_revision_blob, encode_envelope,
@@ -160,6 +161,12 @@ impl SqliteBackend {
     ) -> Result<RelationshipPage, RelationshipError> {
         self.require_relationship_schema()?;
         relationship_store::list_relationships(&self.connection, query)
+    }
+
+    /// Evaluates one bounded, ephemeral version-1 board projection.
+    pub fn project(&self, query: ProjectionQueryV1) -> Result<ProjectionPage, RelationshipError> {
+        self.require_relationship_schema()?;
+        relationship_store::project(&self.connection, query)
     }
 
     /// Durably creates one revision-zero Intent Unit.
@@ -343,16 +350,39 @@ impl StoredRow {
     }
 
     pub(crate) fn from_row(row: &Row<'_>) -> rusqlite::Result<Self> {
+        Self::from_row_at(row, 0)
+    }
+
+    pub(crate) fn from_row_at(row: &Row<'_>, offset: usize) -> rusqlite::Result<Self> {
         Ok(Self {
-            id: row.get(0)?,
-            envelope_version: row.get(1)?,
-            envelope: row.get(2)?,
-            workflow_id: row.get(3)?,
-            species: row.get(4)?,
-            phase: row.get(5)?,
-            status: row.get(6)?,
-            revision: row.get(7)?,
+            id: row.get(offset)?,
+            envelope_version: row.get(offset + 1)?,
+            envelope: row.get(offset + 2)?,
+            workflow_id: row.get(offset + 3)?,
+            species: row.get(offset + 4)?,
+            phase: row.get(offset + 5)?,
+            status: row.get(offset + 6)?,
+            revision: row.get(offset + 7)?,
         })
+    }
+
+    pub(crate) fn optional_from_row_at(
+        row: &Row<'_>,
+        offset: usize,
+    ) -> rusqlite::Result<Option<Self>> {
+        let Some(id) = row.get::<_, Option<String>>(offset)? else {
+            return Ok(None);
+        };
+        Ok(Some(Self {
+            id,
+            envelope_version: row.get(offset + 1)?,
+            envelope: row.get(offset + 2)?,
+            workflow_id: row.get(offset + 3)?,
+            species: row.get(offset + 4)?,
+            phase: row.get(offset + 5)?,
+            status: row.get(offset + 6)?,
+            revision: row.get(offset + 7)?,
+        }))
     }
 
     pub(crate) fn into_validated_unit(self) -> Result<IntentUnit, BackendError> {
