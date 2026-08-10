@@ -11,3 +11,9 @@
 - **Completed:** 2026-08-10T13:26:14Z
 - **Files modified:** docs/appendix/potential-derivative-projects.md
 - **Commit:** `0541d6c`
+
+## T-003 (sprint 0)
+- **Description:** Correct the safe integration boundary while preserving current exclusions
+- **Completed:** 2026-08-10T13:31:46Z
+- **Files modified:** docs/appendix/potential-derivative-projects.md
+- **Commit:** `4312ee7`

@@ -1,9 +1,12 @@
 # Potential Derivative Projects
 
 > **Advisory status:** This appendix is a non-binding architecture map. Project
-> Book intent chapters own product meaning. No repository or future backend
-> named here is asserted to exist, scheduled for implementation, or authorized
-> for creation. Names, boundaries, and sequencing may change when stronger
+> Book intent chapters own product meaning and realization status. The current
+> CubiKan surfaces described below are governed by their realized intents; no
+> recommended derivative repository named in the catalog is asserted to exist,
+> be scheduled for implementation, or be authorized for creation. Provider or
+> network adapters remain future work unless separately selected and realized.
+> Recommended names, boundaries, and sequencing may change when stronger
 > evidence appears.
 
 The map distills the sanitized [Sprint 6 retained-theme
@@ -76,23 +79,37 @@ rules belong to separately selected intents or derivative policy.
 
 ## Safe CubiKan integration baseline
 
-A derivative has two acceptable integration directions:
+A derivative must preserve the Project Book as product-meaning and historical
+realization authority; it may reference or project Book work, but it must not
+replace or dual-write that authority. Its acceptable CubiKan integration
+direction depends on the required capability:
 
 - For local validation, it may embed the current public `cubikan-core` API at an
   explicitly pinned crate version. That pin does not create a cross-version Rust
   API compatibility promise.
-- For durable or multi-process work, it may consume a future adapter-owned,
-  explicitly versioned CubiKan command/query/evidence boundary after the owning
-  backend intent is selected and realized.
+- For durable or multi-process work, it may consume an adapter-owned,
+  explicitly versioned boundary that is available today:
+  `cubikan-backend` provides the local Rust lifecycle, relationship, and
+  projection APIs, while `cubikan-local` protocol v1 provides only create, get,
+  list, transition, and complete against an explicit local database path.
+  Consumers must pin and honor the selected boundary's independent version
+  contract; availability does not imply cross-version compatibility.
+- Provider-specific adapters, including Project Book and Git-host connectors,
+  remain future work. Any network transport or service likewise requires its
+  own selected intent and versioned adapter boundary; neither is implied by the
+  available local backend or lifecycle process adapter.
 
 A derivative must not:
 
-- edit a CubiKan database directly or share writable storage with the backend;
+- edit a CubiKan database directly or share writable backend storage;
 - persist or decode provisional core Serde as if it were a stable disk or wire
   contract;
-- treat the current one-shot CLI as a session or resumable service; or
+- treat the stateless `cubikan` CLI or local `cubikan-local` process adapter as
+  a session, resumable service, or application backend;
 - duplicate lifecycle validation, mint conflicting Intent Unit state, or let a
-  projection become a second lifecycle authority.
+  projection become a second lifecycle authority; or
+- infer authentication, authorization, tenancy, deployment, blockchain, or
+  network-service behavior from the local boundaries.
 
 ## Data-authority map
 
