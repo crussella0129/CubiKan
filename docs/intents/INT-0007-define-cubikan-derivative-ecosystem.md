@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0007
-- **State:** realized
+- **State:** superseded
 - **Work evidence:** [Sprint 6 build plan](../sprints/s6/sprint-plans/build-plan.md)
 - **Completion evidence:** [T-601–T-603 completion ledger](../work/completed-tasks.md#t-601-sprint-6)
 - **Code evidence:** none
 - **Test evidence:** [Sprint 6 test report](../sprints/s6/sprint-tests/test-report.md)
-- **Documentation evidence:** [Potential Derivative Projects](../appendix/potential-derivative-projects.md)
+- **Documentation evidence:** [Sprint 6 appendix snapshot](https://github.com/crussella0129/CubiKan/blob/b6daf73cf4c12e496466ebdcb393b3204e7ffeb7/docs/appendix/potential-derivative-projects.md)
 
 ## Intent
 
@@ -76,6 +76,11 @@ roadmap. Proposed backend intents still require their own research, plan,
 implementation, and human checkpoints. Some recommended repositories may later
 be merged, renamed, or never created when stronger evidence appears.
 
+This realized Sprint 6 contract is superseded for current-state maintenance by
+[INT-0013](INT-0013-maintain-derivative-ecosystem-current-state.md). Its
+historical catalog outcome remains preserved; INT-0013 owns later factual
+updates to the live appendix without rewriting this creation-time contract.
+
 ## Transition history
 
 - 2026-08-08: created as `proposed` from the user-provided, intentionally incomplete Discord excerpts and the request for a prose-only derivative-project exploration sprint.
@@ -84,3 +89,4 @@ be merged, renamed, or never created when stronger evidence appears.
 - 2026-08-08: revised while `planned` after evidence review separated locally provable scope from the recorded operational non-creation boundary for derivative repositories.
 - 2026-08-08: moved to `active` when Build queued T-601 through T-603 from the finalized clean Sprint 6 plans.
 - 2026-08-09: moved to `realized` after T-601–T-603 completed, the final Test Critic returned `clean`, 18 unit/repository checks, 5 integration checks, 2 E2E checks, 100 Rust tests, and one doctest passed, and GitHub Actions push run 31293927701 succeeded at exact Build head `b6daf73cf4c12e496466ebdcb393b3204e7ffeb7`.
+- 2026-08-10: moved to `superseded` by follow-on INT-0013 because its creation-time “current boundary” and proposed-capability wording no longer described the post-Sprint 9 tree; the realized Sprint 6 outcome remains immutable history.
