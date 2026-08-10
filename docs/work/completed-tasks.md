@@ -281,3 +281,73 @@
 - **Completed:** 2026-08-09T07:04:13Z
 - **Files modified:** `crates/cubikan-core/src/lib.rs`, `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `8124ffa76286b7df7ab30af3a1c0d924c9e32c64`
+
+## T-801 (sprint 8)
+- **Description:** Scaffold cubikan-backend and define its public value contract
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T21:01:13Z
+- **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-backend/Cargo.toml`, `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/error.rs`, `crates/cubikan-backend/tests/model.rs`, `docs/SUMMARY.md`, `docs/intents/INT-0010-durable-intent-unit-backend.md`, `docs/sprints/s8/sprint-meta.md`, `docs/sprints/s8/sprint-research/research-report.md`, `docs/sprints/s8/sprint-plans/build-plan.md`, `docs/sprints/s8/sprint-plans/test-plan.md`, `docs/sprints/s8/sprint-plans/critique.md`, `docs/sprints/s8/sprint-tests/unit-tests.md`, `docs/sprints/s8/sprint-tests/integration-tests.md`, `docs/sprints/s8/sprint-tests/e2e-tests.md`, `docs/sprints/s8/sprint-tests/test-report.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `1934c5b6040e540cf40a82d0a3be8281283e2cf0`
+
+## T-802 (sprint 8)
+- **Description:** Implement the strict replay-validated storage envelope
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T21:11:29Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/stored.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `1550ccd2d9919b1e8b0d256bd62852bdbfc4fefe`
+
+## T-803 (sprint 8)
+- **Description:** Own, initialize, and validate SQLite schema v1
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T21:41:15Z
+- **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-backend/Cargo.toml`, `crates/cubikan-backend/src/error.rs`, `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/schema.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/model.rs`, `crates/cubikan-backend/tests/schema.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `00ab50eed285aea5795de6a7a59b48444262481c`
+
+## T-804 (sprint 8)
+- **Description:** Add transactional durable create and replay-validated get
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T21:55:32Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/corruption.rs`, `crates/cubikan-backend/tests/persistence.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `38924cad7849d63fcfac4d8170d5b114da3ab5ec`
+
+## T-805 (sprint 8)
+- **Description:** Add bounded exact-filter live keyset pagination
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T22:14:51Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/query.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/query.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `ecb434b0dd2ec26dc3d877d9608a8ae49fe1857b`
+
+## T-806 (sprint 8)
+- **Description:** Add revision-guarded transition and completion transactions
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md), preserving [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
+- **Completed:** 2026-08-09T22:27:01Z
+- **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/tests/mutations.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `e4b7510659f502050598ec9b0b2b9aa5a92e673a`
+
+## T-807 (sprint 8)
+- **Description:** Define local protocol v1 and execute every backend command
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T22:54:19Z
+- **Files modified:** `Cargo.toml`, `Cargo.lock`, `crates/cubikan-local/Cargo.toml`, `crates/cubikan-local/src/lib.rs`, `crates/cubikan-local/src/protocol.rs`, `crates/cubikan-local/src/execution.rs`, `crates/cubikan-local/tests/protocol.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `7c56ce645303b554033d47ad9e23dd53ba7bbbe6`
+
+## T-808 (sprint 8)
+- **Description:** Add the bounded runner and cubikan-local executable
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T23:12:26Z
+- **Files modified:** `crates/cubikan-local/src/lib.rs`, `crates/cubikan-local/src/main.rs`, `crates/cubikan-local/src/runner.rs`, `crates/cubikan-local/tests/runner.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `9f8050f6347364c03a6b0c2c1bfa70b904a11e6e`
+
+## T-809 (sprint 8)
+- **Description:** Prove cross-process continuity and fail-closed process behavior
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md), preserving [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
+- **Completed:** 2026-08-09T23:20:44Z
+- **Files modified:** `crates/cubikan-local/tests/cli_e2e.rs`, `crates/cubikan-local/tests/fixtures/durable-lifecycle-v1.json`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `6e19edd75820fd8d62338f667217cf19f929f787`
+
+## T-810 (sprint 8)
+- **Description:** Document the first backend boundary and nonclaims
+- **Intent:** [INT-0010](../intents/INT-0010-durable-intent-unit-backend.md)
+- **Completed:** 2026-08-09T23:33:51Z
+- **Files modified:** `crates/cubikan-backend/README.md`, `crates/cubikan-local/README.md`, `README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** `315fb711c6f84b06cdd2b363b682a7f1b394bbaf`
