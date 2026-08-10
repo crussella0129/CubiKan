@@ -400,3 +400,10 @@
 - **Completed:** 2026-08-10T04:43:25Z
 - **Files modified:** `README.md`, `crates/cubikan-backend/README.md`, `crates/cubikan-local/README.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `c8b3a1af3bca2a8a67293e40fc7943f9dafa13f5`
+
+## T-908 (sprint 9)
+- **Description:** Prove the public-backend relationship and projection vertical across reopen
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T05:05:06Z
+- **Files modified:** `crates/cubikan-backend/tests/relationship_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
