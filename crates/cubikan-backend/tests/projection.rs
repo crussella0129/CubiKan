@@ -1,3 +1,5 @@
+//! Projection query v1 integration coverage.
+
 mod common;
 
 use common::{
