@@ -86,8 +86,8 @@ materially different sprint, not a substitute for correcting known stale
 documentation.
 
 Rationale: this is the smallest honest vertical. It restores the appendix's
-usefulness without expanding a runtime API, changing intent ownership, or
-authorizing a derivative project.
+usefulness without expanding a runtime API, rewriting historical intent
+semantics, or authorizing a derivative project.
 
 ## Artifacts
 
