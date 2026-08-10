@@ -95,6 +95,14 @@ pub fn fixed_id(value: &str) -> IntentUnitId {
         .expect("fixture Intent Unit ID should be valid")
 }
 
+pub fn numbered_id(value: u64) -> IntentUnitId {
+    assert!(
+        value <= 0x0000_ffff_ffff_ffff,
+        "fixture value must fit the final UUID field"
+    );
+    fixed_id(&format!("00000000-0000-0000-0000-{value:012x}"))
+}
+
 pub fn phase(value: &str) -> PhaseId {
     PhaseId::new(value).expect("fixture phase should be valid")
 }

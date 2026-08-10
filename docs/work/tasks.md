@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-905 (sprint 9) [intent: INT-0012]: Add bounded direct relationship queries — touches: backend relationship query/pagination code and query tests.
 - [ ] T-906 (sprint 9) [intent: INT-0012]: Add ephemeral board-projection query version 1 — touches: backend projection query code and projection tests.
 - [ ] T-907 (sprint 9) [intent: INT-0012]: Document the relationship, migration, projection, and nonclaim boundaries — touches: root/backend/local guides.
 - [ ] T-908 (sprint 9) [intent: INT-0012]: Prove the public-backend relationship/projection vertical across reopen — touches: backend real-file composition tests.

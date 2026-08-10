@@ -1,13 +1,17 @@
 use std::str;
 
 use cubikan_core::{IntentSpecies, IntentUnit, IntentUnitId};
-use rusqlite::{Connection, OptionalExtension, Row, TransactionBehavior, params, types::ValueRef};
+use rusqlite::{
+    Connection, OptionalExtension, Row, TransactionBehavior, params, params_from_iter,
+    types::{Value, ValueRef},
+};
 
 use crate::{
     BackendError, CreateRelationship, CreateRelationshipDefinition, DeleteRelationship,
-    RelationshipDefinitionId, RelationshipDefinitionKey, RelationshipDefinitionVersion,
-    RelationshipDefinitionView, RelationshipDirection, RelationshipEndpoint, RelationshipError,
-    RelationshipIdentity, RelationshipPolicy, RelationshipView,
+    ListRelationships, RelationshipCursor, RelationshipDefinitionId, RelationshipDefinitionKey,
+    RelationshipDefinitionVersion, RelationshipDefinitionView, RelationshipDirection,
+    RelationshipEndpoint, RelationshipError, RelationshipIdentity, RelationshipPage,
+    RelationshipPolicy, RelationshipView,
     sqlite::{classify_runtime_error, load_validated_unit},
 };
 
@@ -32,6 +36,23 @@ const SELECT_RELATIONSHIP_SQL: &str = "SELECT
    AND definition_version = ?2
    AND source_id = ?3 COLLATE BINARY
    AND target_id = ?4 COLLATE BINARY";
+
+const SELECT_RELATIONSHIPS_SQL: &str = "SELECT
+    definition_id,
+    definition_version,
+    source_id,
+    target_id
+ FROM intent_unit_relationships
+ WHERE definition_id = ? COLLATE BINARY
+   AND definition_version = ?";
+const SOURCE_FILTER_SQL: &str = " AND source_id = ? COLLATE BINARY";
+const TARGET_FILTER_SQL: &str = " AND target_id = ? COLLATE BINARY";
+const RELATIONSHIP_CURSOR_SQL: &str = " AND (
+       source_id COLLATE BINARY > ?
+       OR (source_id COLLATE BINARY = ? AND target_id COLLATE BINARY > ?)
+   )";
+const RELATIONSHIP_ORDER_AND_LIMIT_SQL: &str =
+    " ORDER BY source_id COLLATE BINARY, target_id COLLATE BINARY LIMIT ?";
 
 pub(crate) fn create_definition(
     connection: &mut Connection,
@@ -212,6 +233,104 @@ pub(crate) fn delete_relationship(
 
     transaction.commit().map_err(classify_runtime_error)?;
     Ok(RelationshipView::new(relationship))
+}
+
+pub(crate) fn list_relationships(
+    connection: &Connection,
+    query: ListRelationships,
+) -> Result<RelationshipPage, RelationshipError> {
+    // Definition, candidate, and endpoint reads form one committed view for
+    // this request. A later page starts a new transaction and remains live.
+    let transaction = connection
+        .unchecked_transaction()
+        .map_err(classify_runtime_error)?;
+    let page = list_relationships_in_snapshot(&transaction, query)?;
+    transaction.commit().map_err(classify_runtime_error)?;
+    Ok(page)
+}
+
+fn list_relationships_in_snapshot(
+    connection: &Connection,
+    query: ListRelationships,
+) -> Result<RelationshipPage, RelationshipError> {
+    // Definition validation deliberately precedes candidate selection. The
+    // complete exact-version key is required even when no edge will match.
+    let definition = load_definition(connection, query.definition())?;
+    let mut sql = String::from(SELECT_RELATIONSHIPS_SQL);
+    let mut values = Vec::with_capacity(8);
+    values.push(Value::Text(query.definition().id().as_str().to_owned()));
+    values.push(Value::Blob(
+        encode_version(query.definition().version()).to_vec(),
+    ));
+
+    if let Some(source) = query.source() {
+        sql.push_str(SOURCE_FILTER_SQL);
+        values.push(Value::Text(source.to_string()));
+    }
+    if let Some(target) = query.target() {
+        sql.push_str(TARGET_FILTER_SQL);
+        values.push(Value::Text(target.to_string()));
+    }
+    if let Some(after) = query.after() {
+        sql.push_str(RELATIONSHIP_CURSOR_SQL);
+        let source = after.relationship().source().to_string();
+        values.push(Value::Text(source.clone()));
+        values.push(Value::Text(source));
+        values.push(Value::Text(after.relationship().target().to_string()));
+    }
+
+    sql.push_str(RELATIONSHIP_ORDER_AND_LIMIT_SQL);
+    let limit = query.limit().value();
+    let fetch_limit = limit
+        .checked_add(1)
+        .expect("validated relationship page limit plus lookahead must fit usize");
+    values.push(Value::Integer(i64::try_from(fetch_limit).expect(
+        "relationship page limit plus lookahead must fit SQLite INTEGER",
+    )));
+
+    let candidates = {
+        let mut statement = connection.prepare(&sql).map_err(classify_runtime_error)?;
+        statement
+            .query_map(
+                params_from_iter(values.iter()),
+                StoredRelationship::from_row,
+            )
+            .map_err(classify_runtime_error)?
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(classify_runtime_error)?
+    };
+
+    // Validate the full limit-plus-lookahead selection before returning any
+    // item or deciding whether a next cursor exists.
+    let mut items = Vec::with_capacity(fetch_limit);
+    for candidate in candidates {
+        let view = candidate.into_view(query.definition())?;
+        let source = load_endpoint(
+            connection,
+            RelationshipEndpoint::Source,
+            view.relationship().source(),
+        )?;
+        let target = load_endpoint(
+            connection,
+            RelationshipEndpoint::Target,
+            view.relationship().target(),
+        )?;
+        validate_endpoint_species(&definition, RelationshipEndpoint::Source, &source)?;
+        validate_endpoint_species(&definition, RelationshipEndpoint::Target, &target)?;
+        items.push(view);
+    }
+
+    let has_more = items.len() > limit;
+    items.truncate(limit);
+    let next_cursor = if has_more {
+        items
+            .last()
+            .map(|view| RelationshipCursor::new(view.relationship().clone()))
+    } else {
+        None
+    };
+
+    Ok(RelationshipPage::new(query, items, next_cursor))
 }
 
 fn load_definition(

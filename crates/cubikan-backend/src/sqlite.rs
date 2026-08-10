@@ -11,9 +11,9 @@ use rusqlite::{
 use crate::{
     BackendError, BackendSchemaVersion, CompleteIntentUnit, CreateIntentUnit, CreateRelationship,
     CreateRelationshipDefinition, DeleteRelationship, IntentUnitPage, IntentUnitView,
-    ListIntentUnits, MigrationError, MutationResult, RelationshipDefinitionKey,
-    RelationshipDefinitionView, RelationshipError, RelationshipView, StorageFailure,
-    TransitionIntentUnit, migration, query, relationship_store,
+    ListIntentUnits, ListRelationships, MigrationError, MutationResult, RelationshipDefinitionKey,
+    RelationshipDefinitionView, RelationshipError, RelationshipPage, RelationshipView,
+    StorageFailure, TransitionIntentUnit, migration, query, relationship_store,
     schema::{self, Ownership},
     stored::{
         ENVELOPE_VERSION, decode_envelope, decode_revision_blob, encode_envelope,
@@ -151,6 +151,15 @@ impl SqliteBackend {
     ) -> Result<RelationshipView, RelationshipError> {
         self.require_relationship_schema()?;
         relationship_store::delete_relationship(&mut self.connection, command)
+    }
+
+    /// Lists one bounded, live page of validated direct relationships.
+    pub fn list_relationships(
+        &self,
+        query: ListRelationships,
+    ) -> Result<RelationshipPage, RelationshipError> {
+        self.require_relationship_schema()?;
+        relationship_store::list_relationships(&self.connection, query)
     }
 
     /// Durably creates one revision-zero Intent Unit.

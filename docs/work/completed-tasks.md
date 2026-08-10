@@ -379,3 +379,10 @@
 - **Completed:** 2026-08-10T03:56:51Z
 - **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_mutations.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `7494f447e020d3cb59b803ac3a8a555d2624c1cf`
+
+## T-905 (sprint 9)
+- **Description:** Add bounded direct relationship queries
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T04:09:04Z
+- **Files modified:** `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_query.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
