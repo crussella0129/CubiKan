@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0012
-- **State:** active
+- **State:** realized
 - **Work evidence:** [Sprint 9 build plan](../sprints/s9/sprint-plans/build-plan.md)
-- **Completion evidence:** none
-- **Code evidence:** none
+- **Completion evidence:** [T-901–T-908](../work/completed-tasks.md#t-901-sprint-9)
+- **Code evidence:** [public relationship model](../../crates/cubikan-backend/src/relationship.rs), [schema migration](../../crates/cubikan-backend/src/migration.rs), [relationship storage](../../crates/cubikan-backend/src/relationship_store.rs), [projection queries](../../crates/cubikan-backend/src/query.rs)
 - **Test evidence:** [Sprint 9 test report](../sprints/s9/sprint-tests/test-report.md)
-- **Documentation evidence:** none
+- **Documentation evidence:** [backend relationship and migration guide](../../crates/cubikan-backend/README.md)
 
 ## Intent
 
@@ -197,3 +197,4 @@ metrics, and blockchain policy remain separate outcomes.
 - 2026-08-10: amended while `planned`, before implementation, to make caller-owned non-sequential definition versions, complete edge identity, bounded direct-query semantics, non-idempotent deletion, unrevisioned current-state relationships, projection-anchor behavior, and explicit migration/compatibility limits authoritative before T-901–T-908 began.
 - 2026-08-10: amended while `planned` to make structural-open versus operation-selected semantic corruption detection explicit before the Sprint 9 Plan was relocked.
 - 2026-08-10: moved to `active` when T-901 began implementing the finalized Sprint 9 relationship and projection value contract.
+- 2026-08-10: moved to `realized` after T-901–T-908 completed, the public backend and migration journeys passed locally and in exact-head hosted CI, and the final Sprint 9 Test Critic returned `clean`.
