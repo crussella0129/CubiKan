@@ -365,3 +365,10 @@
 - **Completed:** 2026-08-10T03:32:34Z
 - **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/error.rs`, `crates/cubikan-backend/src/schema.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/migration.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/schema.rs`, `crates/cubikan-backend/tests/migration.rs`, `crates/cubikan-local/tests/cli_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `d7a4d44d662691b713ed9f9e107a876d14e1af2f`
+
+## T-903 (sprint 9)
+- **Description:** Persist immutable relationship definitions
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
+- **Completed:** 2026-08-10T03:42:06Z
+- **Files modified:** `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/relationship_store.rs`, `crates/cubikan-backend/tests/common/mod.rs`, `crates/cubikan-backend/tests/relationship_definitions.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING

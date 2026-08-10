@@ -12,6 +12,7 @@ mod model;
 mod projection;
 mod query;
 mod relationship;
+mod relationship_store;
 mod schema;
 mod sqlite;
 mod stored;

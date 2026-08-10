@@ -124,6 +124,17 @@ pub struct StoredRowSnapshot {
     pub revision: Vec<u8>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct StoredRelationshipDefinitionSnapshot {
+    pub definition_id: String,
+    pub definition_version: Vec<u8>,
+    pub directed: i64,
+    pub source_species: Option<String>,
+    pub target_species: Option<String>,
+    pub self_policy: String,
+    pub cycle_policy: String,
+}
+
 pub fn stored_rows(connection: &Connection) -> Vec<StoredRowSnapshot> {
     let mut statement = connection
         .prepare(
@@ -147,6 +158,40 @@ pub fn stored_rows(connection: &Connection) -> Vec<StoredRowSnapshot> {
         .expect("stored row query should execute")
         .collect::<Result<Vec<_>, _>>()
         .expect("stored rows should decode")
+}
+
+pub fn stored_relationship_definitions(
+    connection: &Connection,
+) -> Vec<StoredRelationshipDefinitionSnapshot> {
+    let mut statement = connection
+        .prepare(
+            "SELECT
+                definition_id,
+                definition_version,
+                directed,
+                source_species,
+                target_species,
+                self_policy,
+                cycle_policy
+             FROM relationship_definitions
+             ORDER BY definition_id COLLATE BINARY, definition_version",
+        )
+        .expect("stored relationship definitions should be readable");
+    statement
+        .query_map([], |row| {
+            Ok(StoredRelationshipDefinitionSnapshot {
+                definition_id: row.get(0)?,
+                definition_version: row.get(1)?,
+                directed: row.get(2)?,
+                source_species: row.get(3)?,
+                target_species: row.get(4)?,
+                self_policy: row.get(5)?,
+                cycle_policy: row.get(6)?,
+            })
+        })
+        .expect("stored relationship definition query should execute")
+        .collect::<Result<Vec<_>, _>>()
+        .expect("stored relationship definitions should decode")
 }
 
 /// Replaces an existing row with a complete envelope derived from a core unit.

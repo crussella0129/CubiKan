@@ -9,9 +9,10 @@ use rusqlite::{
 };
 
 use crate::{
-    BackendError, BackendSchemaVersion, CompleteIntentUnit, CreateIntentUnit, IntentUnitPage,
-    IntentUnitView, ListIntentUnits, MigrationError, MutationResult, RelationshipError,
-    StorageFailure, TransitionIntentUnit, migration, query,
+    BackendError, BackendSchemaVersion, CompleteIntentUnit, CreateIntentUnit,
+    CreateRelationshipDefinition, IntentUnitPage, IntentUnitView, ListIntentUnits, MigrationError,
+    MutationResult, RelationshipDefinitionKey, RelationshipDefinitionView, RelationshipError,
+    StorageFailure, TransitionIntentUnit, migration, query, relationship_store,
     schema::{self, Ownership},
     stored::{
         ENVELOPE_VERSION, decode_envelope, decode_revision_blob, encode_envelope,
@@ -104,10 +105,6 @@ impl SqliteBackend {
         migration::migrate_v1_to_v2(path.as_ref())
     }
 
-    #[allow(
-        dead_code,
-        reason = "consumed by relationship operations beginning in T-903"
-    )]
     pub(crate) fn require_relationship_schema(&self) -> Result<(), RelationshipError> {
         if self.schema_version == BackendSchemaVersion::V2 {
             Ok(())
@@ -117,6 +114,24 @@ impl SqliteBackend {
                 required: BackendSchemaVersion::V2,
             })
         }
+    }
+
+    /// Durably creates one immutable exact-version relationship definition.
+    pub fn create_relationship_definition(
+        &mut self,
+        command: CreateRelationshipDefinition,
+    ) -> Result<RelationshipDefinitionView, RelationshipError> {
+        self.require_relationship_schema()?;
+        relationship_store::create_definition(&mut self.connection, command)
+    }
+
+    /// Retrieves and strictly decodes one exact relationship definition.
+    pub fn get_relationship_definition(
+        &self,
+        key: RelationshipDefinitionKey,
+    ) -> Result<RelationshipDefinitionView, RelationshipError> {
+        self.require_relationship_schema()?;
+        relationship_store::get_definition(&self.connection, key)
     }
 
     /// Durably creates one revision-zero Intent Unit.
