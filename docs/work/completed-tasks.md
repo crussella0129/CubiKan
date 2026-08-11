@@ -415,3 +415,11 @@
 - **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Scope:** Corrected current-state and prerequisite language without changing intent ownership, runtime behavior, or derivative-repository authorization.
 - **Commit:** resolve by stable message `sprint-0: T-007 Close derivative appendix maintenance backlog`
+
+## T-1001 (sprint 10)
+- **Description:** Correct the appendix's current CubiKan surfaces and version boundary
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-10T14:50:00Z
+- **Files modified:** `docs/intents/INT-0013-maintain-derivative-ecosystem-current-state.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `d725411e0bf4c97437544e28c604e48f0c1badbf`
+- **Commit:** PENDING

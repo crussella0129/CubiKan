@@ -2,7 +2,7 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0013
-- **State:** planned
+- **State:** active
 - **Work evidence:** [Sprint 10 build plan](../sprints/s10/sprint-plans/build-plan.md)
 - **Completion evidence:** none
 - **Code evidence:** none
@@ -95,3 +95,4 @@ maintenance promise.
 
 - 2026-08-10: created as `proposed` after the post-Sprint 9 audit found INT-0007's appendix still described realized INT-0009, INT-0010, and INT-0012 capabilities as future.
 - 2026-08-10: moved to `planned` when Sprint 10 mapped the bounded current-state correction and non-creation safeguards to T-1001 through T-1007.
+- 2026-08-10: moved to `active` when Build queued T-1001 through T-1007 from the finalized clean Sprint 10 plans.
