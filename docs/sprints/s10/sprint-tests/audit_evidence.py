@@ -26,6 +26,7 @@ DERIVATIVE_SLUGS = {
     "cubikan-skill-graph",
 }
 REPOSITORY_RE = re.compile(r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$")
+COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 GITHUB_API_ROOT = "https://api.github.com"
 READ_ONLY_ACTION_KINDS = frozenset(
     {
@@ -55,13 +56,46 @@ def require_complete(data: dict[str, Any], field: str) -> None:
     require(data.get(field) is True, f"{field} must be the boolean true")
 
 
-def require_timestamp(value: Any) -> None:
-    require(isinstance(value, str) and value, "captured_at must be a timestamp string")
+def parse_timestamp(value: Any, context: str) -> datetime:
+    require(isinstance(value, str) and value, f"{context} must be a timestamp string")
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
     except ValueError as error:
-        raise EvidenceError("captured_at must be an ISO-8601 timestamp") from error
-    require(parsed.tzinfo is not None, "captured_at must include an explicit UTC offset")
+        raise EvidenceError(f"{context} must be an ISO-8601 timestamp") from error
+    require(parsed.tzinfo is not None, f"{context} must include an explicit UTC offset")
+    return parsed
+
+
+def require_observed_at(
+    record: dict[str, Any], window: tuple[datetime, datetime], context: str
+) -> None:
+    observed_at = parse_timestamp(record.get("observed_at"), f"{context}.observed_at")
+    require(
+        window[0] <= observed_at <= window[1],
+        f"{context}.observed_at falls outside observation_window",
+    )
+
+
+def git_commit_exists(root: Path, commit: str) -> bool:
+    return (
+        subprocess.run(
+            ["git", "-C", str(root), "cat-file", "-e", f"{commit}^{{commit}}"],
+            check=False,
+            capture_output=True,
+        ).returncode
+        == 0
+    )
+
+
+def git_is_ancestor(root: Path, ancestor: str, descendant: str) -> bool:
+    return (
+        subprocess.run(
+            ["git", "-C", str(root), "merge-base", "--is-ancestor", ancestor, descendant],
+            check=False,
+            capture_output=True,
+        ).returncode
+        == 0
+    )
 
 
 def repository_name(value: Any, context: str) -> str:
@@ -105,7 +139,11 @@ def derivative_slug_in_target(value: str) -> str | None:
 
 
 def validate_public_rest_observation(
-    record: Any, expected_endpoint: str, expected_status: int, context: str
+    record: Any,
+    expected_endpoint: str,
+    expected_status: int,
+    window: tuple[datetime, datetime],
+    context: str,
 ) -> None:
     require(isinstance(record, dict), f"{context} must be a typed observation object")
     require(
@@ -122,9 +160,15 @@ def validate_public_rest_observation(
         type(status) is int and status == expected_status,
         f"{context}.http_status must be {expected_status}",
     )
+    require_observed_at(record, window, context)
 
 
-def validate_connector_observation(record: Any, repository: str, context: str) -> None:
+def validate_connector_observation(
+    record: Any,
+    repository: str,
+    window: tuple[datetime, datetime],
+    context: str,
+) -> None:
     require(isinstance(record, dict), f"{context} must be a typed observation object")
     require(
         record.get("provider") == "github-connected-app",
@@ -151,9 +195,12 @@ def validate_connector_observation(record: Any, repository: str, context: str) -
             isinstance(source_id, str) and source_id.strip(),
             f"{context}.source_id must be non-empty when present",
         )
+    require_observed_at(record, window, context)
 
 
-def validate_connector_list_limitation(record: Any) -> None:
+def validate_connector_list_limitation(
+    record: Any, window: tuple[datetime, datetime]
+) -> None:
     context = "connector_repository_list_observation"
     require(isinstance(record, dict), f"{context} must be a typed observation object")
     require(
@@ -179,12 +226,16 @@ def validate_connector_list_limitation(record: Any) -> None:
         or (isinstance(query, str) and query.strip()),
         f"{context} must include its source_id or exact query",
     )
+    require_observed_at(record, window, context)
 
 
 def validate_collection_observation(
-    record: Any, expected_endpoint: str, context: str
+    record: Any,
+    expected_endpoint: str,
+    window: tuple[datetime, datetime],
+    context: str,
 ) -> list[dict[str, Any]]:
-    validate_public_rest_observation(record, expected_endpoint, 200, context)
+    validate_public_rest_observation(record, expected_endpoint, 200, window, context)
     require(record.get("pagination_complete") is True, f"{context}.pagination_complete must be true")
     results = record.get("results")
     require(isinstance(results, list), f"{context}.results must be a list")
@@ -197,6 +248,20 @@ def validate_collection_observation(
 
 
 def validate_inventory(data: dict[str, Any]) -> tuple[int, int, int]:
+    observation_window = data.get("observation_window")
+    require(isinstance(observation_window, dict), "observation_window must be an object")
+    window = (
+        parse_timestamp(observation_window.get("started_at"), "observation_window.started_at"),
+        parse_timestamp(
+            observation_window.get("completed_at"), "observation_window.completed_at"
+        ),
+    )
+    require(window[0] <= window[1], "observation_window must not run backwards")
+    captured_at = parse_timestamp(data.get("captured_at"), "captured_at")
+    require(
+        window[0] <= captured_at <= window[1],
+        "captured_at falls outside observation_window",
+    )
     require(data.get("github_account") == EXPECTED_ACCOUNT, "unexpected GitHub account")
     scope = data.get("repository_check_scope")
     require(isinstance(scope, str) and scope.strip(), "repository_check_scope is required")
@@ -239,6 +304,7 @@ def validate_inventory(data: dict[str, Any]) -> tuple[int, int, int]:
         cubikan_repository.get("public_rest_observation"),
         f"{GITHUB_API_ROOT}/repos/{EXPECTED_REPOSITORY}",
         200,
+        window,
         "cubikan_repository.public_rest_observation",
     )
 
@@ -267,18 +333,20 @@ def validate_inventory(data: dict[str, Any]) -> tuple[int, int, int]:
         require(folded not in checked_names, f"duplicate targeted repository check: {name}")
         checked_names.add(folded)
         require(
-            record.get("exists") is False,
-            f"targeted repository check does not prove nonexistence: {name}",
+            record.get("found_in_observed_scopes") is False,
+            f"targeted repository check found the repository in an observed scope: {name}",
         )
         validate_public_rest_observation(
             record.get("public_rest_observation"),
             f"{GITHUB_API_ROOT}/repos/{name}",
             404,
+            window,
             f"derivative_repository_checks[{index}].public_rest_observation",
         )
         validate_connector_observation(
             record.get("authenticated_connector_observation"),
             name,
+            window,
             f"derivative_repository_checks[{index}].authenticated_connector_observation",
         )
     require(
@@ -286,7 +354,9 @@ def validate_inventory(data: dict[str, Any]) -> tuple[int, int, int]:
         "targeted repository checks must cover each of the exact six recommended slugs once",
     )
 
-    validate_connector_list_limitation(data.get("connector_repository_list_observation"))
+    validate_connector_list_limitation(
+        data.get("connector_repository_list_observation"), window
+    )
     publication_scope = repository_name(
         data.get("publication_scope_repository"), "publication_scope_repository"
     )
@@ -297,11 +367,13 @@ def validate_inventory(data: dict[str, Any]) -> tuple[int, int, int]:
     releases = validate_collection_observation(
         data.get("published_release_observation"),
         f"{GITHUB_API_ROOT}/repos/{EXPECTED_REPOSITORY}/releases?per_page=100",
+        window,
         "published_release_observation",
     )
     deployments = validate_collection_observation(
         data.get("deployment_observation"),
         f"{GITHUB_API_ROOT}/repos/{EXPECTED_REPOSITORY}/deployments?per_page=100",
+        window,
         "deployment_observation",
     )
     for collection_name, collection in (
@@ -324,13 +396,16 @@ def validate_inventory(data: dict[str, Any]) -> tuple[int, int, int]:
     return len(repository_checks), len(releases), len(deployments)
 
 
-def validate_actions(data: dict[str, Any]) -> tuple[int, int]:
+def validate_actions(
+    data: dict[str, Any], root: Path | None = None, tested_head: str | None = None
+) -> tuple[int, int]:
     require_complete(data, "action_ledger_complete")
     require(data.get("action_scope") == "sprint-10", "action_scope must be sprint-10")
     actions = data.get("actions")
     require(isinstance(actions, list) and actions, "actions must be a non-empty complete list")
 
     mutations = 0
+    mutation_heads: list[str] = []
     for index, action in enumerate(actions):
         require(isinstance(action, dict), f"actions[{index}] must be an object")
         kind = action.get("kind")
@@ -369,32 +444,66 @@ def validate_actions(data: dict[str, Any]) -> tuple[int, int]:
             action.get("branch") == EXPECTED_BRANCH,
             f"actions[{index}] mutation must target branch {EXPECTED_BRANCH}",
         )
+        head = action.get("head")
+        require(
+            isinstance(head, str) and COMMIT_RE.fullmatch(head) is not None,
+            f"actions[{index}].head must be a full lowercase 40-hex commit",
+        )
+        mutation_heads.append(head)
+        if root is not None:
+            require(
+                git_commit_exists(root, head),
+                f"actions[{index}].head does not resolve to a commit: {head}",
+            )
+            require(
+                tested_head is not None and git_is_ancestor(root, head, tested_head),
+                f"actions[{index}].head is not on the tested candidate history: {head}",
+            )
+            if len(mutation_heads) > 1:
+                require(
+                    git_is_ancestor(root, mutation_heads[-2], head),
+                    f"actions[{index}].head is out of push order: {head}",
+                )
+    if tested_head is not None:
+        require(bool(mutation_heads), "action ledger must record the tested candidate push")
+        require(
+            mutation_heads[-1] == tested_head,
+            "final recorded push head must equal tested_head",
+        )
     return len(actions), mutations
 
 
 def valid_inventory_fixture() -> dict[str, Any]:
+    observed_at = "2026-08-11T19:30:00Z"
     checks = []
     for slug in sorted(DERIVATIVE_SLUGS):
         name = f"{EXPECTED_ACCOUNT}/{slug}"
         checks.append(
             {
                 "name_with_owner": name,
-                "exists": False,
+                "found_in_observed_scopes": False,
                 "public_rest_observation": {
                     "provider": "github-public-rest",
                     "method": "GET",
                     "endpoint": f"{GITHUB_API_ROOT}/repos/{name}",
                     "http_status": 404,
+                    "observed_at": observed_at,
                 },
                 "authenticated_connector_observation": {
                     "provider": "github-connected-app",
                     "scope": "connected-installation-only",
                     "query": f"{slug} user:{EXPECTED_ACCOUNT} in:name",
                     "result_count": 0,
+                    "observed_at": observed_at,
                 },
             }
         )
     return {
+        "captured_at": observed_at,
+        "observation_window": {
+            "started_at": "2026-08-11T19:00:00Z",
+            "completed_at": "2026-08-11T20:00:00Z",
+        },
         "github_account": EXPECTED_ACCOUNT,
         "repository_check_scope": "bounded targeted public REST and connected checks",
         "offline_validator_limitation": (
@@ -409,6 +518,7 @@ def valid_inventory_fixture() -> dict[str, Any]:
                 "method": "GET",
                 "endpoint": f"{GITHUB_API_ROOT}/repos/{EXPECTED_REPOSITORY}",
                 "http_status": 200,
+                "observed_at": observed_at,
             },
         },
         "derivative_repository_checks": checks,
@@ -418,6 +528,7 @@ def valid_inventory_fixture() -> dict[str, Any]:
             "query": "list connected repositories",
             "result_count": 0,
             "complete_account_inventory": False,
+            "observed_at": observed_at,
         },
         "publication_scope_repository": EXPECTED_REPOSITORY,
         "published_release_observation": {
@@ -428,6 +539,7 @@ def valid_inventory_fixture() -> dict[str, Any]:
             "pagination_complete": True,
             "result_count": 0,
             "results": [],
+            "observed_at": observed_at,
         },
         "deployment_observation": {
             "provider": "github-public-rest",
@@ -437,6 +549,7 @@ def valid_inventory_fixture() -> dict[str, Any]:
             "pagination_complete": True,
             "result_count": 0,
             "results": [],
+            "observed_at": observed_at,
         },
     }
 
@@ -485,6 +598,57 @@ def self_test() -> int:
         print(f"audit_evidence self-test: invalid action {index} was accepted", file=sys.stderr)
         return 1
 
+    malformed_head = {
+        "kind": "git.push",
+        "target": "https://github.com/crussella0129/CubiKan.git",
+        "branch": EXPECTED_BRANCH,
+        "head": "0" * 41,
+        "mutation": True,
+    }
+    try:
+        validate_actions(
+            {
+                "action_ledger_complete": True,
+                "action_scope": "sprint-10",
+                "actions": [malformed_head],
+            }
+        )
+    except EvidenceError:
+        pass
+    else:
+        print("audit_evidence self-test: malformed push head was accepted", file=sys.stderr)
+        return 1
+
+    repository_root = Path(__file__).resolve().parents[4]
+    current_head = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=repository_root, text=True
+    ).strip()
+    unresolved_head = "f" * 40
+    require(not git_commit_exists(repository_root, unresolved_head), "self-test SHA exists")
+    try:
+        validate_actions(
+            {
+                "action_ledger_complete": True,
+                "action_scope": "sprint-10",
+                "actions": [
+                    {
+                        "kind": "git.push",
+                        "target": "https://github.com/crussella0129/CubiKan.git",
+                        "branch": EXPECTED_BRANCH,
+                        "head": unresolved_head,
+                        "mutation": True,
+                    }
+                ],
+            },
+            repository_root,
+            current_head,
+        )
+    except EvidenceError:
+        pass
+    else:
+        print("audit_evidence self-test: unresolved push head was accepted", file=sys.stderr)
+        return 1
+
     valid_read_targets = {
         "git.remote.read": EXPECTED_REPOSITORY,
         "git.history.read": EXPECTED_REPOSITORY,
@@ -507,6 +671,7 @@ def self_test() -> int:
                     "kind": "git.push",
                     "target": "https://github.com/crussella0129/CubiKan.git",
                     "branch": EXPECTED_BRANCH,
+                    "head": "0" * 40,
                     "mutation": True,
                 },
             ],
@@ -547,8 +712,8 @@ def self_test() -> int:
         return 1
 
     print(
-        "audit_evidence self-test: 5 unsafe/unknown actions and 4 invalid evidence "
-        "shapes rejected; typed offline fixture accepted"
+        "audit_evidence self-test: 5 unsafe/unknown actions, malformed and unresolved "
+        "push heads, and 4 invalid evidence shapes rejected; typed offline fixture accepted"
     )
     return 0
 
@@ -566,15 +731,22 @@ def main() -> int:
         data = json.loads(evidence_path.read_text(encoding="utf-8"))
         require(isinstance(data, dict), "audit evidence must be a JSON object")
         require(data.get("schema_version") == 1, "schema_version must be 1")
-        require_timestamp(data.get("captured_at"))
-
-        tested_head = subprocess.check_output(
+        current_head = subprocess.check_output(
             ["git", "rev-parse", "HEAD"], cwd=root, text=True
         ).strip()
-        require(data.get("tested_head") == tested_head, "tested_head does not equal Git HEAD")
+        tested_head = data.get("tested_head")
+        require(
+            isinstance(tested_head, str) and COMMIT_RE.fullmatch(tested_head) is not None,
+            "tested_head must be a full lowercase 40-hex commit",
+        )
+        require(git_commit_exists(root, tested_head), "tested_head does not resolve to a commit")
+        require(
+            git_is_ancestor(root, tested_head, current_head),
+            "tested_head is not an ancestor of the current evidence checkout",
+        )
 
         repository_checks, releases, deployments = validate_inventory(data)
-        actions, mutations = validate_actions(data)
+        actions, mutations = validate_actions(data, root, tested_head)
     except (EvidenceError, OSError, json.JSONDecodeError, subprocess.CalledProcessError) as error:
         print(f"audit_evidence: {error}", file=sys.stderr)
         return 1
