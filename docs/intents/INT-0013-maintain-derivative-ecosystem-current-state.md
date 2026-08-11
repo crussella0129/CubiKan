@@ -2,12 +2,12 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0013
-- **State:** active
+- **State:** realized
 - **Work evidence:** [Sprint 10 build plan](../sprints/s10/sprint-plans/build-plan.md)
-- **Completion evidence:** none
+- **Completion evidence:** [T-1001–T-1007 completion ledger](../work/completed-tasks.md#t-1001-sprint-10)
 - **Code evidence:** none
-- **Test evidence:** none
-- **Documentation evidence:** none
+- **Test evidence:** [Sprint 10 test report](../sprints/s10/sprint-tests/test-report.md)
+- **Documentation evidence:** [maintained derivative-ecosystem appendix](../appendix/potential-derivative-projects.md)
 
 ## Intent
 
@@ -96,3 +96,4 @@ maintenance promise.
 - 2026-08-10: created as `proposed` after the post-Sprint 9 audit found INT-0007's appendix still described realized INT-0009, INT-0010, and INT-0012 capabilities as future.
 - 2026-08-10: moved to `planned` when Sprint 10 mapped the bounded current-state correction and non-creation safeguards to T-1001 through T-1007.
 - 2026-08-10: moved to `active` when Build queued T-1001 through T-1007 from the finalized clean Sprint 10 plans.
+- 2026-08-11: moved to `realized` after T-1001–T-1007 completed, all 15 finalized Sprint 10 checks, 191 workspace tests, and one doctest passed, GitHub Actions run 31533101690 succeeded at exact tested commit `0a7bc3a023364cca9197e735c5acfeab019ce8a1`, and the final Test Critic returned `clean`.

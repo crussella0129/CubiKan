@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-11T20:28:26Z",
+  "tested_head": "0a7bc3a023364cca9197e735c5acfeab019ce8a1",
+  "github_account": "crussella0129",
+  "repository_check_scope": "bounded targeted public REST and connected-app observations for the six recommended slugs; installation scope is narrower than an account-wide inventory",
+  "offline_validator_limitation": "offline shape and consistency validation only; it does not call a provider or authenticate the recorded observations",
+  "observation_window": {
+    "started_at": "2026-08-11T19:25:11Z",
+    "completed_at": "2026-08-11T20:28:26Z"
+  },
+  "derivative_repository_checks_complete": true,
+  "cubikan_repository": {
+    "name_with_owner": "crussella0129/CubiKan",
+    "exists": true,
+    "public_rest_observation": {
+      "provider": "github-public-rest",
+      "method": "GET",
+      "endpoint": "https://api.github.com/repos/crussella0129/CubiKan",
+      "http_status": 200,
+      "observed_at": "2026-08-11T19:59:13Z"
+    }
+  },
+  "derivative_repository_checks": [
+    {
+      "name_with_owner": "crussella0129/animus-ledger",
+      "found_in_observed_scopes": false,
+      "public_rest_observation": {
+        "provider": "github-public-rest",
+        "method": "GET",
+        "endpoint": "https://api.github.com/repos/crussella0129/animus-ledger",
+        "http_status": 404,
+        "observed_at": "2026-08-11T19:59:13Z"
+      },
+      "authenticated_connector_observation": {
+        "provider": "github-connected-app",
+        "scope": "connected-installation-only",
+        "source_id": "github-connector:search_repositories",
+        "query": "animus-ledger user:crussella0129 in:name",
+        "result_count": 0,
+        "observed_at": "2026-08-11T19:59:13Z"
+      }
+    },
+    {
+      "name_with_owner": "crussella0129/cubikan-agent-ops",
+      "found_in_observed_scopes": false,
+      "public_rest_observation": {
+        "provider": "github-public-rest",
+        "method": "GET",
+        "endpoint": "https://api.github.com/repos/crussella0129/cubikan-agent-ops",
+        "http_status": 404,
+        "observed_at": "2026-08-11T19:59:13Z"
+      },
+      "authenticated_connector_observation": {
+        "provider": "github-connected-app",
+        "scope": "connected-installation-only",
+        "source_id": "github-connector:search_repositories",
+        "query": "cubikan-agent-ops user:crussella0129 in:name",
+        "result_count": 0,
+        "observed_at": "2026-08-11T19:59:13Z"
+      }
+    },
+    {
+      "name_with_owner": "crussella0129/cubikan-observatory",
+      "found_in_observed_scopes": false,
+      "public_rest_observation": {
+        "provider": "github-public-rest",
+        "method": "GET",
+        "endpoint": "https://api.github.com/repos/crussella0129/cubikan-observatory",
+        "http_status": 404,
+        "observed_at": "2026-08-11T19:59:13Z"
+      },
+      "authenticated_connector_observation": {
+        "provider": "github-connected-app",
+        "scope": "connected-installation-only",
+        "source_id": "github-connector:search_repositories",
+        "query": "cubikan-observatory user:crussella0129 in:name",
+        "result_count": 0,
+        "observed_at": "2026-08-11T19:59:13Z"
+      }
+    },
+    {
+      "name_with_owner": "crussella0129/cubikan-org-app-kit",
+      "found_in_observed_scopes": false,
+      "public_rest_observation": {
+        "provider": "github-public-rest",
+        "method": "GET",
+        "endpoint": "https://api.github.com/repos/crussella0129/cubikan-org-app-kit",
+        "http_status": 404,
+        "observed_at": "2026-08-11T19:59:13Z"
+      },
+      "authenticated_connector_observation": {
+        "provider": "github-connected-app",
+        "scope": "connected-installation-only",
+        "source_id": "github-connector:search_repositories",
+        "query": "cubikan-org-app-kit user:crussella0129 in:name",
+        "result_count": 0,
+        "observed_at": "2026-08-11T19:59:13Z"
+      }
+    },
+    {
+      "name_with_owner": "crussella0129/cubikan-process-studio",
+      "found_in_observed_scopes": false,
+      "public_rest_observation": {
+        "provider": "github-public-rest",
+        "method": "GET",
+        "endpoint": "https://api.github.com/repos/crussella0129/cubikan-process-studio",
+        "http_status": 404,
+        "observed_at": "2026-08-11T19:59:13Z"
+      },
+      "authenticated_connector_observation": {
+        "provider": "github-connected-app",
+        "scope": "connected-installation-only",
+        "source_id": "github-connector:search_repositories",
+        "query": "cubikan-process-studio user:crussella0129 in:name",
+        "result_count": 0,
+        "observed_at": "2026-08-11T19:59:13Z"
+      }
+    },
+    {
+      "name_with_owner": "crussella0129/cubikan-skill-graph",
+      "found_in_observed_scopes": false,
+      "public_rest_observation": {
+        "provider": "github-public-rest",
+        "method": "GET",
+        "endpoint": "https://api.github.com/repos/crussella0129/cubikan-skill-graph",
+        "http_status": 404,
+        "observed_at": "2026-08-11T19:59:13Z"
+      },
+      "authenticated_connector_observation": {
+        "provider": "github-connected-app",
+        "scope": "connected-installation-only",
+        "source_id": "github-connector:search_repositories",
+        "query": "cubikan-skill-graph user:crussella0129 in:name",
+        "result_count": 0,
+        "observed_at": "2026-08-11T19:59:13Z"
+      }
+    }
+  ],
+  "connector_repository_list_observation": {
+    "provider": "github-connected-app",
+    "scope": "connected-installation-only",
+    "source_id": "github-connector:list_repositories",
+    "result_count": 0,
+    "complete_account_inventory": false,
+    "observed_at": "2026-08-11T19:25:11Z"
+  },
+  "publication_scope_repository": "crussella0129/CubiKan",
+  "published_release_observation": {
+    "provider": "github-public-rest",
+    "method": "GET",
+    "endpoint": "https://api.github.com/repos/crussella0129/CubiKan/releases?per_page=100",
+    "http_status": 200,
+    "pagination_complete": true,
+    "result_count": 0,
+    "results": [],
+    "observed_at": "2026-08-11T19:59:13Z",
+    "visibility_limit": "published releases only; public REST does not expose drafts"
+  },
+  "deployment_observation": {
+    "provider": "github-public-rest",
+    "method": "GET",
+    "endpoint": "https://api.github.com/repos/crussella0129/CubiKan/deployments?per_page=100",
+    "http_status": 200,
+    "pagination_complete": true,
+    "result_count": 0,
+    "results": [],
+    "observed_at": "2026-08-11T19:59:13Z"
+  },
+  "action_ledger_complete": true,
+  "action_scope": "sprint-10",
+  "action_scope_description": "All Sprint 10 Git remote/history inspections, targeted GitHub inventory reads, and remote pushes through the tested head and declared observation window; CI metadata reads are recorded separately in e2e-tests.md.",
+  "actions": [
+    {"kind": "git.remote.read", "target": "crussella0129/CubiKan", "mutation": false},
+    {"kind": "git.history.read", "target": "crussella0129/CubiKan", "mutation": false},
+    {"kind": "github.connector.repositories.list", "target": "crussella0129", "mutation": false},
+    {"kind": "github.connector.repository.search", "target": "crussella0129/CubiKan", "mutation": false},
+    {"kind": "github.public_rest.repository.read", "target": "crussella0129/CubiKan", "mutation": false},
+    {"kind": "github.connector.repository.search", "target": "crussella0129/animus-ledger", "mutation": false},
+    {"kind": "github.public_rest.repository.read", "target": "crussella0129/animus-ledger", "mutation": false},
+    {"kind": "github.connector.repository.search", "target": "crussella0129/cubikan-agent-ops", "mutation": false},
+    {"kind": "github.public_rest.repository.read", "target": "crussella0129/cubikan-agent-ops", "mutation": false},
+    {"kind": "github.connector.repository.search", "target": "crussella0129/cubikan-observatory", "mutation": false},
+    {"kind": "github.public_rest.repository.read", "target": "crussella0129/cubikan-observatory", "mutation": false},
+    {"kind": "github.connector.repository.search", "target": "crussella0129/cubikan-org-app-kit", "mutation": false},
+    {"kind": "github.public_rest.repository.read", "target": "crussella0129/cubikan-org-app-kit", "mutation": false},
+    {"kind": "github.connector.repository.search", "target": "crussella0129/cubikan-process-studio", "mutation": false},
+    {"kind": "github.public_rest.repository.read", "target": "crussella0129/cubikan-process-studio", "mutation": false},
+    {"kind": "github.connector.repository.search", "target": "crussella0129/cubikan-skill-graph", "mutation": false},
+    {"kind": "github.public_rest.repository.read", "target": "crussella0129/cubikan-skill-graph", "mutation": false},
+    {"kind": "github.public_rest.published_releases.read", "target": "crussella0129/CubiKan", "mutation": false},
+    {"kind": "github.public_rest.deployments.read", "target": "crussella0129/CubiKan", "mutation": false},
+    {"kind": "git.push", "target": "https://github.com/crussella0129/CubiKan.git", "branch": "dev", "head": "4040493ce4cb3ff060d10721211e3ec1135de6d5", "mutation": true},
+    {"kind": "git.push", "target": "https://github.com/crussella0129/CubiKan.git", "branch": "dev", "head": "cdede78dae2d3838328b63abd6171e54d4a557f4", "mutation": true},
+    {"kind": "git.push", "target": "https://github.com/crussella0129/CubiKan.git", "branch": "dev", "head": "1c26ee010b8c201a8e8092255df4b949011ed21a", "mutation": true},
+    {"kind": "git.push", "target": "https://github.com/crussella0129/CubiKan.git", "branch": "dev", "head": "0a7bc3a023364cca9197e735c5acfeab019ce8a1", "mutation": true}
+  ]
+}
