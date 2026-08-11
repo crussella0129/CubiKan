@@ -134,7 +134,7 @@ The Book remains the semantic and historical realization authority; the
 realized backend is authoritative only for the durable Intent Unit and
 relationship state accepted through its versioned boundaries. Treating backend
 state as operational task or completion truth for the Book still requires a
-separately selected projection or migration intent with reconciliation and
+separately authorized projection or migration intent with reconciliation and
 cutover rules. Book and backend dual-write is prohibited because it would
 create split-brain history.
 
@@ -339,9 +339,10 @@ the repository exists nor that its creation is scheduled.
   for the canonical association.
 - **Creation trigger:** Create when repeated cross-project trace questions
   justify a connector-heavy analytics runtime with its own privacy and release
-  boundary; a read-only Book/Git prototype may establish that need before a
-  durable backend exists. Before publishing agent scores or feeding any
-  recommendation into adaptation, an approved governance plan must establish
+  boundary; a read-only Book/Git prototype may establish that need without
+  depending on or writing to the available durable backend. Before publishing
+  agent scores or feeding any recommendation into adaptation, an approved
+  governance plan must establish
   data minimization, retention/deletion and redaction, access control, and a
   named human approval gate for score publication and every adaptation decision.
 - **Separation rationale:** Git-host integration, CI/test ingestion, sensitive
