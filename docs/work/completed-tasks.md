@@ -423,3 +423,11 @@
 - **Files modified:** `docs/intents/INT-0013-maintain-derivative-ecosystem-current-state.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Integrated implementation commit:** `d725411e0bf4c97437544e28c604e48f0c1badbf`
 - **Commit:** `b6ba646e88093e8f88eedd31b04405b44a031a82`
+
+## T-1002 (sprint 10)
+- **Description:** Correct the appendix's capability status, dependency, and authority maps
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:08:11Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `a4c14cfcaccc23afeebafe28490b63b0683d17e8`
+- **Commit:** PENDING
