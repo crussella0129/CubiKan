@@ -431,3 +431,11 @@
 - **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Integrated implementation commit:** `a4c14cfcaccc23afeebafe28490b63b0683d17e8`
 - **Commit:** `1a7c1b210f24170f4f07c4dbd700e8bf58c320d5`
+
+## T-1003 (sprint 10)
+- **Description:** Correct the safe integration boundary while preserving current exclusions
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:09:13Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `a3e6aec3afe739091d03103744a82d89ad1c467b`
+- **Commit:** PENDING
