@@ -1,9 +1,12 @@
 # Potential Derivative Projects
 
 > **Advisory status:** This appendix is a non-binding architecture map. Project
-> Book intent chapters own product meaning. No repository or future backend
-> named here is asserted to exist, scheduled for implementation, or authorized
-> for creation. Names, boundaries, and sequencing may change when stronger
+> Book intent chapters own product meaning and realization status. The current
+> CubiKan surfaces described below are governed by their realized intents; no
+> recommended derivative repository named in the catalog is asserted to exist,
+> be scheduled for implementation, or be authorized for creation. Provider or
+> network adapters remain future work unless separately selected and realized.
+> Recommended names, boundaries, and sequencing may change when stronger
 > evidence appears.
 
 The map distills the sanitized [Sprint 6 retained-theme
@@ -13,21 +16,32 @@ or original ordering of the user-provided discussion.
 
 ## Current CubiKan boundary
 
-Today CubiKan consists of two deliberately small surfaces:
+Today CubiKan consists of four deliberately bounded surfaces:
 
 - `cubikan-core` is a chain-agnostic Rust lifecycle kernel. It validates opaque
   Intent Unit identity, caller-defined workflow phases and directed
   transitions, active/completed status, and ordered lifecycle history for one
   aggregate.
-- `cubikan` is an experimental, one-shot, in-memory JSON CLI adapter. One
-  process configures a workflow, creates one unit, performs its requested
-  operations, emits one response, and exits.
+- `cubikan` is the experimental stateless, one-shot, in-memory JSON CLI
+  adapter. One process configures a workflow, creates one unit, performs its
+  requested operations, emits one response, and exits without preserving
+  state.
+- `cubikan-backend` is a synchronous, embedded SQLite Rust library for multiple
+  durable Intent Units at a caller-supplied local filesystem path. It supports
+  exact SQLite schema v1 for lifecycle storage and schema v2 for the durable
+  relationship extension; relationship contract v1 and projection query v1
+  are exposed through this Rust boundary only.
+- `cubikan-local` is the separate explicit-path durable JSON process adapter.
+  Each invocation executes one local protocol-v1 operation against the selected
+  SQLite file. Protocol v1 remains lifecycle-only: create, get, list,
+  transition, and complete; it does not expose relationship or projection
+  operations.
 
-Neither surface currently supplies persistence, a resumable service, actors,
-authorization, metrics, cross-unit relationships, multi-board queries, UI,
-deployment, or blockchain behavior. The current CLI is an execution boundary,
-not an application backend. The core's serialized form is provisional rather
-than a durable integration schema.
+These versioned durable contracts do not stabilize the provisional
+`cubikan-core` Serde form or turn either CLI into an application backend or
+resumable service. The current surfaces remain local and supply no network
+filesystem or network service, actors, authorization, metrics, UI, deployment,
+or blockchain behavior.
 
 ## Architectural layers
 
@@ -36,8 +50,8 @@ The recommendations use four distinct layers:
 | Layer | Responsibility | Current status |
 |-------|----------------|----------------|
 | Lifecycle kernel | One-unit identity, immutable workflow, and validated transition/completion rules. | Realized in `cubikan-core`. |
-| CubiKan backend capability | Reusable provenance, revision, persistence/query, measurement-evidence, or relationship behavior shared by multiple consumers. | Proposed only in INT-0008–INT-0012. |
-| Adapter | Translation between CubiKan-owned concepts and an external provider or protocol, such as a Project Book parser or Git-host connector. | Future and provider-specific. |
+| CubiKan backend capability | Reusable provenance, revision, persistence/query, measurement-evidence, or relationship behavior shared by multiple consumers. | Revision, durable lifecycle storage/query, and relationships/projections are realized under INT-0009, INT-0010, and INT-0012. Provenance and measurement evidence remain proposed under INT-0008 and INT-0011. |
+| Adapter | Translation between CubiKan-owned concepts and an external provider or protocol, such as a Project Book parser or Git-host connector. | The stateless `cubikan` adapter and explicit-path `cubikan-local` lifecycle adapter exist; Book, Git-host, and other provider-specific adapters remain future work. |
 | Derivative application | User experience, orchestration, business records, analytics, privacy, and domain policy for a bounded problem. | Recommended only; none is created here. |
 
 A separate repository is justified when a surface has a distinct runtime,
@@ -65,23 +79,37 @@ rules belong to separately selected intents or derivative policy.
 
 ## Safe CubiKan integration baseline
 
-A derivative has two acceptable integration directions:
+A derivative must preserve the Project Book as product-meaning and historical
+realization authority; it may reference or project Book work, but it must not
+replace or dual-write that authority. Its acceptable CubiKan integration
+direction depends on the required capability:
 
 - For local validation, it may embed the current public `cubikan-core` API at an
   explicitly pinned crate version. That pin does not create a cross-version Rust
   API compatibility promise.
-- For durable or multi-process work, it may consume a future adapter-owned,
-  explicitly versioned CubiKan command/query/evidence boundary after the owning
-  backend intent is selected and realized.
+- For durable or multi-process work, it may consume an adapter-owned,
+  explicitly versioned boundary that is available today:
+  `cubikan-backend` provides the local Rust lifecycle, relationship, and
+  projection APIs, while `cubikan-local` protocol v1 provides only create, get,
+  list, transition, and complete against an explicit local database path.
+  Consumers must pin and honor the selected boundary's independent version
+  contract; availability does not imply cross-version compatibility.
+- Provider-specific adapters, including Project Book and Git-host connectors,
+  remain future work. Any network transport or service likewise requires its
+  own selected intent and versioned adapter boundary; neither is implied by the
+  available local backend or lifecycle process adapter.
 
 A derivative must not:
 
-- edit a CubiKan database directly or share writable storage with the backend;
+- edit a CubiKan database directly or share writable backend storage;
 - persist or decode provisional core Serde as if it were a stable disk or wire
   contract;
-- treat the current one-shot CLI as a session or resumable service; or
+- treat the stateless `cubikan` CLI or local `cubikan-local` process adapter as
+  a session, resumable service, or application backend;
 - duplicate lifecycle validation, mint conflicting Intent Unit state, or let a
-  projection become a second lifecycle authority.
+  projection become a second lifecycle authority; or
+- infer authentication, authorization, tenancy, deployment, blockchain, or
+  network-service behavior from the local boundaries.
 
 ## Data-authority map
 
@@ -92,7 +120,8 @@ rebuildable projections, but they do not dual-write the source of truth.
 |-------|---------------------|---------------|
 | Product intent, rationale, acceptance criteria, decisions, sprint plans, and current historical realization evidence | The Project Book | CubiKan and derivatives may reference or project it; they do not replace or dual-write it. |
 | Current in-process Intent Unit identity, workflow, phase, status, and lifecycle history | The validated `cubikan-core` aggregate | Adapters and derivatives invoke public lifecycle behavior; they do not construct competing state. |
-| Future durable unit state, revision, and bounded lifecycle queries | A future CubiKan backend selected under INT-0009 and INT-0010 | Derivatives use the versioned boundary, never shared writable storage. |
+| Durable Intent Unit state, revision, and bounded lifecycle queries | The replay-validated, versioned `cubikan-backend` storage and command/query boundary realized under INT-0009 and INT-0010 | Derivatives use the public boundary and never share or edit its writable storage. |
+| Versioned relationship definitions and accepted direct edges; ephemeral board or portfolio projections | The `cubikan-backend` relationship contract version 1 is canonical for accepted definitions and edges; projection query version 1 derives live views without creating another authority | Consumers submit and query explicit definitions, edges, and projections through the public Rust API; they do not copy membership into lifecycle state or infer execution policy. |
 | External Git objects, pull requests, and CI records | Their source provider | CubiKan stores namespaced references/evidence associations, not shadow provider objects. |
 | Manager/doer identity, decomposition, assignment readiness/priority, allowed-tool/sandbox/budget envelope, delegation retry/cancel policy, and approvals | Agent Ops | Intent Units represent lifecycle work without becoming an agent runtime; Agent Ops authorizes an execution envelope rather than owning node execution. |
 | Skill manifests, node readiness/scheduling, executor/tool selection within the approved envelope, attempts/leases, node retry/cancel/recovery, sandbox enforcement, and artifact routing | Skill Graph | These execution records reference canonical units and relations without becoming lifecycle state. |
@@ -101,70 +130,89 @@ rebuildable projections, but they do not dual-write the source of truth.
 | Raw lifecycle-linked observations and deterministic metric results | A future CubiKan evidence backend under INT-0011 | Analytics consumers interpret results without rewriting the observations or lifecycle. |
 | Analytical blame, attribution hypotheses, scores, and recommendations | The governed analytics derivative | They remain derived claims and never certify provenance or mutate agents automatically. |
 
-The Book is the current semantic and historical authority. Moving operational
-task or completion truth to a future backend requires a separately selected
-projection or migration intent with reconciliation and cutover rules. Book and
-backend dual-write is prohibited because it would create split-brain history.
+The Book remains the semantic and historical realization authority; the
+realized backend is authoritative only for the durable Intent Unit and
+relationship state accepted through its versioned boundaries. Treating backend
+state as operational task or completion truth for the Book still requires a
+separately authorized projection or migration intent with reconciliation and
+cutover rules. Book and backend dual-write is prohibited because it would
+create split-brain history.
 
-## Proposed CubiKan capability map
+## CubiKan capability status map
 
-The following chapters preserve reusable outcomes but remain `proposed`, with no
-Work or Completion evidence:
+The following chapters own distinct reusable outcomes. Their Book states are
+authoritative: INT-0009, INT-0010, and INT-0012 are `realized`; INT-0008 and
+INT-0011 remain `proposed` with no Work or Completion evidence.
 
 - [INT-0008 — Traceable intent instantiation and artifact
-  provenance](../intents/INT-0008-traceable-intent-instantiation.md) owns
+  provenance](../intents/INT-0008-traceable-intent-instantiation.md) is
+  **proposed** and owns
   namespaced origin references and provider-neutral evidence associations. A
   read-only origin-reference experiment could proceed independently; full
-  revision-scoped and bidirectional provenance requires INT-0009 and INT-0010.
+  revision-scoped and bidirectional provenance can build on the realized
+  INT-0009 and INT-0010 primitives but is not itself realized by them.
 - [INT-0009 — Revisioned lifecycle commands and atomic conflict
-  rejection](../intents/INT-0009-revisioned-lifecycle-commands.md) owns the
-  optimistic revision primitive. A stale expected revision is checked before
-  command validity; with a current revision, existing domain errors remain
-  authoritative.
+  rejection](../intents/INT-0009-revisioned-lifecycle-commands.md) is
+  **realized** and owns the optimistic revision primitive. A stale expected
+  revision is checked before command validity; with a current revision,
+  existing domain errors remain authoritative.
 - [INT-0010 — Durable multi-unit CubiKan
-  backend](../intents/INT-0010-durable-intent-unit-backend.md) depends on
-  INT-0009 and owns durable validated restoration plus bounded, paginated
+  backend](../intents/INT-0010-durable-intent-unit-backend.md) is **realized**,
+  depends on realized INT-0009, and owns explicit-path SQLite persistence,
+  validated restoration, guarded lifecycle commands, and bounded, paginated
   collection queries over stable lifecycle fields.
 - [INT-0011 — Lifecycle checkpoints and metric
   evidence](../intents/INT-0011-lifecycle-checkpoints-and-metric-evidence.md)
-  depends on INT-0009 and INT-0010. It owns durable observations and
-  deterministic evaluation of caller-supplied measurement definitions, not
-  business policy or transition authorization.
+  is **proposed**. Its INT-0009 and INT-0010 dependencies are realized, but its
+  durable observations and deterministic evaluation of caller-supplied
+  measurement definitions are not. It does not own business policy or
+  transition authorization.
 - [INT-0012 — Intent Unit relationships and board
   projections](../intents/INT-0012-intent-unit-relationships-and-board-projections.md)
-  depends on INT-0010 and owns reusable typed cross-unit relations and
-  projections, not execution scheduling.
+  is **realized**, depends on realized INT-0010, and owns reusable typed
+  cross-unit relations and ephemeral projections through the
+  relationship contract version 1 and projection query version 1 Rust backend
+  boundary, not
+  execution scheduling.
 
 This is a partial order, not one mandatory linear roadmap:
 
 ```text
-read-only INT-0008 exploration
+[proposed] read-only INT-0008 origin-reference exploration
 
-INT-0009 revision contract
-    └── INT-0010 durable multi-unit backend
-          ├── full INT-0008 provenance index (also needs INT-0009)
-          ├── INT-0011 measurement evidence (also needs INT-0009)
-          └── INT-0012 relationships and board projections
+[realized] INT-0009 revision contract
+    └── [realized] INT-0010 durable multi-unit backend
+          ├── [proposed] full INT-0008 provenance index (also uses INT-0009)
+          ├── [proposed] INT-0011 measurement evidence (also uses INT-0009)
+          └── [realized] INT-0012 relationships and board projections
 ```
 
-## Decisions required before backend work
+Realized prerequisites satisfy only the recorded technical dependency edges;
+they do not resolve, select, or realize the proposed branches.
 
-The proposed chapters do not choose these policies by implication:
+## Decisions still required for proposed capabilities and derivatives
 
-- storage engine, schema evolution, recovery, backup, and migration;
-- local versus network transport, deployment, tenancy, authentication, and
-  authorization;
-- concurrency, idempotency, retry, cancellation, and cross-unit atomicity;
+The realized local foundations settle revision behavior, SQLite schemas v1/v2,
+lifecycle storage and queries, and relationship/projection contract v1. They do
+not choose these still-unselected capabilities and derivative policies by
+implication:
+
+- recovery, backup, downgrade, future schema migration, and compatibility
+  beyond the exact realized local contracts;
+- network transport or service behavior, hosting, deployment, tenancy,
+  authentication, and authorization;
+- idempotency, retry, cancellation, and cross-unit atomicity beyond the
+  realized single-operation transaction and revision boundaries;
 - evidence identity, correction, verification, privacy, retention, and access;
 - measurement units, clocks, windows, denominators, correction, and approval;
-- relationship taxonomy, cycle/deletion semantics, projection consistency, and
-  scheduling authority; or
+- relationship authorization and definition lifecycle beyond contract v1,
+  historical or transitive queries, board policy, and scheduling authority; or
 - blockchain network, key custody, trust, fees, finality, reorganization, and
   on-chain/off-chain data placement.
 
-Each choice needs evidence, a selected intent, and the normal human checkpoint.
-This appendix supplies boundaries and creation triggers, not implementation
-authority.
+Each unresolved choice needs evidence, a selected intent, and the normal human
+checkpoint. This appendix supplies boundaries and creation triggers, not
+implementation authority.
 
 ## Recommended repository catalog
 
@@ -172,6 +220,13 @@ Each primary recommendation below is a boundary proposal, not a repository
 creation request. Shared inputs are named explicitly; canonical data and policy
 ownership must not conflict. The first group covers agent operations,
 provenance analytics, and Sprint Loops accounting.
+
+Every recommendation remains conditional: creating its named repository still
+requires its own selected intent and explicit authorization, named owners who
+accept its data, policy, and security boundaries, compatible versioned
+integration contracts, and satisfaction of its entry-specific creation trigger.
+Naming the boundary supplies none of those approvals and asserts neither that
+the repository exists nor that its creation is scheduled.
 
 ### 1. Agent Ops — `cubikan-agent-ops`
 
@@ -204,18 +259,21 @@ provenance analytics, and Sprint Loops accounting.
   references, artifact references, and versioned create/transition/complete
   commands for CubiKan.
 - **CubiKan interaction:** CubiKan remains authoritative for Intent Unit
-  identity and validated lifecycle state. Shared or resumable operation uses
-  INT-0009 revisions and waits for INT-0010, whose bounded collection query can
-  support basic queues. Advanced decomposition dependencies, nested-loop
-  composition, or multi-board projections require INT-0012. Delegation and
-  execution edges never become `WorkflowEdge` or implicit core lineage. A local
-  experiment may embed an explicitly pinned current core version, but that does
-  not supply persistence or an agent service.
+  identity and validated lifecycle state. Shared or resumable operation can use
+  the realized INT-0009 revision contract and INT-0010 durable command/query
+  boundary, including its bounded collection query for basic queues. The
+  realized INT-0012 relationship and projection primitives can support advanced
+  decomposition dependencies, nested-loop composition, or multi-board views;
+  Agent Ops still owns those semantics. Delegation and execution edges never
+  become `WorkflowEdge` or implicit core lineage. A local experiment may embed
+  an explicitly pinned current core version, but that does not supply an agent
+  service.
 - **Prerequisites:** An explicit manager/doer identity and authorization model;
   Book-to-unit reference and reconciliation rules; privacy, retention,
-  secret-handling, approval, and cost semantics; INT-0009 plus INT-0010 for
-  shared operation; INT-0012 for durable advanced relationships; and INT-0008
-  when assignments participate in reusable intent-to-artifact provenance.
+  secret-handling, approval, and cost semantics; the realized INT-0009 and
+  INT-0010 primitives for shared operation; the realized INT-0012 primitives
+  for durable advanced relationships; and INT-0008 when assignments participate
+  in reusable intent-to-artifact provenance.
 - **Creation trigger:** Create only when an authorized project needs
   coordinated, resumable work across multiple managers or doers and has named
   owners for identity, permissions, approvals, and the INT-0010-backed
@@ -268,20 +326,23 @@ provenance analytics, and Sprint Loops accounting.
   directly mutate lifecycle state or an agent.
 - **CubiKan interaction:** A bootstrap can read existing Book and Git evidence
   without writing CubiKan. Full revision-scoped, bidirectional provenance uses
-  a future versioned evidence boundary only after INT-0008, INT-0009, and
-  INT-0010 are selected and realized. Observatory never edits backend storage,
-  persists provisional core Serde as a contract, or treats the one-shot CLI as
-  a service.
+  a future versioned evidence boundary only after INT-0008 is selected and
+  realized; its lifecycle revisions and bounded durable queries are already
+  available under realized INT-0009 and INT-0010. Observatory never edits
+  backend storage, persists provisional core Serde as a contract, or treats the
+  one-shot CLI as a service.
 - **Prerequisites:** Read-only bootstrapping needs explicit namespace rules,
   provider connectors that preserve immutable full identities, and access
-  controls for every sensitive source. Full bidirectional provenance needs
-  INT-0008 plus INT-0009 and INT-0010; no analytical projection substitutes for
-  their canonical association.
+  controls for every sensitive source. Full bidirectional provenance still
+  needs INT-0008; its revision and durable-query prerequisites are already
+  realized under INT-0009 and INT-0010. No analytical projection substitutes
+  for the canonical association.
 - **Creation trigger:** Create when repeated cross-project trace questions
   justify a connector-heavy analytics runtime with its own privacy and release
-  boundary; a read-only Book/Git prototype may establish that need before a
-  durable backend exists. Before publishing agent scores or feeding any
-  recommendation into adaptation, an approved governance plan must establish
+  boundary; a read-only Book/Git prototype may establish that need without
+  depending on or writing to the available durable backend. Before publishing
+  agent scores or feeding any recommendation into adaptation, an approved
+  governance plan must establish
   data minimization, retention/deletion and redaction, access control, and a
   named human approval gate for score publication and every adaptation decision.
 - **Separation rationale:** Git-host integration, CI/test ingestion, sensitive
@@ -326,12 +387,13 @@ provenance analytics, and Sprint Loops accounting.
   cost and credit views; correction and approval trails; and explicit missing-
   evidence, trust, or anti-gaming exceptions. Each output identifies the
   accounting-model version and evidence set that produced it.
-- **CubiKan interaction:** Consume a future versioned query/evidence boundary
-  backed by INT-0008, INT-0009, and INT-0010, referencing exact units and
-  revisions without editing CubiKan storage. INT-0011 may supply revision-linked
-  observations, but Animus owns their accounting interpretation. CubiKan
-  lifecycle history is sequence evidence—not a financial ledger, audit journal,
-  valuation record, or proof that work occurred.
+- **CubiKan interaction:** Consume the realized INT-0009 revision and INT-0010
+  durable query boundary to reference exact units and revisions without editing
+  CubiKan storage. Revision-scoped artifact provenance still requires INT-0008,
+  and INT-0011 may later supply lifecycle-linked observations, but Animus owns
+  their accounting interpretation. CubiKan lifecycle history is sequence
+  evidence—not a financial ledger, audit journal, valuation record, or proof
+  that work occurred.
 - **Prerequisites:** An accepted accounting charter defining the unit of account,
   cost/credit semantics, trustworthy-provenance threshold, corrections,
   anti-gaming treatment, access/retention controls, and human approval roles;
@@ -358,7 +420,7 @@ provenance analytics, and Sprint Loops accounting.
   and [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md).
 - **Recursive-loop boundary:** Agent Ops owns manager/doer delegation and loop
   initiation; Skill Graph owns readiness, fan-out/join, retries, and execution
-  composition; INT-0012 may later preserve explicit cross-unit grouping or
+  composition; realized INT-0012 can preserve explicit cross-unit grouping or
   dependency relations. Animus can reconcile only explicit loop identities and
   relations. Parent-child meaning, roll-up, and correction propagation remain
   open and are never inferred from `WorkflowEdge`, phase order, or lifecycle
@@ -398,19 +460,21 @@ provenance analytics, and Sprint Loops accounting.
 - **CubiKan interaction:** Local structural validation may embed the current
   public core at an explicitly pinned crate version; that supplies neither
   persistence nor KPI storage. A definition package may be reviewed or
-  distributed as a non-operational artifact, but every shared operational or KPI
-  activation waits for INT-0009 revisions, INT-0010's versioned durable
-  command/query boundary, and INT-0011 observation/evaluation behavior. Studio
-  authors and governs the caller-supplied versioned definitions and
-  authorization; the future backend stores raw lifecycle-linked observations
-  and deterministically evaluates only those definitions; Observatory consumes
-  the results for governed analysis. Studio never writes backend storage or
-  treats provisional Serde/the one-shot CLI as a durable contract.
+  distributed as a non-operational artifact. The revision and durable
+  command/query primitives needed for shared operation are available under
+  realized INT-0009 and INT-0010; KPI activation still waits for INT-0011
+  observation/evaluation behavior. Studio authors and governs the caller-supplied
+  versioned definitions and authorization; the future evidence backend stores
+  raw lifecycle-linked observations and deterministically evaluates only those
+  definitions; Observatory consumes the results for governed analysis. Studio
+  never writes backend storage or treats provisional Serde/the one-shot CLI as
+  a durable contract.
 - **Prerequisites:** A definition identity/version and compatibility model;
   workflow-version pinning rules; process-owner authorization; complete
   measurement and correction semantics; privacy/retention treatment for
-  metadata; and a chosen pinned core version. Shared operational/KPI release also
-  requires realized INT-0009, INT-0010, and INT-0011 plus a versioned adapter.
+  metadata; and a chosen pinned core version. A shared operational release can
+  build on realized INT-0009 and INT-0010 but still needs a versioned adapter;
+  shared KPI release additionally requires realization of INT-0011.
 - **Creation trigger:** Create when an authorized team repeatedly needs to author
   and govern multiple process definitions through a reusable Electron-first
   experience, owns the definition/authorization model, and accepts immutable
@@ -514,22 +578,24 @@ provenance analytics, and Sprint Loops accounting.
   versioned lifecycle responses into neutral view models, projection-cache
   invalidation, secure-default integration guidance, and kit release policy. It
   does not own a vertical's business rules, authorization, retention, or UX.
-- **Inputs:** A future versioned CubiKan command/query boundary; unit IDs,
-  revisions, lifecycle fields, and bounded paginated results; caller-owned
-  authorization context/domain references; and requirements supplied by an
-  independently authorized bounded-domain application.
+- **Inputs:** The realized INT-0010 versioned command/query boundary through the
+  explicit-path local adapter; unit IDs, revisions, lifecycle fields, and
+  bounded paginated results; caller-owned authorization context/domain
+  references; and requirements supplied by an independently authorized
+  bounded-domain application.
 - **Outputs:** Reusable client bindings and command builders, neutral lifecycle
   components/view models, basic list/queue/board projection helpers, integration
   scaffolds, compatibility declarations, and conformance fixtures. Domain
   events, notifications, reports, and applications remain domain outputs.
 - **CubiKan interaction:** Basic projections use INT-0010's bounded collection
   query over stable lifecycle fields; advanced multi-board views or typed
-  relations wait for INT-0012. The kit sends revision-aware commands through a
-  versioned boundary and never edits storage, persists provisional Serde, treats
-  the one-shot CLI as a session, or infers relations from `WorkflowEdge`.
-- **Prerequisites:** Realized INT-0009 and INT-0010 for operational clients;
-  INT-0012 for advanced relations/boards; accepted client versioning and
-  compatibility; and bounded-domain decisions for identity, authorization,
+  relations use the realized INT-0012 relationship/projection boundary. The kit
+  sends revision-aware commands through the realized versioned boundary and
+  never edits storage, persists provisional Serde, treats the one-shot CLI as a
+  session, or infers relations from `WorkflowEdge`.
+- **Prerequisites:** Realized INT-0009 and INT-0010 for operational clients, and
+  realized INT-0012 for advanced relations/boards; accepted client versioning
+  and compatibility; and bounded-domain decisions for identity, authorization,
   privacy, retention, deployment, and support. A local demo may pin the current
   core, but that is not a shared backend.
 - **Creation trigger:** Create only when independently authorized domain work
@@ -569,42 +635,50 @@ one idea informs multiple authorities; it does not create a hidden seventh repo.
 
 | Theme | Backend/adapter boundary | Derivative recommendation or disposition |
 |-------|--------------------------|------------------------------------------|
-| `DV-01` | INT-0010 provides the potential common lifecycle backend; the Book retains current semantic/history authority. | Agent Ops coordinates work; Animus Ledger reconciles evidenced work. |
+| `DV-01` | Realized INT-0010 makes the local common lifecycle backend available; the Book retains current semantic/history authority. | Agent Ops coordinates work; Animus Ledger reconciles evidenced work. |
 | `DV-02` | Book-to-unit mapping and future provenance remain namespaced. | Agent Ops owns manager/doer execution; Animus reads evidence but does not execute. |
 | `DV-03` | INT-0008 owns durable associations; Git/Book/CI connectors remain adapters. | Observatory owns trace views and governed analytical inference. |
 | `DV-04` | INT-0011 owns observations and deterministic evaluation of caller definitions. | Process Studio authors/governs definitions; Observatory analyzes results. |
 | `DV-05` | The data-authority map keeps the Book canonical until an explicit migration/projection intent. | Animus derives reconciliation without dual-writing Book history. |
-| `DV-06` | INT-0012 owns reusable relations/projections, never phase edges. | Skill Graph owns executable DAG policy and multi-board routing. |
-| `DV-07` | INT-0010 supplies durable lifecycle commands and bounded queries. | Process Studio and the Organizational App Kit remain separate frontends/policy surfaces. |
-| `DV-08` | Explicit INT-0012 relations may represent cross-unit composition; no core lineage is inferred. | Merged across Agent Ops delegation, Skill Graph execution, and Animus reconciliation; exact recursive semantics remain open. |
+| `DV-06` | The realized INT-0012 boundary provides reusable relations/projections, never phase edges. | Skill Graph owns executable DAG policy and multi-board routing. |
+| `DV-07` | The realized INT-0010 boundary supplies durable lifecycle commands and bounded queries. | Process Studio and the Organizational App Kit remain separate frontends/policy surfaces. |
+| `DV-08` | Explicit relations available through realized INT-0012 may represent cross-unit composition; no core lineage is inferred. | Merged across Agent Ops delegation, Skill Graph execution, and Animus reconciliation; exact recursive semantics remain open. |
 | `DV-09` | Blockchain remains an unselected adapter concern with unresolved chain/trust/key/finality/data policy. | Deferred; no blockchain derivative repository is recommended. |
 
 ## Sequencing and creation gates
 
-The ordering is evidence-driven and deliberately non-calendar-based:
+This sequence distinguishes completed technical foundations from remaining
+derivative creation gates. It is evidence-driven, deliberately
+non-calendar-based, and not a delivery roadmap:
 
 1. **Read-only discovery:** Observatory may prototype approved Book/Git trace
    views after its privacy controls exist. Process Studio may validate local
    definitions against a pinned core after its definition/version model exists.
    Neither prototype claims a backend.
-2. **Reusable backend foundation:** Select and realize INT-0009 before INT-0010.
-   Storage, transport, schema, recovery, auth, tenancy, and deployment still
-   require human decisions. Full INT-0008 reverse provenance follows INT-0009
-   and INT-0010.
+2. **Completed reusable backend foundation:** INT-0009 and its dependent
+   INT-0010 are realized; revisioned lifecycle commands and the explicit-path
+   local backend are available and do not need to be selected again. Recovery,
+   backup, compatibility beyond the exact local contracts, network service,
+   authentication, tenancy, and deployment remain unselected. Full INT-0008
+   provenance remains proposed and can build on the available foundations.
 3. **Shared operational applications:** Agent Ops and basic organizational
-   projections may begin only after their identity/security policies and an
-   INT-0010 boundary exist. Process Studio may distribute a definition as a
-   non-operational artifact earlier, but shared operational or KPI activation
-   waits for INT-0009, INT-0010, and INT-0011.
-4. **Measurements and graph composition:** Shared metric evidence needs INT-0011.
-   Advanced multi-board relations need INT-0012; Skill Graph additionally needs
-   an accepted executor, sandbox, retry, artifact, and authorization contract.
+   projections may use the available INT-0010 boundary only after their own
+   identity, security, and compatibility policies are accepted. Process Studio
+   may distribute a definition as a non-operational artifact earlier, but
+   shared operational or KPI activation still needs the proposed INT-0011
+   evidence capability; INT-0009 and INT-0010 are already available.
+4. **Measurements and graph composition:** Shared metric evidence remains gated
+   on proposed INT-0011. Advanced multi-board relations may use realized
+   INT-0012; Skill Graph additionally needs an accepted executor, sandbox,
+   retry, artifact, and authorization contract.
 5. **Governed reconciliation:** Animus Ledger follows trustworthy provenance and
    an accepted accounting charter. It does not gain authority merely because
    lifecycle data is available.
 
-These gates are necessary, not sufficient. Each repository still needs a
-separate selected intent, research/plan, owner, and explicit creation approval.
+Availability satisfies only the completed technical foundation gates; it is not
+sufficient to create any repository. Each repository still needs a separate
+selected intent, research/plan, owner, and explicit creation approval, and each
+remaining gate above must be satisfied where applicable.
 
 ## Merged, deferred, and rejected alternatives
 
@@ -629,8 +703,9 @@ separate selected intent, research/plan, owner, and explicit creation approval.
 
 ## Open questions
 
-- Which storage, transport, deployment, tenancy, authentication, authorization,
-  recovery, and schema-compatibility policies should realize INT-0010?
+- Which recovery, backup, future schema-migration, compatibility, network
+  transport or service, deployment, tenancy, authentication, and authorization
+  policies are required around or beyond the available local INT-0010 boundary?
 - How should Book intent, Intent Unit, repository, and artifact namespaces be
   identified, corrected, retained, and verified under INT-0008?
 - What projection/migration and reconciliation contract would be required before
@@ -639,8 +714,10 @@ separate selected intent, research/plan, owner, and explicit creation approval.
   cost model is acceptable for Agent Ops?
 - Which observation clocks, sources, denominators, windows, units, late-arrival,
   correction, and authorization semantics make a measurement trustworthy?
-- Which relation types, endpoint/cycle/deletion rules, projection consistency,
-  and recursive-loop semantics belong under INT-0012?
+- Which relationship authorization, definition-lifecycle, historical or
+  transitive query, cross-board composition, scheduling, and recursive-loop
+  policies are required beyond the realized INT-0012 relationship/projection
+  contract?
 - What skill admission, executor trust, sandbox, artifact, retry/idempotency,
   fan-out/join, and partial-failure model is safe enough for Skill Graph?
 - What unit of account, valuation, trust, correction, close/reopen, anti-gaming,
@@ -659,7 +736,8 @@ This appendix does not:
 - select a database, chain, network transport, host, identity provider, tenancy
   model, deployment target, or durable compatibility policy;
 - promise cross-version Rust, storage, wire, client, or Book-schema compatibility;
-- redefine realized INT-0001–INT-0006 behavior or advance INT-0008–INT-0012 out
+- redefine any realized intent (INT-0001–INT-0006, INT-0009, INT-0010, or
+  INT-0012), rewrite superseded INT-0007, or advance INT-0008 or INT-0011 out
   of `proposed`;
 - grant a projection, derivative, analytics result, or accounting view authority
   over CubiKan lifecycle state or Project Book semantics;

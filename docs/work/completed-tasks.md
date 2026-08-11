@@ -407,3 +407,67 @@
 - **Completed:** 2026-08-10T05:05:06Z
 - **Files modified:** `crates/cubikan-backend/tests/relationship_e2e.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `751aee2af457d17d01bfd07c343ea37a6b42d2f9`
+
+## MAINT-001 (post-Sprint 9)
+- **Description:** Refresh the advisory derivative-project appendix for the realized local backend and relationship/projection boundary
+- **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md) (originating realized backlog authority); Book reconciliation is governed by superseding [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-10T13:51:14Z
+- **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Scope:** Originating maintenance corrected current-state and prerequisite language without changing runtime behavior or derivative-repository authorization; Sprint 10 reconciliation records INT-0013 as its superseding current-state authority.
+- **Commit:** `a7ed48992897c8463ba6cc729e944398c8ae8779`
+
+## T-1001 (sprint 10)
+- **Description:** Correct the appendix's current CubiKan surfaces and version boundary
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-10T14:50:00Z
+- **Files modified:** `docs/intents/INT-0013-maintain-derivative-ecosystem-current-state.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `d725411e0bf4c97437544e28c604e48f0c1badbf`
+- **Commit:** `b6ba646e88093e8f88eedd31b04405b44a031a82`
+
+## T-1002 (sprint 10)
+- **Description:** Correct the appendix's capability status, dependency, and authority maps
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:08:11Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `a4c14cfcaccc23afeebafe28490b63b0683d17e8`
+- **Commit:** `1a7c1b210f24170f4f07c4dbd700e8bf58c320d5`
+
+## T-1003 (sprint 10)
+- **Description:** Correct the safe integration boundary while preserving current exclusions
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:09:13Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `a3e6aec3afe739091d03103744a82d89ad1c467b`
+- **Commit:** `c923c0b8dae3ac56a40a7d738a192d5359429ea4`
+
+## T-1004 (sprint 10)
+- **Description:** Preserve the complete catalog while replacing stale waits on realized primitives
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:10:36Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `336b4e48e791f9a7d0a25e5de84c9404c3e266d2`
+- **Commit:** `b797cc832363639ba6343ee274cec321b65240e2`
+
+## T-1005 (sprint 10)
+- **Description:** Preserve conditional creation governance for every recommended repository
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:11:54Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `99864da63fc9a51b24ead1d5792c4d6b7f706207`
+- **Commit:** `168f9b1843d031ee1430bbbf689a4ecd48bf1db5`
+
+## T-1006 (sprint 10)
+- **Description:** Correct global sequencing, open questions, and status non-goals
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:13:20Z
+- **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `9517dc17797f25e7a2d8f924abf1b5d51fb62e5a`
+- **Commit:** `aa98b41c8d7ce96ad94e281bb9dbc323ec834868`
+
+## T-1007 (sprint 10)
+- **Description:** Close the derivative-appendix refresh backlog item
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:14:13Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `a7ed48992897c8463ba6cc729e944398c8ae8779`
+- **Commit:** `ec2dac4bda1a1e615bdb0bc0d99b54f6dbbcaacb`
