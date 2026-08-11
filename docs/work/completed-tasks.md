@@ -410,11 +410,11 @@
 
 ## MAINT-001 (post-Sprint 9)
 - **Description:** Refresh the advisory derivative-project appendix for the realized local backend and relationship/projection boundary
-- **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md) (realized documentation maintenance; no state transition)
+- **Intent:** [INT-0007](../intents/INT-0007-define-cubikan-derivative-ecosystem.md) (originating realized backlog authority); Book reconciliation is governed by superseding [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
 - **Completed:** 2026-08-10T13:51:14Z
 - **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Scope:** Corrected current-state and prerequisite language without changing intent ownership, runtime behavior, or derivative-repository authorization.
-- **Commit:** resolve by stable message `sprint-0: T-007 Close derivative appendix maintenance backlog`
+- **Scope:** Originating maintenance corrected current-state and prerequisite language without changing runtime behavior or derivative-repository authorization; Sprint 10 reconciliation records INT-0013 as its superseding current-state authority.
+- **Commit:** `a7ed48992897c8463ba6cc729e944398c8ae8779`
 
 ## T-1001 (sprint 10)
 - **Description:** Correct the appendix's current CubiKan surfaces and version boundary
@@ -463,3 +463,11 @@
 - **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Integrated implementation commit:** `9517dc17797f25e7a2d8f924abf1b5d51fb62e5a`
 - **Commit:** `aa98b41c8d7ce96ad94e281bb9dbc323ec834868`
+
+## T-1007 (sprint 10)
+- **Description:** Close the derivative-appendix refresh backlog item
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:14:13Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `a7ed48992897c8463ba6cc729e944398c8ae8779`
+- **Commit:** PENDING
