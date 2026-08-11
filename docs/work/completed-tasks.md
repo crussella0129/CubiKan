@@ -455,3 +455,11 @@
 - **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Integrated implementation commit:** `99864da63fc9a51b24ead1d5792c4d6b7f706207`
 - **Commit:** `168f9b1843d031ee1430bbbf689a4ecd48bf1db5`
+
+## T-1006 (sprint 10)
+- **Description:** Correct global sequencing, open questions, and status non-goals
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:13:20Z
+- **Files modified:** `docs/appendix/potential-derivative-projects.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `9517dc17797f25e7a2d8f924abf1b5d51fb62e5a`
+- **Commit:** PENDING

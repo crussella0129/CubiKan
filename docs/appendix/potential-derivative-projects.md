@@ -735,8 +735,9 @@ This appendix does not:
 - select a database, chain, network transport, host, identity provider, tenancy
   model, deployment target, or durable compatibility policy;
 - promise cross-version Rust, storage, wire, client, or Book-schema compatibility;
-- redefine any realized intent, including INT-0001–INT-0007, INT-0009,
-  INT-0010, and INT-0012, or advance INT-0008 or INT-0011 out of `proposed`;
+- redefine any realized intent (INT-0001–INT-0006, INT-0009, INT-0010, or
+  INT-0012), rewrite superseded INT-0007, or advance INT-0008 or INT-0011 out
+  of `proposed`;
 - grant a projection, derivative, analytics result, or accounting view authority
   over CubiKan lifecycle state or Project Book semantics;
 - treat Git blame, telemetry, scores, metrics, or linked evidence as causal proof,
