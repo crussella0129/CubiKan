@@ -439,3 +439,11 @@
 - **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Integrated implementation commit:** `a3e6aec3afe739091d03103744a82d89ad1c467b`
 - **Commit:** `c923c0b8dae3ac56a40a7d738a192d5359429ea4`
+
+## T-1004 (sprint 10)
+- **Description:** Preserve the complete catalog while replacing stale waits on realized primitives
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:10:36Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `336b4e48e791f9a7d0a25e5de84c9404c3e266d2`
+- **Commit:** PENDING
