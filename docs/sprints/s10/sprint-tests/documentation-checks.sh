@@ -595,7 +595,7 @@ verify_no_derivative_repository_operations() {
   printf 'tested_head=%s\nbranch=%s\norigin.fetch=%s\norigin.push=%s\nsprint_commit_count=%s\n' "$head" "$branch" "$fetch_url" "$push_url" "$commit_count"
   git -C "$PROJECT_ROOT" log --reverse --format='sprint_commit=%H%x09%s' "$BASE_REVISION..HEAD"
   python3 "$AUDIT_HELPER" "$PROJECT_ROOT" "$AUDIT_EVIDENCE" || return
-  printf 'verified bounded durable evidence: only CubiKan/dev mutations and zero derivative repositories/actions\n'
+  printf 'verified bounded durable evidence: only CubiKan/dev mutations; no targeted derivative repository was found and no derivative mutation was recorded\n'
 }
 
 run_check() {
