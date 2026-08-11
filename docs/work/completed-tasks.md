@@ -447,3 +447,11 @@
 - **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Integrated implementation commit:** `336b4e48e791f9a7d0a25e5de84c9404c3e266d2`
 - **Commit:** `b797cc832363639ba6343ee274cec321b65240e2`
+
+## T-1005 (sprint 10)
+- **Description:** Preserve conditional creation governance for every recommended repository
+- **Intent:** [INT-0013](../intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+- **Completed:** 2026-08-11T19:11:54Z
+- **Files modified:** `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Integrated implementation commit:** `99864da63fc9a51b24ead1d5792c4d6b7f706207`
+- **Commit:** PENDING
