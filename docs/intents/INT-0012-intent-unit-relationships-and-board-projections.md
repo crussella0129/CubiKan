@@ -2,7 +2,7 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0012
-- **State:** realized
+- **State:** superseded
 - **Work evidence:** [Sprint 9 build plan](../sprints/s9/sprint-plans/build-plan.md)
 - **Completion evidence:** [T-901–T-908](../work/completed-tasks.md#t-901-sprint-9)
 - **Code evidence:** [public relationship model](../../crates/cubikan-backend/src/relationship.rs), [schema migration](../../crates/cubikan-backend/src/migration.rs), [relationship storage](../../crates/cubikan-backend/src/relationship_store.rs), [projection queries](../../crates/cubikan-backend/src/query.rs)
@@ -198,3 +198,4 @@ metrics, and blockchain policy remain separate outcomes.
 - 2026-08-10: amended while `planned` to make structural-open versus operation-selected semantic corruption detection explicit before the Sprint 9 Plan was relocked.
 - 2026-08-10: moved to `active` when T-901 began implementing the finalized Sprint 9 relationship and projection value contract.
 - 2026-08-10: moved to `realized` after T-901–T-908 completed, the public backend and migration journeys passed locally and in exact-head hosted CI, and the final Sprint 9 Test Critic returned `clean`.
+- 2026-08-11: moved from `realized` to `superseded` when planned [INT-0014](INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md) replaced its SQLite-owned contract and required Build to carry the bounded definition, edge, direct-query, and projection-v1 semantics into canonical runtime events and a verified SQLite-v3 projection; Sprint 9 implementation and realization evidence remains historical.

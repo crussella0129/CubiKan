@@ -2,7 +2,7 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0010
-- **State:** realized
+- **State:** superseded
 - **Work evidence:** [Sprint 8 build plan](../sprints/s8/sprint-plans/build-plan.md)
 - **Completion evidence:** [T-801–T-810 completion ledger](../work/completed-tasks.md#t-801-sprint-8)
 - **Code evidence:** [`cubikan-backend` public boundary](../../crates/cubikan-backend/src/lib.rs) and [`cubikan-local` process adapter](../../crates/cubikan-local/src/lib.rs)
@@ -109,3 +109,4 @@ Advanced relationship/portfolio queries remain owned by
 - 2026-08-09: moved to `planned` when Sprint 8 mapped the selected embedded backend, storage contract, query semantics, guarded mutations, process boundary, process proof, and documentation to T-801–T-810.
 - 2026-08-09: moved to `active` immediately before T-801 began the adapter-owned backend value contract.
 - 2026-08-10: moved to `realized` after T-801–T-810 completed, the final Test Critic returned `clean`, 165 workspace tests and one doctest passed, and GitHub Actions run 31344560356 succeeded at exact tested commit `065b71fa1b63ba6abce6effb23c9d20674171835`.
+- 2026-08-11: moved from `realized` to `superseded` when planned [INT-0014](INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md) replaced the governing SQLite-canonical mutation and local protocol-v1 contract, selecting a canonical pallet and verified SQLite-v3 projection for Build; all Sprint 8 implementation and realization evidence remains historical until the successor is realized.

@@ -14,6 +14,7 @@
   - [INT-0011 — Lifecycle checkpoints and metric evidence](intents/INT-0011-lifecycle-checkpoints-and-metric-evidence.md)
   - [INT-0012 — Intent Unit relationships and board projections](intents/INT-0012-intent-unit-relationships-and-board-projections.md)
   - [INT-0013 — Maintain derivative ecosystem current-state accuracy](intents/INT-0013-maintain-derivative-ecosystem-current-state.md)
+  - [INT-0014 — Local Polkadot SDK canonical runtime and verified SQLite projection](intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
 - [Appendix](appendix/README.md)
   - [Potential Derivative Projects](appendix/potential-derivative-projects.md)
 - [Tasks](work/tasks.md)
@@ -32,3 +33,4 @@
 - [Sprint 8](sprints/s8/sprint-meta.md)
 - [Sprint 9](sprints/s9/sprint-meta.md)
 - [Sprint 10](sprints/s10/sprint-meta.md)
+- [Sprint 11](sprints/s11/sprint-meta.md)
