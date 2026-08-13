@@ -1,4 +1,4 @@
-//! Deterministic conversion from bounded lifecycle semantics to pallet errors.
+//! Deterministic conversion from bounded domain semantics to pallet errors.
 
 use crate::{
     pallet::{Config, Error},

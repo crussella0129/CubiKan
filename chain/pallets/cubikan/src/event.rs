@@ -1,6 +1,6 @@
 //! Stable identities carried by every accepted CubiKan domain event.
 
-/// Caller-independent command schema accepted by lifecycle dispatchables.
+/// Caller-independent command schema accepted by all domain dispatchables.
 pub const COMMAND_SCHEMA_VERSION: u16 = 1;
 
 /// First canonical pallet storage schema.

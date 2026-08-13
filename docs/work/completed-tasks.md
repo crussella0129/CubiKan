@@ -493,3 +493,11 @@
 - **Files modified:** `chain/Cargo.lock`, `chain/Cargo.toml`, `chain/pallets/cubikan/Cargo.toml`, `chain/pallets/cubikan/src/lib.rs`, `chain/pallets/cubikan/src/event.rs`, `chain/pallets/cubikan/src/error.rs`, `chain/pallets/cubikan/src/benchmarking.rs`, `chain/pallets/cubikan/src/weights.rs`, `chain/pallets/cubikan/src/mock.rs`, `chain/pallets/cubikan/src/tests/lifecycle.rs`, `chain/pins.toml`, `chain/tools/verify-pins.sh`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Scope repair:** The locked task assigned executable FRAME benchmarks but omitted the direct optional `frame-benchmarking` manifest/lock/pin paths; Sprint 11 meta records the minimal same-revision dependency repair.
 - **Commit:** `33322344bb0f587ee94a2b05002ee0da78302198`
+
+## T-1104 (sprint 11)
+- **Description:** Port bounded relationship definitions and edges to the pallet
+- **Intent:** [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md), [INT-0014](../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
+- **Completed:** 2026-08-13T20:14:47Z
+- **Files modified:** `chain/pallets/cubikan/src/relationship.rs`, `chain/pallets/cubikan/src/lib.rs`, `chain/pallets/cubikan/src/event.rs`, `chain/pallets/cubikan/src/error.rs`, `chain/pallets/cubikan/src/benchmarking.rs`, `chain/pallets/cubikan/src/weights.rs`, `chain/pallets/cubikan/src/tests/relationships.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Fixture note:** The independently authored T-1102 conformance corpus already carries the bounded relationship value and 128/129 capacity cases; T-1104 added no implementation-derived fixture bytes.
+- **Commit:** PENDING

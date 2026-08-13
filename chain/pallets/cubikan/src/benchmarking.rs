@@ -1,4 +1,4 @@
-//! Executable FRAME v2 benchmarks for every lifecycle dispatchable.
+//! Executable FRAME v2 benchmarks for every lifecycle and relationship call.
 //!
 //! Domain fixtures deliberately exercise the production maxima. Transition
 //! and completion setup fills 255 of 256 lifecycle records so the measured
@@ -13,13 +13,16 @@ use frame_system::RawOrigin;
 use crate::{
     event::COMMAND_SCHEMA_VERSION,
     types::{
-        ExternalReference, IntentSpecies, IntentUnitId, Namespace, PhaseId, ReferenceScope,
-        ReferenceValue, Workflow, WorkflowEdge, WorkflowId, MAX_AUTHORIZED_SUBMITTERS,
-        MAX_COMPLETION_PHASES, MAX_LIFECYCLE_RECORDS, MAX_NAMESPACE_BYTES, MAX_TEXT_BYTES,
-        MAX_WORKFLOW_EDGES, MAX_WORKFLOW_PHASES,
+        DefinitionKey, DefinitionVersion, ExternalReference, IntentSpecies, IntentUnitId,
+        IntentUnitState, Namespace, PhaseId, ReferenceScope, ReferenceValue,
+        RelationshipDefinition, RelationshipKey, RelationshipPolicy, Workflow, WorkflowEdge,
+        WorkflowId, MAX_AUTHORIZED_SUBMITTERS, MAX_COMPLETION_PHASES, MAX_LIFECYCLE_RECORDS,
+        MAX_NAMESPACE_BYTES, MAX_RELATIONSHIP_EDGES, MAX_TEXT_BYTES, MAX_WORKFLOW_EDGES,
+        MAX_WORKFLOW_PHASES,
     },
     AuthorizedSubmitterInput, AuthorizedSubmitters, AuthorizedSubmittersOf, Call, Config,
-    GlobalSequence, IntentUnits, Pallet,
+    GlobalSequence, IntentUnits, Pallet, RelationshipDefinitions, RelationshipEdges,
+    RelationshipEdgesOf,
 };
 
 fn maximal_text(marker: u8, index: usize) -> [u8; MAX_TEXT_BYTES] {
@@ -45,6 +48,23 @@ fn maximal_origin() -> ExternalReference {
 
 fn maximal_species() -> IntentSpecies {
     IntentSpecies::try_from_bytes(&maximal_text(b'i', 0)).expect("valid species")
+}
+
+fn maximal_definition(
+    self_policy: RelationshipPolicy,
+    cycle_policy: RelationshipPolicy,
+) -> RelationshipDefinition {
+    let namespace = [b'r'; MAX_NAMESPACE_BYTES];
+    RelationshipDefinition::new(
+        DefinitionKey::new(
+            Namespace::try_from_bytes(&namespace).expect("maximal definition id is valid"),
+            DefinitionVersion::try_new(u64::MAX).expect("maximum version is positive"),
+        ),
+        Some(maximal_species()),
+        Some(maximal_species()),
+        self_policy,
+        cycle_policy,
+    )
 }
 
 fn maximal_workflow() -> Workflow {
@@ -117,6 +137,42 @@ fn create_maximal_unit<T: Config>(caller: T::AccountId, id: IntentUnitId) {
     .expect("authorized maximal unit creation succeeds");
 }
 
+fn store_maximal_unit<T: Config>(marker: u8) -> IntentUnitId {
+    let id = IntentUnitId::from_bytes([marker; 16]);
+    IntentUnits::<T>::insert(
+        id,
+        IntentUnitState::new(id, maximal_origin(), maximal_species(), maximal_workflow()),
+    );
+    id
+}
+
+fn store_relationship_definition<T: Config>(definition: RelationshipDefinition) {
+    let key = definition.key().clone();
+    RelationshipDefinitions::<T>::insert(key, definition);
+}
+
+fn maximal_relationship_graph<T: Config>() -> (DefinitionKey, Vec<IntentUnitId>) {
+    let definition = maximal_definition(RelationshipPolicy::Allow, RelationshipPolicy::Reject);
+    let key = definition.key().clone();
+    store_relationship_definition::<T>(definition);
+
+    let units: Vec<_> = (0..=MAX_RELATIONSHIP_EDGES)
+        .map(|index| {
+            store_maximal_unit::<T>(
+                u8::try_from(index + 1).expect("129 unit fixture markers fit u8"),
+            )
+        })
+        .collect();
+    let edges: RelationshipEdgesOf = (0..MAX_RELATIONSHIP_EDGES - 1)
+        .rev()
+        .map(|index| RelationshipKey::new(key.clone(), units[index], units[index + 1]))
+        .collect::<Vec<_>>()
+        .try_into()
+        .expect("127-edge setup is within the relationship bound");
+    RelationshipEdges::<T>::insert(&key, edges);
+    (key, units)
+}
+
 fn fill_lifecycle_to_max_minus_one<T: Config>(caller: T::AccountId, id: IntentUnitId) {
     for revision in 0..u64::try_from(MAX_LIFECYCLE_RECORDS - 1).expect("bound fits u64") {
         let target = if revision % 2 == 0 {
@@ -133,6 +189,21 @@ fn fill_lifecycle_to_max_minus_one<T: Config>(caller: T::AccountId, id: IntentUn
         )
         .expect("fixture transition is valid");
     }
+}
+
+fn fill_stored_lifecycle_to_capacity<T: Config>(id: IntentUnitId) {
+    let mut state = IntentUnits::<T>::get(id).expect("benchmark endpoint is stored");
+    for revision in 0..u64::try_from(MAX_LIFECYCLE_RECORDS).expect("bound fits u64") {
+        let target = if revision % 2 == 0 {
+            maximal_phase(31)
+        } else {
+            maximal_phase(30)
+        };
+        state
+            .transition_to(&target, revision)
+            .expect("direct fixture transition remains valid through capacity");
+    }
+    IntentUnits::<T>::insert(id, state);
 }
 
 #[benchmarks]
@@ -225,6 +296,73 @@ mod benchmarks {
         assert_eq!(AuthorizedSubmitters::<T>::get().into_inner(), accounts);
         assert_eq!(GlobalSequence::<T>::get(), None);
         assert_eq!(frame_system::Pallet::<T>::event_count(), 1);
+    }
+
+    #[benchmark]
+    fn create_relationship_definition() {
+        let caller: T::AccountId = whitelisted_caller();
+        authorize::<T>(caller.clone());
+        let definition = maximal_definition(RelationshipPolicy::Reject, RelationshipPolicy::Reject);
+        let key = definition.key().clone();
+
+        #[extrinsic_call]
+        create_relationship_definition(
+            RawOrigin::Signed(caller),
+            COMMAND_SCHEMA_VERSION,
+            definition.clone(),
+        );
+
+        assert_eq!(RelationshipDefinitions::<T>::get(key), Some(definition));
+        assert_eq!(GlobalSequence::<T>::get(), Some(1));
+    }
+
+    #[benchmark]
+    fn create_relationship() {
+        let caller: T::AccountId = whitelisted_caller();
+        authorize::<T>(caller.clone());
+        let (definition, units) = maximal_relationship_graph::<T>();
+        fill_stored_lifecycle_to_capacity::<T>(units[0]);
+        fill_stored_lifecycle_to_capacity::<T>(units[MAX_RELATIONSHIP_EDGES]);
+        let relationship =
+            RelationshipKey::new(definition.clone(), units[MAX_RELATIONSHIP_EDGES], units[0]);
+
+        #[extrinsic_call]
+        create_relationship(
+            RawOrigin::Signed(caller),
+            COMMAND_SCHEMA_VERSION,
+            relationship.clone(),
+        );
+
+        let edges = RelationshipEdges::<T>::get(definition);
+        assert_eq!(edges.len(), MAX_RELATIONSHIP_EDGES);
+        assert_eq!(edges.last(), Some(&relationship));
+    }
+
+    #[benchmark]
+    fn delete_relationship() {
+        let caller: T::AccountId = whitelisted_caller();
+        authorize::<T>(caller.clone());
+        let (definition, units) = maximal_relationship_graph::<T>();
+        fill_stored_lifecycle_to_capacity::<T>(units[0]);
+        fill_stored_lifecycle_to_capacity::<T>(units[MAX_RELATIONSHIP_EDGES]);
+        let relationship =
+            RelationshipKey::new(definition.clone(), units[MAX_RELATIONSHIP_EDGES], units[0]);
+        RelationshipEdges::<T>::mutate(&definition, |edges| {
+            edges
+                .try_push(relationship.clone())
+                .expect("128th edge reaches the exact capacity")
+        });
+
+        #[extrinsic_call]
+        delete_relationship(
+            RawOrigin::Signed(caller),
+            COMMAND_SCHEMA_VERSION,
+            relationship.clone(),
+        );
+
+        let edges = RelationshipEdges::<T>::get(definition);
+        assert_eq!(edges.len(), MAX_RELATIONSHIP_EDGES - 1);
+        assert!(!edges.contains(&relationship));
     }
 
     #[cfg(test)]

@@ -11,6 +11,7 @@ extern crate alloc;
 pub mod conformance;
 pub mod error;
 pub mod event;
+pub mod relationship;
 pub mod types;
 pub mod weights;
 
@@ -27,6 +28,7 @@ mod mock;
 mod tests {
     mod lifecycle;
     mod model;
+    mod relationships;
 }
 
 #[frame_support::pallet]
@@ -47,8 +49,9 @@ pub mod pallet {
             PALLET_STORAGE_SCHEMA_VERSION,
         },
         types::{
-            CreateUnitPayload, DomainPayload, ExternalReference, IntentSpecies, IntentUnitId,
-            IntentUnitState, PhaseId, Workflow, MAX_AUTHORIZED_SUBMITTERS,
+            CreateUnitPayload, DefinitionKey, DomainPayload, ExternalReference, IntentSpecies,
+            IntentUnitId, IntentUnitState, PhaseId, RelationshipDefinition, RelationshipKey,
+            RelationshipPolicy, Workflow, MAX_AUTHORIZED_SUBMITTERS, MAX_RELATIONSHIP_EDGES,
         },
         weights::WeightInfo,
     };
@@ -62,6 +65,9 @@ pub mod pallet {
     pub type AuthorizedSubmittersOf<T> =
         BoundedVec<<T as frame_system::Config>::AccountId, ConstU32<16>>;
 
+    /// Complete live directed-edge set for one immutable definition version.
+    pub type RelationshipEdgesOf = BoundedVec<RelationshipKey, ConstU32<128>>;
+
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(PALLET_STORAGE_SCHEMA_VERSION);
 
     #[pallet::config]
@@ -70,7 +76,7 @@ pub mod pallet {
         #[allow(deprecated)]
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
-        /// Worst-case weights for every dispatchable lifecycle operation.
+        /// Worst-case weights for every dispatchable domain operation.
         type WeightInfo: WeightInfo;
     }
 
@@ -83,6 +89,18 @@ pub mod pallet {
     #[pallet::getter(fn intent_units)]
     pub type IntentUnits<T: Config> =
         StorageMap<_, Blake2_128Concat, IntentUnitId, IntentUnitState, OptionQuery>;
+
+    /// Immutable definitions keyed by their caller-owned exact version.
+    #[pallet::storage]
+    #[pallet::getter(fn relationship_definitions)]
+    pub type RelationshipDefinitions<T: Config> =
+        StorageMap<_, Blake2_128Concat, DefinitionKey, RelationshipDefinition, OptionQuery>;
+
+    /// Bounded live directed edges scoped to one exact definition version.
+    #[pallet::storage]
+    #[pallet::getter(fn relationship_edges)]
+    pub type RelationshipEdges<T: Config> =
+        StorageMap<_, Blake2_128Concat, DefinitionKey, RelationshipEdgesOf, ValueQuery>;
 
     /// Directly signed technical accounts permitted to submit domain calls.
     #[pallet::storage]
@@ -198,6 +216,17 @@ pub mod pallet {
         UnknownTargetPhase,
         TransitionNotAllowed,
         CompletionPhaseNotEligible,
+        RelationshipDefinitionAlreadyExists,
+        RelationshipDefinitionNotFound,
+        RelationshipSourceNotFound,
+        RelationshipTargetNotFound,
+        RelationshipSourceSpeciesMismatch,
+        RelationshipTargetSpeciesMismatch,
+        RelationshipSelfEdgeRejected,
+        RelationshipAlreadyExists,
+        RelationshipCapacityExceeded,
+        RelationshipCycleRejected,
+        RelationshipNotFound,
         GlobalSequenceExhausted,
         DuplicateAuthorizedSubmitter,
         TooManyAuthorizedSubmitters,
@@ -323,6 +352,150 @@ pub mod pallet {
 
             AuthorizedSubmitters::<T>::put(&stored);
             Self::deposit_event(Event::AuthorizedSubmittersReplaced { accounts: stored });
+            Ok(())
+        }
+
+        /// Create one immutable exact-version relationship definition.
+        #[pallet::call_index(4)]
+        #[pallet::weight(T::WeightInfo::create_relationship_definition())]
+        pub fn create_relationship_definition(
+            origin: OriginFor<T>,
+            command_schema_version: u16,
+            definition: RelationshipDefinition,
+        ) -> DispatchResult {
+            let signer = Self::authorized_signer(command_schema_version, origin)?;
+            let definition_key = definition.key().clone();
+            ensure!(
+                !RelationshipDefinitions::<T>::contains_key(&definition_key),
+                Error::<T>::RelationshipDefinitionAlreadyExists
+            );
+            let global_sequence = Self::next_global_sequence()?;
+
+            RelationshipDefinitions::<T>::insert(&definition_key, &definition);
+            GlobalSequence::<T>::put(global_sequence);
+            Self::deposit_accepted(
+                global_sequence,
+                signer,
+                DomainPayload::RelationshipDefinitionCreated(definition),
+            );
+            Ok(())
+        }
+
+        /// Create one bounded directed edge under an exact definition version.
+        #[pallet::call_index(5)]
+        #[pallet::weight(T::WeightInfo::create_relationship())]
+        pub fn create_relationship(
+            origin: OriginFor<T>,
+            command_schema_version: u16,
+            relationship: RelationshipKey,
+        ) -> DispatchResult {
+            let signer = Self::authorized_signer(command_schema_version, origin)?;
+            let definition_key = relationship.definition().clone();
+            let definition = RelationshipDefinitions::<T>::get(&definition_key)
+                .ok_or(Error::<T>::RelationshipDefinitionNotFound)?;
+            let source_id = relationship.source_id();
+            let target_id = relationship.target_id();
+            let source =
+                IntentUnits::<T>::get(source_id).ok_or(Error::<T>::RelationshipSourceNotFound)?;
+            let target =
+                IntentUnits::<T>::get(target_id).ok_or(Error::<T>::RelationshipTargetNotFound)?;
+
+            if let Some(expected) = definition.source_species() {
+                ensure!(
+                    source.species() == expected,
+                    Error::<T>::RelationshipSourceSpeciesMismatch
+                );
+            }
+            if let Some(expected) = definition.target_species() {
+                ensure!(
+                    target.species() == expected,
+                    Error::<T>::RelationshipTargetSpeciesMismatch
+                );
+            }
+
+            let is_self = source_id == target_id;
+            ensure!(
+                !is_self || definition.self_policy() == RelationshipPolicy::Allow,
+                Error::<T>::RelationshipSelfEdgeRejected
+            );
+
+            let mut edges = RelationshipEdges::<T>::get(&definition_key);
+            ensure!(
+                !edges.contains(&relationship),
+                Error::<T>::RelationshipAlreadyExists
+            );
+            ensure!(
+                edges.len() < MAX_RELATIONSHIP_EDGES,
+                Error::<T>::RelationshipCapacityExceeded
+            );
+            if !is_self && definition.cycle_policy() == RelationshipPolicy::Reject {
+                ensure!(
+                    !crate::relationship::closes_cycle(edges.as_slice(), &relationship),
+                    Error::<T>::RelationshipCycleRejected
+                );
+            }
+            let global_sequence = Self::next_global_sequence()?;
+
+            edges
+                .try_push(relationship.clone())
+                .map_err(|_| Error::<T>::RelationshipCapacityExceeded)?;
+            RelationshipEdges::<T>::insert(&definition_key, edges);
+            GlobalSequence::<T>::put(global_sequence);
+            Self::deposit_accepted(
+                global_sequence,
+                signer,
+                DomainPayload::RelationshipCreated(relationship),
+            );
+            Ok(())
+        }
+
+        /// Delete only the named live edge; definitions and neighbors remain.
+        #[pallet::call_index(6)]
+        #[pallet::weight(T::WeightInfo::delete_relationship())]
+        pub fn delete_relationship(
+            origin: OriginFor<T>,
+            command_schema_version: u16,
+            relationship: RelationshipKey,
+        ) -> DispatchResult {
+            let signer = Self::authorized_signer(command_schema_version, origin)?;
+            let definition_key = relationship.definition().clone();
+            let definition = RelationshipDefinitions::<T>::get(&definition_key)
+                .ok_or(Error::<T>::RelationshipDefinitionNotFound)?;
+            let source_id = relationship.source_id();
+            let target_id = relationship.target_id();
+            let source =
+                IntentUnits::<T>::get(source_id).ok_or(Error::<T>::RelationshipSourceNotFound)?;
+            let target =
+                IntentUnits::<T>::get(target_id).ok_or(Error::<T>::RelationshipTargetNotFound)?;
+
+            if let Some(expected) = definition.source_species() {
+                ensure!(
+                    source.species() == expected,
+                    Error::<T>::RelationshipSourceSpeciesMismatch
+                );
+            }
+            if let Some(expected) = definition.target_species() {
+                ensure!(
+                    target.species() == expected,
+                    Error::<T>::RelationshipTargetSpeciesMismatch
+                );
+            }
+
+            let mut edges = RelationshipEdges::<T>::get(&definition_key);
+            let position = edges
+                .iter()
+                .position(|stored| stored == &relationship)
+                .ok_or(Error::<T>::RelationshipNotFound)?;
+            let global_sequence = Self::next_global_sequence()?;
+
+            edges.remove(position);
+            RelationshipEdges::<T>::insert(&definition_key, edges);
+            GlobalSequence::<T>::put(global_sequence);
+            Self::deposit_accepted(
+                global_sequence,
+                signer,
+                DomainPayload::RelationshipDeleted(relationship),
+            );
             Ok(())
         }
     }
