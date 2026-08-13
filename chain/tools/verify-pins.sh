@@ -173,7 +173,7 @@ pin() {
             exit
         }
         END { if (!found) exit 1 }
-    ' "$PINS" || die "missing or nonliteral pin $section.$key"
+    ' <<<"$PINS_CONTENT" || die "missing or nonliteral pin $section.$key"
 }
 
 sha256_file() {
@@ -280,11 +280,11 @@ tree_sha256() {
 }
 
 require_no_placeholders() {
-    [[ -f "$PINS" && ! -L "$PINS" ]] || die "pins.toml is missing or symbolic"
-    if /usr/bin/grep -En '(TO_BE_FILLED|PLACEHOLDER|PENDING|TBD|[0]{64})' "$PINS" >/dev/null; then
+    if /usr/bin/grep -En '(TO_BE_FILLED|PLACEHOLDER|PENDING|TBD|[0]{64})' <<<"$PINS_CONTENT" >/dev/null; then
         die "pins.toml contains a placeholder identity"
     fi
-    [[ "$(sha256_file "$PINS")" == "$EXPECTED_PINS_SHA256" ]] || die "pin document identity mismatch"
+    [[ "$(printf '%s' "$PINS_CONTENT" | /usr/lib/cargo/bin/coreutils/sha256sum | /usr/bin/gawk '{print $1}')" == "$EXPECTED_PINS_SHA256" ]] ||
+        die "pin document identity mismatch"
 }
 
 enter_or_verify_locked_isolation() {
@@ -309,8 +309,10 @@ enter_or_verify_locked_isolation() {
             [[ "$isolation_output" == *'loopback-netns: current-process-isolation=outside-clean-launcher'* ]] ||
                 die "namespace wrapper returned the outside status without its exact proof marker"
             printf '%s\n' "$isolation_output" >&2
-            /usr/bin/gnurm -f -- "$pins_snapshot"
-            pins_snapshot=""
+            if [[ -n "${pins_snapshot:-}" ]]; then
+                /usr/bin/gnurm -f -- "$pins_snapshot"
+                pins_snapshot=""
+            fi
             exec /usr/lib/cargo/bin/coreutils/env -i \
                 CUBIKAN_LOOPBACK_SANITIZED=1 HOME=/home/charles \
                 CARGO_HOME=/home/charles/.cargo RUSTUP_HOME=/home/charles/.rustup \
@@ -362,13 +364,16 @@ case "${1:-}:${2:-}:${3:-}:${4:-}" in
     *) usage ;;
 esac
 [[ "$pin_source" == /* || "$pin_source" == "$DEFAULT_PINS" ]] || die "test pin copy must be an absolute path"
+[[ -f "$pin_source" && ! -L "$pin_source" ]] || die "pin source is missing or symbolic"
 if [[ "$mode" == testidentity ]]; then
     [[ "$identity_subject" == /* ]] || die "identity-test subject must be an absolute path"
 fi
-pins_snapshot="$(/usr/lib/cargo/bin/coreutils/mktemp "$TASK_TMP/cubikan-pins-v1.XXXXXX")"
-trap '/usr/bin/gnurm -f -- "${pins_snapshot:-}"' EXIT
-/usr/bin/gnucp -- "$pin_source" "$pins_snapshot"
-readonly PINS="$pins_snapshot"
+pins_content=''
+IFS= read -r -d '' pins_content <"$pin_source" || [[ -n "$pins_content" ]] || die "pin source is empty"
+readonly PINS_CONTENT="$pins_content"
+readonly PINS="$pin_source"
+pins_snapshot=''
+unset pins_content
 require_no_placeholders
 
 # The exact fetch branch is the sole network-enabled phase. Before locked mode
@@ -468,7 +473,7 @@ verify_pin_contract() {
             $0 == section { active=1; next }
             /^\[/ { active=0 }
             active && /^[a-z0-9_]+[[:space:]]*=/ { key=$0; sub(/[[:space:]]*=.*/, "", key); print key }
-        ' "$PINS")
+        ' <<<"$PINS_CONTENT")
     done
     local asset
     for asset in "${ASSET_NAMES[@]}"; do
@@ -952,6 +957,8 @@ verify_live_root_dependency_boundary() {
     ' "$PROJECT_ROOT/Cargo.lock" | /usr/lib/cargo/bin/coreutils/sort)"
     if [[ -z "$actual" ]]; then
         [[ $manifest_subxt -eq 0 ]] || die "root declares Subxt without its exact locked family"
+        require_hash "$PROJECT_ROOT/Cargo.toml" "$(pin foundation root_manifest_sha256)"
+        require_hash "$PROJECT_ROOT/Cargo.lock" "$(pin foundation root_lock_sha256)"
         return
     fi
     [[ $manifest_subxt -eq 1 ]] || die "root lock contains Subxt without an approved direct declaration"
