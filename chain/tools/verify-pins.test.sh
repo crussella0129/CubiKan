@@ -120,11 +120,12 @@ initialize_identity_cases() {
     add_identity_case argv_grammar "$PROJECT_ROOT/$(pin_value repository_tools argv_grammar_path)" copy
     add_identity_case argv_normalizer "$PROJECT_ROOT/$(pin_value repository_tools argv_normalizer_path)" copy
     add_identity_case loopback_wrapper "$PROJECT_ROOT/$(pin_value repository_tools loopback_wrapper_path)" copy
+    add_identity_case sealed_exec "$PROJECT_ROOT/$(pin_value repository_tools sealed_exec_path)" copy
 
     for tool in \
         bash unshare ip ss netcat git rustup env awk sha256sum dd mount stat tar \
         patch diff find sort iconv uname dirname readlink sed grep head wc cp rm \
-        mkdir mktemp curl chmod mv; do
+        mkdir mktemp curl chmod mv python; do
         add_identity_case "host_$tool" "$(pin_value host_tools "${tool}_path")" fake-file
     done
 
@@ -182,7 +183,7 @@ assert_identity_class_inventory_is_closed() {
     if ! /usr/bin/diff -u -- "$actual" "$expected"; then
         die 'identity-test cases do not exactly cover the verifier class inventory'
     fi
-    [[ "$(/usr/bin/wc -l <"$expected")" == 67 ]] || die 'closed identity inventory no longer contains 67 classes'
+    [[ "$(/usr/bin/wc -l <"$expected")" == 69 ]] || die 'closed identity inventory no longer contains 69 classes'
 }
 
 expect_identity_acceptance() {
@@ -273,8 +274,11 @@ write_registry_fixture_harness() {
             'readonly DEPENDENT_SENTINEL="${FIXTURE_DEPENDENT_SENTINEL:?}"' \
             'die() { printf "fixture: %s\\n" "$*" >&2; exit 1; }' \
             'pin() {' \
-            '    [[ "$1:$2" == root_dependency_contract:lock_path ]] || die "unexpected pin lookup: $1.$2"' \
-            '    printf "%s\\n" fixture-contract/Cargo.lock' \
+            '    case "$1:$2" in' \
+            '        root_dependency_contract:lock_path) printf "%s\\n" fixture-contract/Cargo.lock ;;' \
+            '        foundation:snapshot_path) printf "%s\\n" foundation ;;' \
+            '        *) die "unexpected pin lookup: $1.$2" ;;' \
+            '    esac' \
             '}' \
             'sha256_file() { local output; output="$(/usr/bin/sha256sum -- "$1")"; printf "%s\\n" "${output%% *}"; }' \
             'require_hash() {' \
@@ -371,7 +375,7 @@ test_static_path_contains_no_dependent_execution() {
     # namespace/dependent-build path can be reached.
     if printf '%s\n%s\n' "$static_functions" "$branch" | rg -n \
         '^[[:space:]]*(download_exact|fetch_all|safe_extract|verify_repository_tool_behavior|verify_host_tool_behavior|verify_sdk_and_scaffold|verify_node_and_zombienet|verify_asset_capabilities|verify_rusqlite_reconstruction|verify_toolchain|verify_feature_closures_and_builds)([[:space:]]|$)|/(cargo|rustup|curl|tar|patch)([[:space:]]|$)|^[[:space:]]*exec([[:space:]]|$)|\$LOOPBACK' \
-        | /usr/bin/grep -v '\$LOOPBACK_FD_PATH' >/dev/null; then
+        | /usr/bin/grep -v '\$LOOPBACK_CONTENT' >/dev/null; then
         die 'test-static path contains a dependent execution command'
     fi
     [[ "$branch" == *'verify_complete_static_inputs'* ]] || die 'test-static does not call its complete static preflight'
@@ -470,6 +474,7 @@ test_canonical_registry_archive_cache_identities_precede_source_materialization(
     sentinel="$fixture/dependent-executed"
     /usr/bin/mkdir -p -- \
         "$project_root/chain" "$project_root/fixture-contract" \
+        "$project_root/foundation/payload/root" "$project_root/foundation/payload/chain" \
         "$cargo_home/registry/cache/fixture-index"
     printf '%s\n' 'canonical registry archive fixture' >"$archive"
     checksum="$(/usr/bin/sha256sum -- "$archive")"
@@ -479,6 +484,8 @@ test_canonical_registry_archive_cache_identities_precede_source_materialization(
     /usr/bin/cp -- "$lock" "$project_root/Cargo.lock"
     /usr/bin/cp -- "$lock" "$project_root/chain/Cargo.lock"
     /usr/bin/cp -- "$lock" "$project_root/fixture-contract/Cargo.lock"
+    /usr/bin/cp -- "$lock" "$project_root/foundation/payload/root/lockfile.lock"
+    /usr/bin/cp -- "$lock" "$project_root/foundation/payload/chain/lockfile.lock"
     write_registry_fixture_harness "$harness"
 
     FIXTURE_PROJECT_ROOT="$project_root" \
@@ -558,6 +565,8 @@ test_sdk_cargo_git_database_matches_verified_release_archive_before_source_mater
     assert_unique_order "$body" 'verify_sdk_git_database' \
         '/usr/bin/gnurm -rf -- "$CARGO_HOME/registry/src"' \
         'SDK Cargo git database validation order'
+    assert_unique_order "$body" 'CARGO_NET_OFFLINE=true "$rustup" run "$(pin rust channel)" cargo fetch \' 'verify_materialized_sdk_checkout' \
+        'offline SDK materialization before checkout validation order'
 }
 
 test_materialized_sdk_checkout_matches_verified_release_archive_before_build() {
@@ -600,11 +609,10 @@ test_materialized_sdk_checkout_matches_verified_release_archive_before_build() {
 }
 
 test_locked_isolation_dispatch_is_tristate() {
-    local fixture="$TEST_ROOT/isolation-dispatch" wrapper harness pins returned dispatched body
+    local fixture="$TEST_ROOT/isolation-dispatch" wrapper harness returned dispatched body
     fixture="$TEST_ROOT/isolation-dispatch"
     wrapper="$fixture/probe-wrapper.sh"
     harness="$fixture/harness.sh"
-    pins="$fixture/pins.snapshot"
     returned="$fixture/returned"
     dispatched="$fixture/dispatched"
     /usr/bin/mkdir -p -- "$fixture"
@@ -613,7 +621,7 @@ test_locked_isolation_dispatch_is_tristate() {
 #!/usr/bin/bash -p
 set -euo pipefail
 case "${1:-}" in
-    __cubikan_loopback_bound_path_v1__)
+    __cubikan_loopback_bound_memory_v1__)
         hint=$2
         shift 4
         [[ "${1:-}" == __cubikan_loopback_clean_entry_v1__ ]] || exit 96
@@ -657,14 +665,16 @@ EOF
         printf '%s\n' '#!/usr/bin/bash -p' 'set -euo pipefail'
         printf '%s\n' \
             'readonly LOOPBACK="${FIXTURE_LOOPBACK:?}"' \
-            'exec {LOOPBACK_FD}<"$LOOPBACK"' \
-            'exec {LOOPBACK_LAUNCH_FD}<"$LOOPBACK"' \
-            'exec {LOOPBACK_REENTRY_FD}<"$LOOPBACK"' \
+            'LOOPBACK_CONTENT=""' \
+            'IFS= read -r -d "" LOOPBACK_CONTENT <"$LOOPBACK" || [[ -n "$LOOPBACK_CONTENT" ]]' \
+            'readonly LOOPBACK_CONTENT' \
+            'loopback_digest="$(printf "%s" "$LOOPBACK_CONTENT" | /usr/bin/sha256sum)"' \
+            'readonly LOOPBACK_CONTENT_SHA256="${loopback_digest%% *}"' \
             'readonly VERIFIER_SELF=/fixture/verify-pins.sh' \
-            'readonly VERIFIER_BOUND_TOKEN=__cubikan_verifier_bound_path_v1__' \
-            'exec {VERIFIER_CONTINUATION_FD}</dev/null' \
-            'readonly VERIFIER_CONTINUATION_IDENTITY=1:2:3' \
-            'pins_snapshot="${FIXTURE_PINS:?}"' \
+            'readonly VERIFIER_BOUND_TOKEN=__cubikan_verifier_bound_memory_v1__' \
+            'readonly VERIFIER_CONTENT="printf verifier"' \
+            'verifier_digest="$(printf "%s" "$VERIFIER_CONTENT" | /usr/bin/sha256sum)"' \
+            'readonly VERIFIER_CONTENT_SHA256="${verifier_digest%% *}"' \
             'die() { printf "fixture: %s\n" "$*" >&2; exit 1; }' \
             'pin() {' \
             '    [[ "$1:$2" == host_tools:bash_path ]] || die "unexpected pin lookup"' \
@@ -675,27 +685,24 @@ EOF
     } >"$harness"
     /usr/bin/chmod 0700 -- "$harness"
 
-    printf '%s\n' exact >"$pins"
     printf '%s\n' 0 >"$fixture/probe-status"
-    FIXTURE_LOOPBACK="$wrapper" FIXTURE_PINS="$pins" \
+    FIXTURE_LOOPBACK="$wrapper" \
         RETURN_SENTINEL="$returned" /usr/bin/bash -p "$harness" >"$fixture/proven.out" 2>"$fixture/proven.err"
     [[ -e "$returned" && ! -e "$dispatched" ]] || die 'proven isolation did not continue in place'
 
     /usr/bin/rm -f -- "$returned" "$dispatched"
-    printf '%s\n' exact >"$pins"
     printf '%s\n' 125 >"$fixture/probe-status"
-    FIXTURE_LOOPBACK="$wrapper" FIXTURE_PINS="$pins" \
+    FIXTURE_LOOPBACK="$wrapper" \
         RETURN_SENTINEL="$returned" /usr/bin/bash -p "$harness" >"$fixture/outside.out" 2>"$fixture/outside.err"
-    [[ ! -e "$returned" && -e "$dispatched" && ! -e "$pins" ]] ||
+    [[ ! -e "$returned" && -e "$dispatched" ]] ||
         die 'clean outside isolation did not enter exactly one fresh wrapper'
-    [[ "$(<"$dispatched")" == *$'__cubikan_verifier_bound_path_v1__\n/fixture/verify-pins.sh\n__cubikan_prebound_verifier_fd_v1__'* &&
-        "$(<"$dispatched")" == *$'\n1:2:3\n--locked\n--offline' ]] ||
+    [[ "$(<"$dispatched")" == *$'__cubikan_verifier_bound_memory_v1__\n/fixture/verify-pins.sh\n__cubikan_prebound_verifier_memory_v1__'* &&
+        "$(<"$dispatched")" == *$'\nprintf verifier\n--locked\n--offline' ]] ||
         die 'clean outside isolation dispatched unexpected verifier argv'
 
     /usr/bin/rm -f -- "$returned" "$dispatched"
-    printf '%s\n' exact >"$pins"
     printf '%s\n' 1 >"$fixture/probe-status"
-    if FIXTURE_LOOPBACK="$wrapper" FIXTURE_PINS="$pins" \
+    if FIXTURE_LOOPBACK="$wrapper" \
         RETURN_SENTINEL="$returned" /usr/bin/bash -p "$harness" >"$fixture/partial.out" 2>"$fixture/partial.err"; then
         die 'partial isolation fixture unexpectedly succeeded'
     fi
@@ -720,7 +727,7 @@ test_plain_bash_compatibility_reenters_the_sanitized_verifier() {
     [[ "$output" == *"$marker"* ]] || die 'plain-bash compatibility check omitted its dependent-boundary marker'
 }
 
-test_verifier_bind_helper_snapshots_reviewed_bytes() {
+test_verifier_bind_helper_captures_reviewed_bytes_in_memory() {
     local fixture source alternate output harness expected source_identity source_size
     fixture="$TEST_ROOT/verifier-bind-snapshot"
     source="$fixture/reviewed.sh"
@@ -744,18 +751,16 @@ test_verifier_bind_helper_snapshots_reviewed_bytes() {
             'die() { printf "fixture: %s\n" "$*" >&2; exit 1; }'
         extract_function sha256_file
         extract_function require_hash
-        extract_function require_open_fd_hash
-        extract_function bind_verified_repository_executable
+        extract_function bind_verified_repository_script
         printf '%s\n' \
-            'bind_verified_repository_executable "${SOURCE:?}" "${EXPECTED:?}" fixture-script BOUND_FD BOUND_PATH BACKUP_FD BACKUP_PATH' \
+            'bind_verified_repository_script "${SOURCE:?}" "${EXPECTED:?}" fixture-script BOUND_CONTENT BOUND_DIGEST' \
             '/usr/lib/cargo/bin/coreutils/dd if="${ALTERNATE:?}" of="$SOURCE" conv=notrunc status=none' \
             '[[ "$(/usr/bin/stat -c "%d:%i" -- "$SOURCE")" == "${SOURCE_IDENTITY:?}" ]]' \
             '[[ "$(/usr/bin/stat -c "%s" -- "$SOURCE")" == "${SOURCE_SIZE:?}" ]]' \
             '[[ "$(sha256_file "$SOURCE")" != "$EXPECTED" ]]' \
-            'OUTPUT="${OUTPUT_FILE:?}" /usr/bin/bash -s <&"$BOUND_FD"' \
-            'OUTPUT="$OUTPUT_FILE" /usr/bin/bash -s <&"$BACKUP_FD"' \
-            '[[ "$(/usr/bin/readlink -- "$BOUND_PATH")" == *" (deleted)" ]]' \
-            '[[ "$(/usr/bin/readlink -- "$BACKUP_PATH")" == *" (deleted)" ]]'
+            '[[ "$BOUND_DIGEST" == "$EXPECTED" ]]' \
+            'OUTPUT="${OUTPUT_FILE:?}" /usr/bin/bash -c "$BOUND_CONTENT"' \
+            'OUTPUT="$OUTPUT_FILE" /usr/bin/bash -c "$BOUND_CONTENT"'
     } >"$harness"
     /usr/bin/chmod 0700 -- "$harness"
 
@@ -766,11 +771,10 @@ test_verifier_bind_helper_snapshots_reviewed_bytes() {
         die 'verifier bind helper executed bytes from the overwritten workspace inode'
 }
 
-test_verifier_continuation_uses_private_snapshot() {
-    local fixture verifier_copy verifier_snapshot sentinel subject output fd continuation_fd snapshot_identity
+test_verifier_continuation_uses_reviewed_memory() {
+    local fixture verifier_copy sentinel subject output content digest
     fixture="$TEST_ROOT/verifier-self-swap"
     verifier_copy="$fixture/chain/tools/verify-pins.sh"
-    verifier_snapshot="$(/usr/bin/mktemp /tmp/cubikan-verifier-test-v1.XXXXXX)"
     sentinel="$fixture/alternate-ran"
     subject="$fixture/chain/tools/node-argv-grammar-v1.txt"
     /usr/bin/mkdir -p -- "$fixture/chain/tools" "$fixture/chain/.cache/tmp"
@@ -778,12 +782,9 @@ test_verifier_continuation_uses_private_snapshot() {
     /usr/bin/cp -- "$PINS" "$fixture/chain/pins.toml"
     /usr/bin/cp -- "$PROJECT_ROOT/chain/tools/node-argv-grammar-v1.txt" "$subject"
     /usr/bin/chmod 0700 -- "$verifier_copy"
-    /usr/bin/cp -- "$verifier_copy" "$verifier_snapshot"
-    /usr/bin/chmod 0400 -- "$verifier_snapshot"
-    snapshot_identity="$(/usr/bin/stat -Lc '%d:%i:%s' -- "$verifier_snapshot")"
-    exec {fd}<"$verifier_snapshot"
-    exec {continuation_fd}<"$verifier_snapshot"
-    /usr/bin/rm -f -- "$verifier_snapshot"
+    content=''
+    IFS= read -r -d '' content <"$verifier_copy" || [[ -n "$content" ]]
+    digest="$(printf '%s' "$content" | /usr/bin/sha256sum | /usr/bin/awk '{print $1}')"
     printf '#!/usr/bin/bash\n/usr/bin/touch -- %q\nexit 0\n' "$sentinel" >"$verifier_copy"
     /usr/bin/chmod 0700 -- "$verifier_copy"
     if ! output="$(/usr/lib/cargo/bin/coreutils/env -i CUBIKAN_VERIFIER_SANITIZED=1 \
@@ -792,17 +793,15 @@ test_verifier_continuation_uses_private_snapshot() {
         LC_ALL=C LANG=C TZ=UTC TMPDIR="$fixture/chain/.cache/tmp" \
         GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null \
         GIT_NO_REPLACE_OBJECTS=1 GIT_OPTIONAL_LOCKS=0 \
-        /usr/bin/bash --noprofile --norc -p -s -- \
-        __cubikan_verifier_bound_path_v1__ "$verifier_copy" \
-        "$continuation_fd" "$snapshot_identity" \
-        --sanitized-entry --test-identity argv_grammar "$subject" <&"$fd" 2>&1)"; then
+        /usr/bin/bash --noprofile --norc -p -c "$content" "$verifier_copy" \
+        __cubikan_verifier_bound_memory_v1__ "$verifier_copy" \
+        "$digest" "$content" \
+        --sanitized-entry --test-identity argv_grammar "$subject" 2>&1)"; then
         printf '%s\n' "$output" >&2
         die 'private verifier snapshot did not complete its identity-only continuation'
     fi
-    exec {fd}<&-
-    exec {continuation_fd}<&-
     [[ "$output" == *'identity-checked:argv_grammar:dependent-boundary-not-entered'* ]] ||
-        die 'private verifier continuation omitted its dependent-boundary marker'
+        die 'memory-bound verifier continuation omitted its dependent-boundary marker'
     [[ ! -e "$sentinel" ]] || die 'alternate verifier pathname bytes executed'
 }
 
@@ -848,10 +847,10 @@ if [[ "${1:-}" == --test-isolation-dispatch ]]; then
     exit 0
 fi
 if [[ "${1:-}" == --test-script-snapshots ]]; then
-    [[ $# -eq 1 ]] || die 'script-snapshot test accepts no additional arguments'
-    test_verifier_bind_helper_snapshots_reviewed_bytes
-    test_verifier_continuation_uses_private_snapshot
-    printf '%s\n' 'verify-pins private script snapshot tests passed'
+    [[ $# -eq 1 ]] || die 'script-memory test accepts no additional arguments'
+    test_verifier_bind_helper_captures_reviewed_bytes_in_memory
+    test_verifier_continuation_uses_reviewed_memory
+    printf '%s\n' 'verify-pins reviewed script memory tests passed'
     exit 0
 fi
 [[ $# -eq 0 ]] || die 'usage: verify-pins.test.sh [--test-isolation-dispatch | --test-script-snapshots]'
@@ -865,8 +864,8 @@ test_sdk_cargo_git_database_matches_verified_release_archive_before_source_mater
 test_materialized_sdk_checkout_matches_verified_release_archive_before_build
 test_locked_isolation_dispatch_is_tristate
 test_plain_bash_compatibility_reenters_the_sanitized_verifier
-test_verifier_bind_helper_snapshots_reviewed_bytes
-test_verifier_continuation_uses_private_snapshot
+test_verifier_bind_helper_captures_reviewed_bytes_in_memory
+test_verifier_continuation_uses_reviewed_memory
 test_hostile_environment_is_removed_before_bootstrap
 test_fast_namespace_and_normalizer_guards
 printf '%s\n' 'verify-pins exact-identity, identity-mutation, bootstrap, and fail-before-execution tests passed'

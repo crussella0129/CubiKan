@@ -1,27 +1,26 @@
 #!/usr/bin/bash -p
 
-# Bind every verifier continuation to the inode Bash already opened.  The
-# separately carried canonical path is only a repository-location hint; no
-# later bootstrap or namespace transition reopens it as executable authority.
-readonly VERIFIER_BOUND_TOKEN=__cubikan_verifier_bound_path_v1__
+# Freeze every verifier continuation in a Bash string before any later
+# execution boundary.  The canonical path is only a repository-location hint;
+# every continuation is `bash -c` over the already-reviewed in-process bytes.
+readonly VERIFIER_BOUND_TOKEN=__cubikan_verifier_bound_memory_v1__
 if [[ "${1:-}" == "$VERIFIER_BOUND_TOKEN" ]]; then
     [[ $# -ge 4 && "$2" == /* && -z "${BASH_SOURCE[0]}" &&
-        (("$3" == - && "$4" == -) ||
-            ("$3" =~ ^[1-9][0-9]*$ && "$4" =~ ^[0-9]+:[0-9]+:[1-9][0-9]*$)) ]] || {
-        builtin printf '%s\n' 'verify-pins: invalid bound-path entry' >&2
+        "$3" =~ ^[0-9a-f]{64}$ && -n "$4" ]] || {
+        builtin printf '%s\n' 'verify-pins: invalid bound-memory entry' >&2
         builtin exit 126
     }
     verifier_self_hint=$2
-    verifier_continuation_fd=$3
-    verifier_continuation_identity=$4
+    verifier_content_sha256=$3
+    verifier_content=$4
     shift 4
-    if [[ "$verifier_continuation_fd" != - ]]; then
-        [[ -f "/proc/self/fd/$verifier_continuation_fd" &&
-            "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$verifier_continuation_fd")" == "$verifier_continuation_identity" ]] || {
-            builtin printf '%s\n' 'verify-pins: continuation snapshot identity mismatch' >&2
-            builtin exit 126
-        }
-    fi
+    verifier_bound_hash="$(builtin printf '%s' "$verifier_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
+    verifier_bound_hash=${verifier_bound_hash%% *}
+    [[ "$verifier_bound_hash" == "$verifier_content_sha256" ]] || {
+        builtin printf '%s\n' 'verify-pins: bound-memory identity mismatch' >&2
+        builtin exit 126
+    }
+    builtin unset verifier_bound_hash
 else
     if [[ $- != *p* && -n "${BASH_ENV:-}${ENV:-}" ]]; then
         builtin printf '%s\n' 'verify-pins: non-privileged compatibility entry forbids BASH_ENV and ENV' >&2
@@ -36,36 +35,21 @@ else
         builtin printf '%s\n' 'verify-pins: initial script path or descriptor is invalid' >&2
         builtin exit 126
     }
-    verifier_initial_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$verifier_self_hint")" || builtin exit 126
-    exec {verifier_copy_fd}<"$verifier_self_hint" || builtin exit 126
-    verifier_snapshot="$(/usr/lib/cargo/bin/coreutils/mktemp /tmp/cubikan-verifier-v1.XXXXXX)" || builtin exit 126
-    /usr/lib/cargo/bin/coreutils/dd of="$verifier_snapshot" status=none <&"$verifier_copy_fd" || builtin exit 126
-    exec {verifier_copy_fd}<&-
-    /usr/lib/cargo/bin/coreutils/chmod 0400 -- "$verifier_snapshot" || builtin exit 126
-    verifier_snapshot_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum -- "$verifier_snapshot")" || builtin exit 126
-    verifier_snapshot_hash=${verifier_snapshot_hash%% *}
-    exec {verifier_compare_fd}<"$verifier_self_hint" || builtin exit 126
-    verifier_compare_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum - <&"$verifier_compare_fd")" || builtin exit 126
+    verifier_initial_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$verifier_self_hint")" || builtin exit 126
+    verifier_content=''
+    IFS= builtin read -r -d '' verifier_content <"$verifier_self_hint" || [[ -n "$verifier_content" ]] || builtin exit 126
+    verifier_content_sha256="$(builtin printf '%s' "$verifier_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
+    verifier_content_sha256=${verifier_content_sha256%% *}
+    verifier_compare_content=''
+    IFS= builtin read -r -d '' verifier_compare_content <"$verifier_self_hint" || [[ -n "$verifier_compare_content" ]] || builtin exit 126
+    verifier_compare_hash="$(builtin printf '%s' "$verifier_compare_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
     verifier_compare_hash=${verifier_compare_hash%% *}
-    exec {verifier_compare_fd}<&-
-    [[ "$verifier_snapshot_hash" == "$verifier_compare_hash" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$verifier_self_hint")" == "$verifier_initial_identity" ]] || {
-        /usr/bin/gnurm -f -- "$verifier_snapshot"
-        builtin printf '%s\n' 'verify-pins: initial script changed during private snapshot creation' >&2
+    [[ "$verifier_content_sha256" == "$verifier_compare_hash" &&
+        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$verifier_self_hint")" == "$verifier_initial_identity" ]] || {
+        builtin printf '%s\n' 'verify-pins: initial script changed during memory capture' >&2
         builtin exit 126
     }
-    verifier_snapshot_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$verifier_snapshot")" || builtin exit 126
-    exec {verifier_source_fd}<"$verifier_snapshot" || builtin exit 126
-    exec {verifier_continuation_fd}<"$verifier_snapshot" || builtin exit 126
-    verifier_continuation_identity="$verifier_snapshot_identity"
-    /usr/bin/gnurm -f -- "$verifier_snapshot"
-    [[ ! -e "$verifier_snapshot" && -f "/proc/self/fd/$verifier_source_fd" &&
-        -f "/proc/self/fd/$verifier_continuation_fd" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$verifier_source_fd")" == "$verifier_snapshot_identity" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$verifier_continuation_fd")" == "$verifier_snapshot_identity" ]] || {
-        builtin printf '%s\n' 'verify-pins: private verifier snapshot binding failed' >&2
-        builtin exit 126
-    }
+    builtin unset verifier_compare_content verifier_compare_hash verifier_initial_identity
     verifier_tool_dir="${verifier_self_hint%/*}"
     verifier_project_root="${verifier_tool_dir%/chain/tools}"
     [[ "$verifier_project_root" != "$verifier_tool_dir" ]] || builtin exit 126
@@ -79,10 +63,9 @@ else
         LC_ALL=C LANG=C TZ=UTC TMPDIR="$verifier_project_root/chain/.cache/tmp" \
         GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null \
         GIT_NO_REPLACE_OBJECTS=1 GIT_OPTIONAL_LOCKS=0 \
-        /usr/bin/bash --noprofile --norc -p -s -- \
-        "$VERIFIER_BOUND_TOKEN" "$verifier_self_hint" "$verifier_continuation_fd" "$verifier_continuation_identity" \
-        --sanitized-entry "$@" \
-        <&"$verifier_source_fd"
+        /usr/bin/bash --noprofile --norc -p -c "$verifier_content" "$verifier_self_hint" \
+        "$VERIFIER_BOUND_TOKEN" "$verifier_self_hint" "$verifier_content_sha256" "$verifier_content" \
+        --sanitized-entry "$@"
 fi
 
 [[ "$verifier_self_hint" == */chain/tools/verify-pins.sh ]] || {
@@ -112,11 +95,11 @@ unset CUBIKAN_VERIFIER_SANITIZED
 umask 077
 
 readonly VERIFIER_SELF="$verifier_self_hint"
-readonly VERIFIER_CONTINUATION_FD="$verifier_continuation_fd"
-readonly VERIFIER_CONTINUATION_IDENTITY="$verifier_continuation_identity"
+readonly VERIFIER_CONTENT_SHA256="$verifier_content_sha256"
+readonly VERIFIER_CONTENT="$verifier_content"
 unset verifier_self_hint
-unset verifier_continuation_fd
-unset verifier_continuation_identity
+unset verifier_content_sha256
+unset verifier_content
 readonly TOOL_DIR="$(cd -- "$(/usr/lib/cargo/bin/coreutils/dirname -- "$VERIFIER_SELF")" && pwd -P)"
 readonly PROJECT_ROOT="$(cd -- "$TOOL_DIR/../.." && pwd -P)"
 readonly CARGO_HOME="$PROJECT_ROOT/chain/.cache/cargo-home"
@@ -135,18 +118,16 @@ export PATH HOME RUSTUP_HOME CARGO_HOME LC_ALL LANG TZ TMPDIR
 readonly DEFAULT_PINS="$PROJECT_ROOT/chain/pins.toml"
 readonly CACHE="$PROJECT_ROOT/chain/.cache"
 readonly LOOPBACK="$TOOL_DIR/loopback-netns.sh"
-LOOPBACK_FD=""
-LOOPBACK_FD_PATH=""
-LOOPBACK_LAUNCH_FD=""
-LOOPBACK_LAUNCH_FD_PATH=""
-LOOPBACK_REENTRY_FD=""
-LOOPBACK_REENTRY_FD_PATH=""
-NORMALIZER_FD=""
-NORMALIZER_FD_PATH=""
+LOOPBACK_CONTENT=""
+LOOPBACK_CONTENT_SHA256=""
+NORMALIZER_CONTENT=""
+NORMALIZER_CONTENT_SHA256=""
+SEALED_EXEC_CONTENT=""
+SEALED_EXEC_CONTENT_SHA256=""
 # Updated only after the complete pin document has passed independent review.
 # This closes the bootstrap hole where a modified pin file could bless a
 # modified namespace executable before the rest of the verifier runs.
-readonly EXPECTED_PINS_SHA256="3105d6bf482feebf8ef89489fb4ae13a9acb66848744162e4a1f8df052d33b56"
+readonly EXPECTED_PINS_SHA256="96401055f6bfd1832e651033159c5f8193c54400bf8e2f879dfe248c574f0374"
 
 die() {
     printf 'verify-pins: %s\n' "$*" >&2
@@ -202,56 +183,24 @@ require_open_fd_hash() {
         die "opened $label inode changed while hashing"
 }
 
-bind_verified_repository_executable() {
-    local path="$1" expected="$2" label="$3" fd_variable="$4" fd_path_variable="$5"
-    local backup_fd_variable="${6:-}" backup_fd_path_variable="${7:-}"
-    local hash_fd copy_fd source_identity path_identity snapshot snapshot_identity
-    local opened_fd opened_fd_path backup_fd backup_fd_path
+bind_verified_repository_script() {
+    local path="$1" expected="$2" label="$3" content_variable="$4" digest_variable="$5"
+    local source_identity compare_identity content compare_content actual compare_actual
     [[ "$path" == /* && -f "$path" && -x "$path" && ! -L "$path" ]] ||
         die "$label is not an absolute executable regular non-symbolic file"
-    exec {hash_fd}<"$path" || die "cannot open $label hash stream"
-    exec {copy_fd}<"$path" || die "cannot open $label copy stream"
-    [[ -f "/proc/self/fd/$hash_fd" && -f "/proc/self/fd/$copy_fd" &&
-        ! -L "$path" && "$path" -ef "/proc/self/fd/$hash_fd" &&
-        "$path" -ef "/proc/self/fd/$copy_fd" ]] || die "$label pathname changed while opening"
-    source_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$copy_fd")"
-    path_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$path")"
-    [[ "$source_identity" == "$path_identity" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$hash_fd")" == "$source_identity" ]] ||
-        die "$label hash stream differs from the reviewed inode"
-    require_open_fd_hash "$hash_fd" "$expected" "$label"
-    exec {hash_fd}<&-
-
-    snapshot="$(/usr/lib/cargo/bin/coreutils/mktemp /tmp/cubikan-reviewed-script-v1.XXXXXX)"
-    /usr/lib/cargo/bin/coreutils/dd of="$snapshot" status=none <&"$copy_fd" || die "cannot materialize reviewed $label bytes"
-    exec {copy_fd}<&-
-    /usr/lib/cargo/bin/coreutils/chmod 0400 -- "$snapshot"
-    require_hash "$snapshot" "$expected"
-    snapshot_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$snapshot")"
-    exec {opened_fd}<"$snapshot" || die "cannot open reviewed $label snapshot"
-    opened_fd_path="/proc/self/fd/$opened_fd"
-    if [[ -n "$backup_fd_variable" ]]; then
-        [[ -n "$backup_fd_path_variable" ]] || die "missing backup descriptor output for $label"
-        exec {backup_fd}<"$snapshot" || die "cannot open backup reviewed $label snapshot"
-        backup_fd_path="/proc/self/fd/$backup_fd"
-    fi
-    /usr/bin/gnurm -f -- "$snapshot"
-    [[ ! -e "$snapshot" && -f "$opened_fd_path" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$opened_fd_path")" == "$snapshot_identity" ]] || {
-        exec {opened_fd}<&-
-        die "$label private snapshot binding failed"
-    }
-    if [[ -n "$backup_fd_variable" ]]; then
-        [[ -f "$backup_fd_path" &&
-            "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$backup_fd_path")" == "$snapshot_identity" ]] ||
-            die "backup $label snapshot differs from the reviewed snapshot"
-    fi
-    printf -v "$fd_variable" '%s' "$opened_fd"
-    printf -v "$fd_path_variable" '%s' "$opened_fd_path"
-    if [[ -n "$backup_fd_variable" ]]; then
-        printf -v "$backup_fd_variable" '%s' "$backup_fd"
-        printf -v "$backup_fd_path_variable" '%s' "$backup_fd_path"
-    fi
+    source_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$path")"
+    content=''
+    IFS= read -r -d '' content <"$path" || [[ -n "$content" ]] || die "cannot capture $label bytes"
+    actual="$(printf '%s' "$content" | /usr/lib/cargo/bin/coreutils/sha256sum | /usr/bin/gawk '{print $1}')"
+    [[ "$actual" == "$expected" ]] || die "SHA-256 mismatch for captured $label"
+    compare_content=''
+    IFS= read -r -d '' compare_content <"$path" || [[ -n "$compare_content" ]] || die "cannot recapture $label bytes"
+    compare_actual="$(printf '%s' "$compare_content" | /usr/lib/cargo/bin/coreutils/sha256sum | /usr/bin/gawk '{print $1}')"
+    compare_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$path")"
+    [[ "$compare_actual" == "$expected" && "$compare_actual" == "$actual" &&
+        "$compare_identity" == "$source_identity" ]] || die "$label changed during memory capture"
+    printf -v "$content_variable" '%s' "$content"
+    printf -v "$digest_variable" '%s' "$actual"
 }
 
 require_size() {
@@ -288,19 +237,17 @@ require_no_placeholders() {
 }
 
 enter_or_verify_locked_isolation() {
-    local isolation_output isolation_status=0 bash_path loopback_reentry_identity
-    [[ -n "$LOOPBACK_FD" ]] ||
-        die "locked isolation descriptors are unavailable"
+    local isolation_output isolation_status=0 bash_path
+    [[ -n "$LOOPBACK_CONTENT" && -n "$LOOPBACK_CONTENT_SHA256" ]] ||
+        die "locked isolation content is unavailable"
     bash_path="$(pin host_tools bash_path)"
-    loopback_reentry_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$LOOPBACK_REENTRY_FD")"
     isolation_output="$(/usr/lib/cargo/bin/coreutils/env -i \
         CUBIKAN_LOOPBACK_SANITIZED=1 HOME=/home/charles \
         CARGO_HOME=/home/charles/.cargo RUSTUP_HOME=/home/charles/.rustup \
         LC_ALL=C LANG=C TZ=UTC TMPDIR=/tmp PATH=/home/charles/.cargo/bin:/usr/bin:/bin \
-        "$bash_path" --noprofile --norc -p -s -- \
-        __cubikan_loopback_bound_path_v1__ "$LOOPBACK" "$LOOPBACK_REENTRY_FD" "$loopback_reentry_identity" \
-        __cubikan_loopback_clean_entry_v1__ --assert-current-isolated \
-        <&"$LOOPBACK_FD" 2>&1)" || isolation_status=$?
+        "$bash_path" --noprofile --norc -p -c "$LOOPBACK_CONTENT" "$LOOPBACK" \
+        __cubikan_loopback_bound_memory_v1__ "$LOOPBACK" "$LOOPBACK_CONTENT_SHA256" "$LOOPBACK_CONTENT" \
+        __cubikan_loopback_clean_entry_v1__ --assert-current-isolated 2>&1)" || isolation_status=$?
     case "$isolation_status" in
         0)
             printf '%s\n' "$isolation_output" >&2
@@ -309,22 +256,17 @@ enter_or_verify_locked_isolation() {
             [[ "$isolation_output" == *'loopback-netns: current-process-isolation=outside-clean-launcher'* ]] ||
                 die "namespace wrapper returned the outside status without its exact proof marker"
             printf '%s\n' "$isolation_output" >&2
-            if [[ -n "${pins_snapshot:-}" ]]; then
-                /usr/bin/gnurm -f -- "$pins_snapshot"
-                pins_snapshot=""
-            fi
             exec /usr/lib/cargo/bin/coreutils/env -i \
                 CUBIKAN_LOOPBACK_SANITIZED=1 HOME=/home/charles \
                 CARGO_HOME=/home/charles/.cargo RUSTUP_HOME=/home/charles/.rustup \
                 LC_ALL=C LANG=C TZ=UTC TMPDIR=/tmp PATH=/home/charles/.cargo/bin:/usr/bin:/bin \
-                "$bash_path" --noprofile --norc -p -s -- \
-                __cubikan_loopback_bound_path_v1__ "$LOOPBACK" "$LOOPBACK_REENTRY_FD" "$loopback_reentry_identity" \
+                "$bash_path" --noprofile --norc -p -c "$LOOPBACK_CONTENT" "$LOOPBACK" \
+                __cubikan_loopback_bound_memory_v1__ "$LOOPBACK" "$LOOPBACK_CONTENT_SHA256" "$LOOPBACK_CONTENT" \
                 __cubikan_loopback_clean_entry_v1__ -- \
-                "$bash_path" --noprofile --norc -p -s -- \
+                "$bash_path" --noprofile --norc -p -c "$VERIFIER_CONTENT" "$VERIFIER_SELF" \
                 "$VERIFIER_BOUND_TOKEN" "$VERIFIER_SELF" \
-                __cubikan_prebound_verifier_fd_v1__ "$VERIFIER_CONTINUATION_FD" "$VERIFIER_CONTINUATION_IDENTITY" \
-                --locked --offline \
-                <&"$LOOPBACK_LAUNCH_FD"
+                __cubikan_prebound_verifier_memory_v1__ "$VERIFIER_CONTENT_SHA256" "$VERIFIER_CONTENT" \
+                --locked --offline
             ;;
         *)
             [[ -z "$isolation_output" ]] || printf '%s\n' "$isolation_output" >&2
@@ -372,19 +314,15 @@ pins_content=''
 IFS= read -r -d '' pins_content <"$pin_source" || [[ -n "$pins_content" ]] || die "pin source is empty"
 readonly PINS_CONTENT="$pins_content"
 readonly PINS="$pin_source"
-pins_snapshot=''
 unset pins_content
 require_no_placeholders
 
 # The exact fetch branch is the sole network-enabled phase. Before locked mode
 # enters the namespace, verify every executable that namespace entry will use.
 if [[ "$mode" == locked ]]; then
-    bind_verified_repository_executable "$LOOPBACK" \
+    bind_verified_repository_script "$LOOPBACK" \
         "$(pin repository_tools loopback_wrapper_sha256)" namespace-wrapper \
-        LOOPBACK_FD LOOPBACK_FD_PATH LOOPBACK_LAUNCH_FD LOOPBACK_LAUNCH_FD_PATH
-    bind_verified_repository_executable "$LOOPBACK" \
-        "$(pin repository_tools loopback_wrapper_sha256)" namespace-wrapper-reentry \
-        LOOPBACK_REENTRY_FD LOOPBACK_REENTRY_FD_PATH
+        LOOPBACK_CONTENT LOOPBACK_CONTENT_SHA256
     require_hash "$(pin host_tools bash_path)" "$(pin host_tools bash_sha256)"
     require_hash "$(pin host_tools unshare_path)" "$(pin host_tools unshare_sha256)"
     require_hash "$(pin host_tools ip_path)" "$(pin host_tools ip_sha256)"
@@ -445,6 +383,7 @@ verify_pin_contract() {
     require_exact_literal node platform linux-x64
     require_exact_literal node archive_symlink_count 3
     require_exact_literal repository_tools argv_grammar_version 1
+    require_exact_literal host_tools python_version "Python 3.14.4"
     require_exact_literal foundation snapshot_format cubikan-foundation-snapshot-v1
     require_exact_literal foundation snapshot_file_count 30
     require_exact_literal foundation snapshot_external_tree_count 1
@@ -608,29 +547,40 @@ verify_materialized_sdk_checkout() {
 
 verify_repository_tool_bytes() {
     require_hash "$PROJECT_ROOT/$(pin repository_tools argv_grammar_path)" "$(pin repository_tools argv_grammar_sha256)"
-    if [[ -z "$NORMALIZER_FD_PATH" ]]; then
-        bind_verified_repository_executable \
+    if [[ -z "$SEALED_EXEC_CONTENT" ]]; then
+        bind_verified_repository_script \
+            "$PROJECT_ROOT/$(pin repository_tools sealed_exec_path)" \
+            "$(pin repository_tools sealed_exec_sha256)" sealed-exec-helper \
+            SEALED_EXEC_CONTENT SEALED_EXEC_CONTENT_SHA256
+    fi
+    if [[ -z "$NORMALIZER_CONTENT" ]]; then
+        bind_verified_repository_script \
             "$PROJECT_ROOT/$(pin repository_tools argv_normalizer_path)" \
             "$(pin repository_tools argv_normalizer_sha256)" argv-normalizer \
-            NORMALIZER_FD NORMALIZER_FD_PATH
-    else
-        [[ -f "$NORMALIZER_FD_PATH" ]] || die "argv normalizer descriptor is unavailable"
+            NORMALIZER_CONTENT NORMALIZER_CONTENT_SHA256
     fi
-    if [[ -z "$LOOPBACK_FD_PATH" ]]; then
-        bind_verified_repository_executable \
+    if [[ -z "$LOOPBACK_CONTENT" ]]; then
+        bind_verified_repository_script \
             "$PROJECT_ROOT/$(pin repository_tools loopback_wrapper_path)" \
             "$(pin repository_tools loopback_wrapper_sha256)" namespace-wrapper \
-            LOOPBACK_FD LOOPBACK_FD_PATH
-    else
-        [[ -f "$LOOPBACK_FD_PATH" ]] || die "namespace wrapper descriptor is unavailable"
+            LOOPBACK_CONTENT LOOPBACK_CONTENT_SHA256
     fi
 }
 
 verify_repository_tool_behavior() {
-    [[ -n "$NORMALIZER_FD" ]] || die "argv normalizer descriptor is unavailable"
-    CUBIKAN_NORMALIZER_SANITIZED=1 "$(pin host_tools bash_path)" --noprofile --norc -p -s -- \
-        __cubikan_normalizer_bound_path_v1__ "$TOOL_DIR/normalize-node-argv.sh" \
-        --verify-grammar <&"$NORMALIZER_FD" >/dev/null
+    local python probe_output python_size
+    [[ -n "$NORMALIZER_CONTENT" ]] || die "argv normalizer content is unavailable"
+    [[ -n "$SEALED_EXEC_CONTENT" ]] || die "sealed execution helper content is unavailable"
+    CUBIKAN_NORMALIZER_SANITIZED=1 "$(pin host_tools bash_path)" --noprofile --norc -p -c "$NORMALIZER_CONTENT" \
+        "$TOOL_DIR/normalize-node-argv.sh" \
+        __cubikan_normalizer_bound_memory_v1__ "$TOOL_DIR/normalize-node-argv.sh" \
+        "$NORMALIZER_CONTENT_SHA256" "$NORMALIZER_CONTENT" --verify-grammar >/dev/null
+    python="$(pin host_tools python_path)"
+    python_size="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%s' -- "$python")"
+    probe_output="$("$python" -I -S -c "$SEALED_EXEC_CONTENT" probe-path "$python" \
+        "$python_size" "$(pin host_tools python_sha256)")"
+    [[ "$probe_output" == 'sealed-exec: seal-set=write,grow,shrink,seal post-seal-write=denied' ]] ||
+        die "sealed execution helper did not prove its exact write-denial contract"
 }
 
 verify_host_tool_bytes() {
@@ -638,7 +588,7 @@ verify_host_tool_bytes() {
     for key in \
         bash unshare ip ss netcat git rustup env awk sha256sum dd mount stat tar \
         patch diff find sort iconv uname dirname readlink sed grep head wc cp rm \
-        mkdir mktemp curl chmod mv; do
+        mkdir mktemp curl chmod mv python; do
         path="$(pin host_tools "${key}_path")"
         expected_path="$(/usr/lib/cargo/bin/coreutils/readlink -f -- "$path")"
         [[ "$path" == "$expected_path" ]] || die "pinned host executable path is not canonical: $path"
@@ -655,6 +605,7 @@ verify_host_tool_behavior() {
     [[ "$("$(pin host_tools ss_path)" -V 2>&1)" == *"iproute2-$(pin host_tools iproute2_version)"* ]] || die "ss version mismatch"
     [[ "$("$(pin host_tools git_path)" --version)" == "git version $(pin host_tools git_version)" ]] || die "Git version mismatch"
     [[ "$("$(pin host_tools netcat_path)" -h 2>&1 | /usr/lib/cargo/bin/coreutils/head -1)" == "OpenBSD netcat (Debian patchlevel $(pin host_tools netcat_version))" ]] || die "netcat version mismatch"
+    [[ "$("$(pin host_tools python_path)" --version)" == "$(pin host_tools python_version)" ]] || die "Python version mismatch"
 }
 
 verify_current_network_namespace() {
@@ -788,15 +739,25 @@ verify_node_and_zombienet() {
 }
 
 verify_asset_capabilities() {
-    local asset output expected_version command
+    local asset output expected_version expected_suffix command python
+    [[ -n "$SEALED_EXEC_CONTENT" ]] || die "sealed execution helper content is unavailable"
+    python="$(pin host_tools python_path)"
     for asset in "${ASSET_NAMES[@]}"; do
         require_size "$DOWNLOADS/$asset" "$(pin "assets.$asset" size)"
         require_hash "$DOWNLOADS/$asset" "$(pin "assets.$asset" sha256)"
-        output="$("$DOWNLOADS/$asset" --version 2>&1)"
-        # Release artifacts may include a filename-derived argv[0] prefix; the
-        # pinned semantic version must still appear exactly.
-        [[ "$output" == *"$(pin "assets.$asset" version)"* || "$output" == *"${asset#polkadot-} $(pin polkadot_sdk node_version)-8ae9775dc43"* ]] || die "$asset version mismatch: $output"
-        output="$("$DOWNLOADS/$asset" --help 2>&1)"
+        output="$("$python" -I -S -c "$SEALED_EXEC_CONTENT" exec-path "$DOWNLOADS/$asset" \
+            "$(pin "assets.$asset" size)" "$(pin "assets.$asset" sha256)" \
+            -- "$DOWNLOADS/$asset" --version 2>&1)"
+        # Linux may report the sealed memfd label rather than argv[0]. Require
+        # the exact pinned semantic version/commit suffix and accept only that
+        # single filename-derived prefix substitution.
+        expected_version="$(pin "assets.$asset" version)"
+        expected_suffix="${expected_version#* }"
+        [[ "$output" == "$expected_version" || "$output" == "memfd:cubikan-sealed-exec-v1 (deleted) $expected_suffix" ]] ||
+            die "$asset version mismatch: $output"
+        output="$("$python" -I -S -c "$SEALED_EXEC_CONTENT" exec-path "$DOWNLOADS/$asset" \
+            "$(pin "assets.$asset" size)" "$(pin "assets.$asset" sha256)" \
+            -- "$DOWNLOADS/$asset" --help 2>&1)"
         IFS=',' read -r -a commands <<<"$(pin "assets.$asset" required_commands)"
         for command in "${commands[@]}"; do
             [[ "$output" == *"$command"* ]] || die "$asset lacks required command $command"
@@ -894,7 +855,7 @@ verify_toolchain() {
 }
 
 prepare_verified_cargo_sources() {
-    local cargo_config
+    local cargo_config rustup
     [[ "$CARGO_HOME" == "$PROJECT_ROOT/chain/.cache/cargo-home" ]] || die "Cargo home is not the task-owned canonical path"
     [[ -d "$CARGO_HOME" && ! -L "$CARGO_HOME" ]] || die "canonical Cargo home is missing or symbolic"
     for cargo_config in \
@@ -909,6 +870,14 @@ prepare_verified_cargo_sources() {
     # them forces Cargo to reconstruct every source used below from the
     # just-verified registry archives and SDK git object database.
     /usr/bin/gnurm -rf -- "$CARGO_HOME/registry/src" "$CARGO_HOME/git/checkouts"
+    # Offline `cargo fetch` is the materialization boundary: it may read only
+    # the verified archive/object caches above and executes no package code.
+    # Compare Cargo's fresh SDK checkout to the release archive immediately,
+    # before any metadata, tree, check, build, or build script can consume it.
+    rustup="$(pin host_tools rustup_path)"
+    CARGO_NET_OFFLINE=true "$rustup" run "$(pin rust channel)" cargo fetch \
+        --manifest-path "$PROJECT_ROOT/chain/Cargo.toml" --locked --offline
+    verify_materialized_sdk_checkout
 }
 
 verify_foundation_snapshot_bytes() {
@@ -1177,6 +1146,7 @@ verify_identity_subject() {
         argv_grammar) expected_hash="$(pin repository_tools argv_grammar_sha256)" ;;
         argv_normalizer) expected_hash="$(pin repository_tools argv_normalizer_sha256)" ;;
         loopback_wrapper) expected_hash="$(pin repository_tools loopback_wrapper_sha256)" ;;
+        sealed_exec) expected_hash="$(pin repository_tools sealed_exec_sha256)" ;;
         root_manifest) expected_hash="$(pin foundation root_manifest_sha256)" ;;
         root_lock) expected_hash="$(pin foundation root_lock_sha256)" ;;
         gitignore) expected_hash="$(pin foundation gitignore_sha256)" ;;
@@ -1196,7 +1166,7 @@ verify_identity_subject() {
         rusqlite_patch) expected_hash="$(pin rusqlite patch_sha256)" ;;
         runtime_wasm) expected_hash="$(pin foundation runtime_wasm_sha256)"; expected_size="$(pin foundation runtime_wasm_size)" ;;
         host_*)
-            [[ "${class#host_}" =~ ^(bash|unshare|ip|ss|netcat|git|rustup|env|awk|sha256sum|dd|mount|stat|tar|patch|diff|find|sort|iconv|uname|dirname|readlink|sed|grep|head|wc|cp|rm|mkdir|mktemp|curl|chmod|mv)$ ]] || die "unknown host identity-test class: $class"
+            [[ "${class#host_}" =~ ^(bash|unshare|ip|ss|netcat|git|rustup|env|awk|sha256sum|dd|mount|stat|tar|patch|diff|find|sort|iconv|uname|dirname|readlink|sed|grep|head|wc|cp|rm|mkdir|mktemp|curl|chmod|mv|python)$ ]] || die "unknown host identity-test class: $class"
             expected_hash="$(pin host_tools "${class#host_}_sha256")"
             ;;
         rusqlite_vendor_tree)

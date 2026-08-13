@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-1101 (sprint 11) [intent: INT-0014]: Pin and isolate the Polkadot SDK development toolchain — touches: root/chain manifests and locks, toolchains, pins, chain scaffold/tools/runtime/pallet, checked rusqlite patch/vendor
 - [ ] T-1102 (sprint 11) [intent: INT-0008, INT-0009, INT-0012, INT-0014]: Define bounded SCALE values and independent conformance fixtures — touches: core values/tests, pallet types/conformance/model, chain-conformance fixture
 - [ ] T-1103 (sprint 11) [intent: INT-0008, INT-0009, INT-0014]: Implement canonical lifecycle events and pallet mutations — touches: pallet lifecycle/event/error/benchmark/weights/mock/tests
 - [ ] T-1104 (sprint 11) [intent: INT-0012, INT-0014]: Port bounded relationship definitions and edges to the pallet — touches: pallet relationship/event/error/benchmark/weights/tests and conformance fixture

@@ -1,16 +1,25 @@
 #!/usr/bin/bash -p
 
-# Bind every continuation to the inode Bash already opened for this script.
-# The separately carried path is only a location hint for repository assets;
-# it is never reopened as executable authority.
-readonly NORMALIZER_BOUND_TOKEN=__cubikan_normalizer_bound_path_v1__
+# Freeze every continuation in a Bash string before later execution. The path
+# is only a repository-location hint; the reviewed behavior is in memory.
+readonly NORMALIZER_BOUND_TOKEN=__cubikan_normalizer_bound_memory_v1__
 if [[ "${1:-}" == "$NORMALIZER_BOUND_TOKEN" ]]; then
-    [[ $# -ge 2 && "$2" == /* && -z "${BASH_SOURCE[0]}" ]] || {
-        builtin printf '%s\n' 'normalize-node-argv: invalid bound-path entry' >&2
+    [[ $# -ge 4 && "$2" == /* && -z "${BASH_SOURCE[0]}" &&
+        "$3" =~ ^[0-9a-f]{64}$ && -n "$4" ]] || {
+        builtin printf '%s\n' 'normalize-node-argv: invalid bound-memory entry' >&2
         builtin exit 126
     }
     normalizer_self_hint=$2
-    shift 2
+    normalizer_content_sha256=$3
+    normalizer_content=$4
+    shift 4
+    normalizer_bound_hash="$(builtin printf '%s' "$normalizer_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
+    normalizer_bound_hash=${normalizer_bound_hash%% *}
+    [[ "$normalizer_bound_hash" == "$normalizer_content_sha256" ]] || {
+        builtin printf '%s\n' 'normalize-node-argv: bound-memory identity mismatch' >&2
+        builtin exit 126
+    }
+    builtin unset normalizer_bound_hash normalizer_content_sha256 normalizer_content
 else
     case "${BASH_SOURCE[0]}" in
         /*) normalizer_self_hint="${BASH_SOURCE[0]}" ;;
@@ -21,36 +30,25 @@ else
         builtin printf '%s\n' 'normalize-node-argv: initial script path or descriptor is invalid' >&2
         builtin exit 126
     }
-    normalizer_initial_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$normalizer_self_hint")" || builtin exit 126
-    exec {normalizer_copy_fd}<"$normalizer_self_hint" || builtin exit 126
-    normalizer_snapshot="$(/usr/lib/cargo/bin/coreutils/mktemp /tmp/cubikan-normalizer-v1.XXXXXX)" || builtin exit 126
-    /usr/lib/cargo/bin/coreutils/dd of="$normalizer_snapshot" status=none <&"$normalizer_copy_fd" || builtin exit 126
-    exec {normalizer_copy_fd}<&-
-    /usr/lib/cargo/bin/coreutils/chmod 0400 -- "$normalizer_snapshot" || builtin exit 126
-    normalizer_snapshot_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum -- "$normalizer_snapshot")" || builtin exit 126
-    normalizer_snapshot_hash=${normalizer_snapshot_hash%% *}
-    exec {normalizer_compare_fd}<"$normalizer_self_hint" || builtin exit 126
-    normalizer_compare_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum - <&"$normalizer_compare_fd")" || builtin exit 126
+    normalizer_initial_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$normalizer_self_hint")" || builtin exit 126
+    normalizer_content=''
+    IFS= builtin read -r -d '' normalizer_content <"$normalizer_self_hint" || [[ -n "$normalizer_content" ]] || builtin exit 126
+    normalizer_content_sha256="$(builtin printf '%s' "$normalizer_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
+    normalizer_content_sha256=${normalizer_content_sha256%% *}
+    normalizer_compare_content=''
+    IFS= builtin read -r -d '' normalizer_compare_content <"$normalizer_self_hint" || [[ -n "$normalizer_compare_content" ]] || builtin exit 126
+    normalizer_compare_hash="$(builtin printf '%s' "$normalizer_compare_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
     normalizer_compare_hash=${normalizer_compare_hash%% *}
-    exec {normalizer_compare_fd}<&-
-    [[ "$normalizer_snapshot_hash" == "$normalizer_compare_hash" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$normalizer_self_hint")" == "$normalizer_initial_identity" ]] || {
-        /usr/bin/gnurm -f -- "$normalizer_snapshot"
-        builtin printf '%s\n' 'normalize-node-argv: initial script changed during private snapshot creation' >&2
+    [[ "$normalizer_content_sha256" == "$normalizer_compare_hash" &&
+        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$normalizer_self_hint")" == "$normalizer_initial_identity" ]] || {
+        builtin printf '%s\n' 'normalize-node-argv: initial script changed during memory capture' >&2
         builtin exit 126
     }
-    normalizer_snapshot_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$normalizer_snapshot")" || builtin exit 126
-    exec {normalizer_source_fd}<"$normalizer_snapshot" || builtin exit 126
-    /usr/bin/gnurm -f -- "$normalizer_snapshot"
-    [[ ! -e "$normalizer_snapshot" && -f "/proc/self/fd/$normalizer_source_fd" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$normalizer_source_fd")" == "$normalizer_snapshot_identity" ]] || {
-        builtin printf '%s\n' 'normalize-node-argv: private script snapshot binding failed' >&2
-        builtin exit 126
-    }
+    builtin unset normalizer_compare_content normalizer_compare_hash normalizer_initial_identity
     builtin unset BASH_ENV ENV CDPATH GLOBIGNORE LD_AUDIT LD_LIBRARY_PATH LD_PRELOAD
     exec /usr/lib/cargo/bin/coreutils/env -i CUBIKAN_NORMALIZER_SANITIZED=1 HOME=/home/charles LC_ALL=C LANG=C TZ=UTC PATH=/usr/bin:/bin \
-        /usr/bin/bash --noprofile --norc -p -s -- \
-        "$NORMALIZER_BOUND_TOKEN" "$normalizer_self_hint" "$@" <&"$normalizer_source_fd"
+        /usr/bin/bash --noprofile --norc -p -c "$normalizer_content" "$normalizer_self_hint" \
+        "$NORMALIZER_BOUND_TOKEN" "$normalizer_self_hint" "$normalizer_content_sha256" "$normalizer_content" "$@"
 fi
 [[ "$normalizer_self_hint" == */chain/tools/normalize-node-argv.sh ]] || {
     builtin printf '%s\n' 'normalize-node-argv: path hint is not canonical' >&2
@@ -74,7 +72,12 @@ unset normalizer_self_hint
 readonly SELF_DIR="$(cd -- "$(/usr/lib/cargo/bin/coreutils/dirname -- "$NORMALIZER_SELF")" && pwd -P)"
 readonly PROJECT_ROOT="$(cd -- "$SELF_DIR/../.." && pwd -P)"
 readonly GRAMMAR_FILE="$SELF_DIR/node-argv-grammar-v1.txt"
+readonly SEALED_EXEC="$SELF_DIR/sealed-exec.py"
+readonly PYTHON=/usr/bin/python3.14
 readonly EXPECTED_GRAMMAR_SHA256="112655c95fcf0b1fe535d0e6b209883374bb650b40ecd9f3383d4378dd1b88b4"
+readonly EXPECTED_SEALED_EXEC_SHA256="b3cd068ac20123ca2971aca6dff5f6718778090323e14c3d3156669bc1c1f672"
+readonly EXPECTED_PYTHON_SHA256="b8d8288faefdd300201f43fcf00f6f539a27218eeed3a3dff5ab10b9c4c99700"
+SEALED_EXEC_CONTENT=""
 
 die() {
     printf 'normalize-node-argv: %s\n' "$*" >&2
@@ -98,6 +101,24 @@ verify_grammar() {
     local actual
     actual="$(sha256_file "$GRAMMAR_FILE")"
     [[ "$actual" == "$EXPECTED_GRAMMAR_SHA256" ]] || die "grammar hash mismatch"
+}
+
+verify_sealed_exec_boundary() {
+    local source_identity compare_identity content compare_content actual compare_actual
+    [[ -f "$SEALED_EXEC" && ! -L "$SEALED_EXEC" ]] || die "sealed execution helper is missing or symbolic"
+    source_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$SEALED_EXEC")"
+    content=''
+    IFS= read -r -d '' content <"$SEALED_EXEC" || [[ -n "$content" ]] || die "cannot capture sealed execution helper"
+    actual="$(printf '%s' "$content" | /usr/lib/cargo/bin/coreutils/sha256sum | /usr/bin/gawk '{print $1}')"
+    [[ "$actual" == "$EXPECTED_SEALED_EXEC_SHA256" ]] || die "sealed execution helper hash mismatch"
+    compare_content=''
+    IFS= read -r -d '' compare_content <"$SEALED_EXEC" || [[ -n "$compare_content" ]] || die "cannot recapture sealed execution helper"
+    compare_actual="$(printf '%s' "$compare_content" | /usr/lib/cargo/bin/coreutils/sha256sum | /usr/bin/gawk '{print $1}')"
+    compare_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$SEALED_EXEC")"
+    [[ "$compare_actual" == "$EXPECTED_SEALED_EXEC_SHA256" && "$compare_actual" == "$actual" &&
+        "$compare_identity" == "$source_identity" ]] || die "sealed execution helper changed during memory capture"
+    SEALED_EXEC_CONTENT="$content"
+    [[ -x "$PYTHON" && ! -L "$PYTHON" && "$(sha256_file "$PYTHON")" == "$EXPECTED_PYTHON_SHA256" ]] || die "sealed execution interpreter identity mismatch"
 }
 
 usage() {
@@ -169,10 +190,10 @@ esac
 readonly expected_path="$PROJECT_ROOT/chain/.cache/downloads/$command_name"
 [[ "$command_path" == "$expected_path" && ! -L "$command_path" ]] || die "command must be the canonical verified cache asset"
 
-# Bind verification and private materialization to separate descriptors for
+# Bind verification and sealed materialization to separate descriptors for
 # one inode. DrvFS does not provide stable /proc/self/fd execution semantics,
-# so the reviewed bytes are copied into the wrapper's private tmpfs before
-# execution instead of executing the workspace procfd pathname.
+# so the reviewed bytes are copied into a write-sealed memfd before execution
+# instead of executing the workspace procfd pathname.
 exec {command_prefix_fd}<"$command_path"
 exec {command_hash_fd}<"$command_path"
 exec {command_copy_fd}<"$command_path"
@@ -359,12 +380,8 @@ fi
 if [[ $print0 -eq 1 ]]; then
     printf '%s\0' "${normalized[@]}"
 else
-    [[ "$(/usr/lib/cargo/bin/coreutils/stat -fLc '%T' -- /run/cubikan-exec)" == tmpfs &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%a' -- /run/cubikan-exec)" == 700 ]] || die "node execution requires the wrapper private executable tmpfs"
-    execution_dir="$(/usr/lib/cargo/bin/coreutils/mktemp -d "/run/cubikan-exec/cubikan-node-$command_name.XXXXXX")"
-    execution_path="$execution_dir/$command_name"
-    "$DD" of="$execution_path" status=none <&"$command_copy_fd"
-    [[ "$(sha256_file "$execution_path")" == "$(expected_asset_sha256 "$command_name")" ]] || die "private node materialization hash mismatch"
-    /usr/lib/cargo/bin/coreutils/chmod 0500 -- "$execution_path"
-    exec -a "$command_path" -- "$execution_path" "${normalized[@]:1}" </dev/null
+    verify_sealed_exec_boundary
+    readonly command_size="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%s' -- "$command_copy_fd_path")"
+    exec "$PYTHON" -I -S -c "$SEALED_EXEC_CONTENT" exec-fd "$command_copy_fd" "$command_size" \
+        "$(expected_asset_sha256 "$command_name")" -- "$command_path" "${normalized[@]:1}" </dev/null
 fi

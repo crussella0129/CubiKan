@@ -87,9 +87,9 @@ exec 9<&-
 /usr/bin/grep -Fq 'descriptor path is forbidden outside the exact verifier continuation' \
     "$tmpdir/named-fd.err" || fail "arbitrary descriptor argv rejection omitted its exact reason"
 
-# Both wrapper child-script snapshot helpers must detach reviewed bytes from a
+# Both wrapper child-script memory helpers must detach reviewed bytes from a
 # same-size in-place overwrite of the original inode.
-helper_root="$tmpdir/wrapper-snapshot-helpers"
+helper_root="$tmpdir/wrapper-memory-helpers"
 helper_harness="$helper_root/harness.sh"
 helper_output="$helper_root/executed"
 /usr/bin/mkdir -p -- "$helper_root"
@@ -104,26 +104,28 @@ printf '%s\n' '#!/usr/bin/bash' 'printf "%s\n" fd-mutated! >>"${OUTPUT:?}"' >"$h
 {
     printf '%s\n' '#!/usr/bin/bash -p' 'set -euo pipefail' 'shopt -u varredir_close' \
         'readonly STAT=/usr/lib/cargo/bin/coreutils/stat' \
-        'die() { printf "fixture: %s\n" "$*" >&2; exit 1; }'
-    extract_wrapper_function snapshot_script_path
-    extract_wrapper_function snapshot_script_fd
+        'die() { printf "fixture: %s\n" "$*" >&2; exit 1; }' \
+        'digest_content() { local value; value="$(printf "%s" "$1" | /usr/bin/sha256sum)"; printf "%s\n" "${value%% *}"; }'
+    extract_wrapper_function capture_script_path
+    extract_wrapper_function capture_script_memory
     printf '%s\n' \
         'path_identity="$($STAT -Lc "%d:%i" -- "${PATH_SOURCE:?}")"' \
         'path_size="$($STAT -Lc "%s" -- "$PATH_SOURCE")"' \
-        'snapshot_script_path "$PATH_SOURCE" PATH_FD PATH_IDENTITY' \
+        'capture_script_path "$PATH_SOURCE" PATH_CONTENT PATH_DIGEST' \
         '/usr/lib/cargo/bin/coreutils/dd if="${PATH_MUTANT:?}" of="$PATH_SOURCE" conv=notrunc status=none' \
         '[[ "$($STAT -Lc "%d:%i" -- "$PATH_SOURCE")" == "$path_identity" && "$($STAT -Lc "%s" -- "$PATH_SOURCE")" == "$path_size" ]]' \
-        'OUTPUT="${OUTPUT_FILE:?}" /usr/bin/bash -s <&"$PATH_FD"' \
-        'exec {PREBOUND_SOURCE_FD}<"${FD_SOURCE:?}"' \
-        'prebound_identity="$($STAT -Lc "%d:%i:%s" -- "/proc/self/fd/$PREBOUND_SOURCE_FD")"' \
+        'OUTPUT="${OUTPUT_FILE:?}" /usr/bin/bash -c "$PATH_CONTENT"' \
+        'FD_CONTENT=""' \
+        'IFS= read -r -d "" FD_CONTENT <"${FD_SOURCE:?}" || [[ -n "$FD_CONTENT" ]]' \
+        'FD_DIGEST="$(digest_content "$FD_CONTENT")"' \
         'fd_inode="$($STAT -Lc "%d:%i" -- "$FD_SOURCE")"' \
         'fd_size="$($STAT -Lc "%s" -- "$FD_SOURCE")"' \
-        'snapshot_script_fd "$PREBOUND_SOURCE_FD" "$prebound_identity" FD_SNAPSHOT_FD FD_SNAPSHOT_IDENTITY' \
+        'capture_script_memory "$FD_CONTENT" "$FD_DIGEST" FD_REVIEWED FD_REVIEWED_DIGEST' \
         '/usr/lib/cargo/bin/coreutils/dd if="${FD_MUTANT:?}" of="$FD_SOURCE" conv=notrunc status=none' \
         '[[ "$($STAT -Lc "%d:%i" -- "$FD_SOURCE")" == "$fd_inode" && "$($STAT -Lc "%s" -- "$FD_SOURCE")" == "$fd_size" ]]' \
-        'OUTPUT="$OUTPUT_FILE" /usr/bin/bash -s <&"$FD_SNAPSHOT_FD"' \
-        '[[ "$(/usr/bin/readlink -- "/proc/self/fd/$PATH_FD")" == *" (deleted)" ]]' \
-        '[[ "$(/usr/bin/readlink -- "/proc/self/fd/$FD_SNAPSHOT_FD")" == *" (deleted)" ]]'
+        'OUTPUT="$OUTPUT_FILE" /usr/bin/bash -c "$FD_REVIEWED"' \
+        '[[ "$PATH_DIGEST" == "$(digest_content "$PATH_CONTENT")" ]]' \
+        '[[ "$FD_REVIEWED_DIGEST" == "$FD_DIGEST" ]]'
 } >"$helper_harness"
 /usr/bin/chmod 0700 -- "$helper_harness"
 PATH_SOURCE="$helper_root/path-source.sh" PATH_MUTANT="$helper_root/path-mutant.sh" \
@@ -132,22 +134,18 @@ PATH_SOURCE="$helper_root/path-source.sh" PATH_MUTANT="$helper_root/path-mutant.
 [[ "$(<"$helper_output")" == $'path-original\nfd-original' ]] ||
     fail "wrapper snapshot helper executed bytes from an overwritten workspace inode"
 
-# The bound wrapper continuation must likewise consume an unlinked private
-# snapshot after its canonical pathname is overwritten in place.
+# The bound wrapper continuation must likewise consume reviewed memory after
+# its canonical pathname is overwritten in place.
 swap_root="$tmpdir/wrapper-swap"
 swap_wrapper="$swap_root/chain/tools/loopback-netns.sh"
 swap_sentinel="$swap_root/alternate-ran"
-swap_snapshot="$(/usr/bin/mktemp /tmp/cubikan-loopback-test-v1.XXXXXX)"
 swap_mutant="$swap_root/mutant.sh"
 /usr/bin/mkdir -p -- "$swap_root/chain/tools"
 /usr/bin/cp -- "$WRAPPER" "$swap_wrapper"
 /usr/bin/chmod 0700 -- "$swap_wrapper"
-/usr/bin/cp -- "$swap_wrapper" "$swap_snapshot"
-/usr/bin/chmod 0400 -- "$swap_snapshot"
-swap_snapshot_identity="$(/usr/bin/stat -Lc '%d:%i:%s' -- "$swap_snapshot")"
-exec {swap_fd}<"$swap_snapshot"
-exec {swap_reentry_fd}<"$swap_snapshot"
-/usr/bin/rm -f -- "$swap_snapshot"
+swap_content=''
+IFS= read -r -d '' swap_content <"$swap_wrapper" || [[ -n "$swap_content" ]]
+swap_digest="$(printf '%s' "$swap_content" | /usr/bin/sha256sum | /usr/bin/awk '{print $1}')"
 swap_inode="$(/usr/bin/stat -Lc '%d:%i' -- "$swap_wrapper")"
 swap_size="$(/usr/bin/stat -Lc '%s' -- "$swap_wrapper")"
 printf '#!/usr/bin/bash\n/usr/bin/touch -- %q\nexit 0\n#' "$swap_sentinel" >"$swap_mutant"
@@ -163,13 +161,11 @@ swap_status=0
 /usr/lib/cargo/bin/coreutils/env -i CUBIKAN_LOOPBACK_SANITIZED=1 HOME=/home/charles \
     CARGO_HOME=/home/charles/.cargo RUSTUP_HOME=/home/charles/.rustup \
     LC_ALL=C LANG=C TZ=UTC TMPDIR=/tmp PATH=/home/charles/.cargo/bin:/usr/bin:/bin \
-    /usr/bin/bash --noprofile --norc -p -s -- \
-    __cubikan_loopback_bound_path_v1__ "$swap_wrapper" "$swap_reentry_fd" "$swap_snapshot_identity" \
+    /usr/bin/bash --noprofile --norc -p -c "$swap_content" "$swap_wrapper" \
+    __cubikan_loopback_bound_memory_v1__ "$swap_wrapper" "$swap_digest" "$swap_content" \
     __cubikan_loopback_clean_entry_v1__ --assert-current-isolated \
-    <&"$swap_fd" >"$tmpdir/swap.out" 2>"$tmpdir/swap.err" || swap_status=$?
-exec {swap_fd}<&-
-exec {swap_reentry_fd}<&-
-[[ $swap_status -eq 125 ]] || fail "private wrapper snapshot did not retain ordinary outside classification"
+    >"$tmpdir/swap.out" 2>"$tmpdir/swap.err" || swap_status=$?
+[[ $swap_status -eq 125 ]] || fail "reviewed wrapper memory did not retain ordinary outside classification"
 [[ ! -e "$swap_sentinel" ]] || fail "alternate wrapper pathname bytes executed"
 
 # The internal token is intentionally forgeable as data.  It cannot authorize
@@ -218,7 +214,7 @@ literal_verifier="$literal_root/chain/tools/verify-pins.sh"
 literal_sentinel="$literal_root/verifier-body-ran"
 /usr/bin/mkdir -p -- "$literal_root/chain/tools"
 /usr/bin/cp -- "$WRAPPER" "$literal_wrapper"
-printf '#!/usr/bin/bash\n[[ "$1" == __cubikan_verifier_bound_path_v1__ && "$2" == %q && "$3" == - && "$4" == - && "$5" == --sanitized-entry && "$6" == --locked && "$7" == --offline ]]\nprintf ran >%q\n' \
+printf '#!/usr/bin/bash\n[[ "$1" == __cubikan_verifier_bound_memory_v1__ && "$2" == %q && "$3" =~ ^[0-9a-f]{64}$ && -n "$4" && "$5" == --sanitized-entry && "$6" == --locked && "$7" == --offline ]]\nprintf ran >%q\n' \
     "$literal_verifier" "$literal_sentinel" >"$literal_verifier"
 /usr/bin/chmod 0700 -- "$literal_wrapper" "$literal_verifier"
 if ! (builtin cd -- "$literal_root" && \

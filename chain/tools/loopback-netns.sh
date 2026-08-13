@@ -1,27 +1,25 @@
 #!/usr/bin/bash -p
 
-# Bind every continuation to the inode Bash already opened for this wrapper.
-# SELF remains a repository-location hint only; namespace re-entry always runs
-# LOOPBACK_SELF_FD_PATH.
-readonly LOOPBACK_BOUND_TOKEN=__cubikan_loopback_bound_path_v1__
+# Freeze every continuation in a Bash string before namespace entry. SELF is a
+# repository-location hint only; namespace re-entry consumes reviewed memory.
+readonly LOOPBACK_BOUND_TOKEN=__cubikan_loopback_bound_memory_v1__
 if [[ "${1:-}" == "$LOOPBACK_BOUND_TOKEN" ]]; then
     [[ $# -ge 4 && "$2" == /* && -z "${BASH_SOURCE[0]}" &&
-        (("$3" == - && "$4" == -) ||
-            ("$3" =~ ^[1-9][0-9]*$ && "$4" =~ ^[0-9]+:[0-9]+:[1-9][0-9]*$)) ]] || {
-        builtin printf '%s\n' 'loopback-netns: invalid bound-path entry' >&2
+        "$3" =~ ^[0-9a-f]{64}$ && -n "$4" ]] || {
+        builtin printf '%s\n' 'loopback-netns: invalid bound-memory entry' >&2
         builtin exit 126
     }
     loopback_self_hint=$2
-    loopback_reentry_fd=$3
-    loopback_reentry_identity=$4
+    loopback_content_sha256=$3
+    loopback_content=$4
     shift 4
-    if [[ "$loopback_reentry_fd" != - ]]; then
-        [[ -f "/proc/self/fd/$loopback_reentry_fd" &&
-            "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$loopback_reentry_fd")" == "$loopback_reentry_identity" ]] || {
-            builtin printf '%s\n' 'loopback-netns: reentry snapshot identity mismatch' >&2
-            builtin exit 126
-        }
-    fi
+    loopback_bound_hash="$(builtin printf '%s' "$loopback_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
+    loopback_bound_hash=${loopback_bound_hash%% *}
+    [[ "$loopback_bound_hash" == "$loopback_content_sha256" ]] || {
+        builtin printf '%s\n' 'loopback-netns: bound-memory identity mismatch' >&2
+        builtin exit 126
+    }
+    builtin unset loopback_bound_hash
 else
     if [[ $- != *p* && -n "${BASH_ENV:-}${ENV:-}" ]]; then
         builtin printf '%s\n' 'loopback-netns: non-privileged compatibility entry forbids BASH_ENV and ENV' >&2
@@ -36,36 +34,21 @@ else
         builtin printf '%s\n' 'loopback-netns: initial script path or descriptor is invalid' >&2
         builtin exit 126
     }
-    loopback_initial_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$loopback_self_hint")" || builtin exit 126
-    exec {loopback_copy_fd}<"$loopback_self_hint" || builtin exit 126
-    loopback_snapshot="$(/usr/lib/cargo/bin/coreutils/mktemp /tmp/cubikan-loopback-v1.XXXXXX)" || builtin exit 126
-    /usr/lib/cargo/bin/coreutils/dd of="$loopback_snapshot" status=none <&"$loopback_copy_fd" || builtin exit 126
-    exec {loopback_copy_fd}<&-
-    /usr/lib/cargo/bin/coreutils/chmod 0400 -- "$loopback_snapshot" || builtin exit 126
-    loopback_snapshot_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum -- "$loopback_snapshot")" || builtin exit 126
-    loopback_snapshot_hash=${loopback_snapshot_hash%% *}
-    exec {loopback_compare_fd}<"$loopback_self_hint" || builtin exit 126
-    loopback_compare_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum - <&"$loopback_compare_fd")" || builtin exit 126
+    loopback_initial_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$loopback_self_hint")" || builtin exit 126
+    loopback_content=''
+    IFS= builtin read -r -d '' loopback_content <"$loopback_self_hint" || [[ -n "$loopback_content" ]] || builtin exit 126
+    loopback_content_sha256="$(builtin printf '%s' "$loopback_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
+    loopback_content_sha256=${loopback_content_sha256%% *}
+    loopback_compare_content=''
+    IFS= builtin read -r -d '' loopback_compare_content <"$loopback_self_hint" || [[ -n "$loopback_compare_content" ]] || builtin exit 126
+    loopback_compare_hash="$(builtin printf '%s' "$loopback_compare_content" | /usr/lib/cargo/bin/coreutils/sha256sum)" || builtin exit 126
     loopback_compare_hash=${loopback_compare_hash%% *}
-    exec {loopback_compare_fd}<&-
-    [[ "$loopback_snapshot_hash" == "$loopback_compare_hash" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$loopback_self_hint")" == "$loopback_initial_identity" ]] || {
-        /usr/bin/gnurm -f -- "$loopback_snapshot"
-        builtin printf '%s\n' 'loopback-netns: initial script changed during private snapshot creation' >&2
+    [[ "$loopback_content_sha256" == "$loopback_compare_hash" &&
+        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$loopback_self_hint")" == "$loopback_initial_identity" ]] || {
+        builtin printf '%s\n' 'loopback-netns: initial script changed during memory capture' >&2
         builtin exit 126
     }
-    loopback_snapshot_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "$loopback_snapshot")" || builtin exit 126
-    exec {loopback_source_fd}<"$loopback_snapshot" || builtin exit 126
-    exec {loopback_reentry_fd}<"$loopback_snapshot" || builtin exit 126
-    loopback_reentry_identity="$loopback_snapshot_identity"
-    /usr/bin/gnurm -f -- "$loopback_snapshot"
-    [[ ! -e "$loopback_snapshot" && -f "/proc/self/fd/$loopback_source_fd" &&
-        -f "/proc/self/fd/$loopback_reentry_fd" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$loopback_source_fd")" == "$loopback_snapshot_identity" &&
-        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s' -- "/proc/self/fd/$loopback_reentry_fd")" == "$loopback_snapshot_identity" ]] || {
-        builtin printf '%s\n' 'loopback-netns: private wrapper snapshot binding failed' >&2
-        builtin exit 126
-    }
+    builtin unset loopback_compare_content loopback_compare_hash loopback_initial_identity
     exec /usr/lib/cargo/bin/coreutils/env -i \
         HOME=/home/charles \
         CARGO_HOME=/home/charles/.cargo \
@@ -76,9 +59,9 @@ else
         TMPDIR=/tmp \
         PATH=/home/charles/.cargo/bin:/usr/bin:/bin \
         CUBIKAN_LOOPBACK_SANITIZED=1 \
-        /usr/bin/bash --noprofile --norc -p -s -- \
-        "$LOOPBACK_BOUND_TOKEN" "$loopback_self_hint" "$loopback_reentry_fd" "$loopback_reentry_identity" \
-        __cubikan_loopback_clean_entry_v1__ "$@" <&"$loopback_source_fd"
+        /usr/bin/bash --noprofile --norc -p -c "$loopback_content" "$loopback_self_hint" \
+        "$LOOPBACK_BOUND_TOKEN" "$loopback_self_hint" "$loopback_content_sha256" "$loopback_content" \
+        __cubikan_loopback_clean_entry_v1__ "$@"
 fi
 [[ "$loopback_self_hint" == */chain/tools/loopback-netns.sh &&
     "${CUBIKAN_LOOPBACK_SANITIZED:-}" == 1 &&
@@ -108,11 +91,11 @@ readonly INTERNAL_NETNS_TOKEN=__cubikan_loopback_netns_child_v1__
 readonly ISOLATION_OUTSIDE_STATUS=125
 
 readonly SELF="$loopback_self_hint"
-readonly LOOPBACK_REENTRY_FD="$loopback_reentry_fd"
-readonly LOOPBACK_REENTRY_IDENTITY="$loopback_reentry_identity"
+readonly LOOPBACK_CONTENT_SHA256="$loopback_content_sha256"
+readonly LOOPBACK_CONTENT="$loopback_content"
 unset loopback_self_hint
-unset loopback_reentry_fd
-unset loopback_reentry_identity
+unset loopback_content_sha256
+unset loopback_content
 unset CUBIKAN_LOOPBACK_SANITIZED
 readonly WORKSPACE_ROOT="${SELF%/chain/tools/loopback-netns.sh}"
 [[ "$WORKSPACE_ROOT" != "$SELF" && -d "$WORKSPACE_ROOT/chain/tools" ]] || {
@@ -125,71 +108,36 @@ die() {
     exit 1
 }
 
-snapshot_script_path() {
-    local path=$1 fd_variable=$2 identity_variable=$3
-    local source_fd compare_fd source_identity snapshot snapshot_hash compare_hash snapshot_identity snapshot_fd
+capture_script_path() {
+    local path=${1:?} content_variable=${2:?} digest_variable=${3:?}
+    local source_identity compare_identity content compare_content actual compare_actual
     [[ "$path" == /* && -f "$path" && -x "$path" && ! -L "$path" ]] ||
-        die "script snapshot source is not an absolute executable regular file"
-    source_identity="$("$STAT" -Lc '%d:%i:%s' -- "$path")"
-    exec {source_fd}<"$path" || die "cannot open script snapshot source"
-    [[ -f "/proc/self/fd/$source_fd" && "$path" -ef "/proc/self/fd/$source_fd" &&
-        "$("$STAT" -Lc '%d:%i:%s' -- "/proc/self/fd/$source_fd")" == "$source_identity" ]] ||
-        die "script snapshot source changed while opening"
-
-    snapshot="$(/usr/lib/cargo/bin/coreutils/mktemp /tmp/cubikan-child-script-v1.XXXXXX)" ||
-        die "cannot create private child-script snapshot"
-    /usr/lib/cargo/bin/coreutils/dd of="$snapshot" status=none <&"$source_fd" ||
-        die "cannot copy private child-script snapshot"
-    exec {source_fd}<&-
-    /usr/lib/cargo/bin/coreutils/chmod 0400 -- "$snapshot" ||
-        die "cannot protect private child-script snapshot"
-    snapshot_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum -- "$snapshot")" ||
-        die "cannot hash private child-script snapshot"
-    snapshot_hash=${snapshot_hash%% *}
-    exec {compare_fd}<"$path" || die "cannot reopen child-script source for comparison"
-    compare_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum - <&"$compare_fd")" ||
-        die "cannot compare child-script source"
-    compare_hash=${compare_hash%% *}
-    exec {compare_fd}<&-
-    [[ "$snapshot_hash" == "$compare_hash" && ! -L "$path" &&
-        "$("$STAT" -Lc '%d:%i:%s' -- "$path")" == "$source_identity" ]] || {
-        /usr/bin/gnurm -f -- "$snapshot"
-        die "child-script source changed during private snapshot creation"
-    }
-
-    snapshot_identity="$("$STAT" -Lc '%d:%i:%s' -- "$snapshot")"
-    exec {snapshot_fd}<"$snapshot" || die "cannot open private child-script snapshot"
-    /usr/bin/gnurm -f -- "$snapshot"
-    [[ ! -e "$snapshot" && -f "/proc/self/fd/$snapshot_fd" &&
-        "$("$STAT" -Lc '%d:%i:%s' -- "/proc/self/fd/$snapshot_fd")" == "$snapshot_identity" ]] ||
-        die "private child-script snapshot binding failed"
-    printf -v "$fd_variable" '%s' "$snapshot_fd"
-    printf -v "$identity_variable" '%s' "$snapshot_identity"
+        die "script source is not an absolute executable regular file"
+    source_identity="$("$STAT" -Lc '%d:%i:%s:%Y:%Z' -- "$path")"
+    content=''
+    IFS= read -r -d '' content <"$path" || [[ -n "$content" ]] || die "cannot capture child-script bytes"
+    actual="$(printf '%s' "$content" | /usr/lib/cargo/bin/coreutils/sha256sum)"
+    actual=${actual%% *}
+    compare_content=''
+    IFS= read -r -d '' compare_content <"$path" || [[ -n "$compare_content" ]] || die "cannot recapture child-script bytes"
+    compare_actual="$(printf '%s' "$compare_content" | /usr/lib/cargo/bin/coreutils/sha256sum)"
+    compare_actual=${compare_actual%% *}
+    compare_identity="$("$STAT" -Lc '%d:%i:%s:%Y:%Z' -- "$path")"
+    [[ "$compare_actual" == "$actual" && "$compare_identity" == "$source_identity" ]] ||
+        die "child-script source changed during memory capture"
+    printf -v "$content_variable" '%s' "$content"
+    printf -v "$digest_variable" '%s' "$actual"
 }
 
-snapshot_script_fd() {
-    local source_fd=$1 expected_identity=$2 fd_variable=$3 identity_variable=$4
-    local snapshot snapshot_identity snapshot_fd
-    [[ "$source_fd" =~ ^[1-9][0-9]*$ &&
-        "$expected_identity" =~ ^[0-9]+:[0-9]+:[1-9][0-9]*$ &&
-        -f "/proc/self/fd/$source_fd" &&
-        "$("$STAT" -Lc '%d:%i:%s' -- "/proc/self/fd/$source_fd")" == "$expected_identity" ]] ||
-        die "prebound child-script descriptor identity mismatch"
-    snapshot="$(/usr/lib/cargo/bin/coreutils/mktemp /tmp/cubikan-child-script-v1.XXXXXX)" ||
-        die "cannot create private prebound child-script snapshot"
-    /usr/lib/cargo/bin/coreutils/dd of="$snapshot" status=none <&"$source_fd" ||
-        die "cannot copy private prebound child-script snapshot"
-    exec {source_fd}<&-
-    /usr/lib/cargo/bin/coreutils/chmod 0400 -- "$snapshot" ||
-        die "cannot protect private prebound child-script snapshot"
-    snapshot_identity="$("$STAT" -Lc '%d:%i:%s' -- "$snapshot")"
-    exec {snapshot_fd}<"$snapshot" || die "cannot open private prebound child-script snapshot"
-    /usr/bin/gnurm -f -- "$snapshot"
-    [[ ! -e "$snapshot" && -f "/proc/self/fd/$snapshot_fd" &&
-        "$("$STAT" -Lc '%d:%i:%s' -- "/proc/self/fd/$snapshot_fd")" == "$snapshot_identity" ]] ||
-        die "private prebound child-script snapshot binding failed"
-    printf -v "$fd_variable" '%s' "$snapshot_fd"
-    printf -v "$identity_variable" '%s' "$snapshot_identity"
+capture_script_memory() {
+    local content=${1:?} expected_digest=${2:?} content_variable=${3:?} digest_variable=${4:?} actual
+    [[ "$expected_digest" =~ ^[0-9a-f]{64}$ && -n "$content" ]] ||
+        die "prebound child-script memory identity is malformed"
+    actual="$(printf '%s' "$content" | /usr/lib/cargo/bin/coreutils/sha256sum)"
+    actual=${actual%% *}
+    [[ "$actual" == "$expected_digest" ]] || die "prebound child-script memory identity mismatch"
+    printf -v "$content_variable" '%s' "$content"
+    printf -v "$digest_variable" '%s' "$actual"
 }
 
 require_clean_bootstrap() {
@@ -236,7 +184,7 @@ close_fds_except() {
 
 authorize_verifier_continuation_fd() {
     local -n argv_ref=$1
-    local fd verifier_path verifier_argument opened_identity physical_pwd
+    local verifier_path verifier_argument captured_content captured_digest physical_pwd
     PRESERVED_CHILD_FDS=()
     verifier_path="$WORKSPACE_ROOT/chain/tools/verify-pins.sh"
     verifier_argument="${argv_ref[1]:-}"
@@ -249,54 +197,48 @@ authorize_verifier_continuation_fd() {
             ("$verifier_argument" == chain/tools/verify-pins.sh && "$physical_pwd" == "$WORKSPACE_ROOT")) &&
         "${argv_ref[2]:-}" == --locked && "${argv_ref[3]:-}" == --offline &&
         ${#argv_ref[@]} -eq 4 ]]; then
-        snapshot_script_path "$verifier_path" fd opened_identity
-        argv_ref=(/usr/bin/bash --noprofile --norc -p -s --
-            __cubikan_verifier_bound_path_v1__ "$verifier_path" - - \
+        capture_script_path "$verifier_path" captured_content captured_digest
+        argv_ref=(/usr/bin/bash --noprofile --norc -p -c "$captured_content" "$verifier_path"
+            __cubikan_verifier_bound_memory_v1__ "$verifier_path" "$captured_digest" "$captured_content" \
             --sanitized-entry --locked --offline)
-        PRESERVED_CHILD_FDS+=("$fd")
-        VERIFIER_CHILD_SCRIPT_FD=$fd
-        VERIFIER_CHILD_SCRIPT_IDENTITY=$opened_identity
+        INTERNAL_VERIFIER_DIGEST=$captured_digest
+        INTERNAL_VERIFIER_CONTENT=$captured_content
         return
     fi
     if [[ "${argv_ref[0]:-}" == /usr/bin/bash &&
         "${argv_ref[1]:-}" == --noprofile && "${argv_ref[2]:-}" == --norc &&
-        "${argv_ref[3]:-}" == -p && "${argv_ref[4]:-}" == -s &&
-        "${argv_ref[5]:-}" == -- &&
-        "${argv_ref[6]:-}" == __cubikan_verifier_bound_path_v1__ &&
-        "${argv_ref[7]:-}" == "$verifier_path" &&
-        "${argv_ref[8]:-}" == __cubikan_prebound_verifier_fd_v1__ &&
-        "${argv_ref[9]:-}" =~ ^[1-9][0-9]*$ &&
-        "${argv_ref[10]:-}" =~ ^[0-9]+:[0-9]+:[1-9][0-9]*$ &&
-        "${argv_ref[11]:-}" == --locked && "${argv_ref[12]:-}" == --offline &&
-        ${#argv_ref[@]} -eq 13 ]]; then
-        snapshot_script_fd "${argv_ref[9]}" "${argv_ref[10]}" fd opened_identity
-        argv_ref=(/usr/bin/bash --noprofile --norc -p -s --
-            __cubikan_verifier_bound_path_v1__ "$verifier_path" - - \
+        "${argv_ref[3]:-}" == -p && "${argv_ref[4]:-}" == -c &&
+        "${argv_ref[6]:-}" == "$verifier_path" &&
+        "${argv_ref[7]:-}" == __cubikan_verifier_bound_memory_v1__ &&
+        "${argv_ref[8]:-}" == "$verifier_path" &&
+        "${argv_ref[9]:-}" == __cubikan_prebound_verifier_memory_v1__ &&
+        "${argv_ref[10]:-}" =~ ^[0-9a-f]{64}$ &&
+        -n "${argv_ref[11]:-}" &&
+        "${argv_ref[12]:-}" == --locked && "${argv_ref[13]:-}" == --offline &&
+        ${#argv_ref[@]} -eq 14 ]]; then
+        capture_script_memory "${argv_ref[11]}" "${argv_ref[10]}" captured_content captured_digest
+        [[ "${argv_ref[5]}" == "$captured_content" ]] || die "prebound verifier command content mismatch"
+        argv_ref=(/usr/bin/bash --noprofile --norc -p -c "$captured_content" "$verifier_path"
+            __cubikan_verifier_bound_memory_v1__ "$verifier_path" "$captured_digest" "$captured_content" \
             --sanitized-entry --locked --offline)
-        PRESERVED_CHILD_FDS+=("$fd")
-        VERIFIER_CHILD_SCRIPT_FD=$fd
-        VERIFIER_CHILD_SCRIPT_IDENTITY=$opened_identity
+        INTERNAL_VERIFIER_DIGEST=$captured_digest
+        INTERNAL_VERIFIER_CONTENT=$captured_content
         return
     fi
     if [[ "${argv_ref[0]:-}" == /usr/bin/bash &&
         "${argv_ref[1]:-}" == --noprofile && "${argv_ref[2]:-}" == --norc &&
-        "${argv_ref[3]:-}" == -p && "${argv_ref[4]:-}" == -s &&
-        "${argv_ref[5]:-}" == -- &&
-        "${argv_ref[6]:-}" == __cubikan_verifier_bound_path_v1__ &&
-        "${argv_ref[7]:-}" == "$verifier_path" && "${argv_ref[8]:-}" == - &&
-        "${argv_ref[9]:-}" == - && "${argv_ref[10]:-}" == --sanitized-entry &&
-        "${argv_ref[11]:-}" == --locked && "${argv_ref[12]:-}" == --offline &&
-        ${#argv_ref[@]} -eq 13 ]]; then
-        [[ "${INTERNAL_VERIFIER_FD:-}" =~ ^[1-9][0-9]*$ &&
-            "${INTERNAL_VERIFIER_IDENTITY:-}" =~ ^[0-9]+:[0-9]+:[1-9][0-9]*$ ]] ||
-            die "rewritten verifier continuation lacks its internal descriptor identity"
-        fd=$INTERNAL_VERIFIER_FD
-        [[ -f "/proc/self/fd/$fd" &&
-            "$("$STAT" -Lc '%d:%i:%s' -- "/proc/self/fd/$fd")" == "$INTERNAL_VERIFIER_IDENTITY" ]] ||
-            die "rewritten verifier continuation descriptor identity mismatch"
-        PRESERVED_CHILD_FDS+=("$fd")
-        VERIFIER_CHILD_SCRIPT_FD=$fd
-        VERIFIER_CHILD_SCRIPT_IDENTITY=$INTERNAL_VERIFIER_IDENTITY
+        "${argv_ref[3]:-}" == -p && "${argv_ref[4]:-}" == -c &&
+        "${argv_ref[6]:-}" == "$verifier_path" &&
+        "${argv_ref[7]:-}" == __cubikan_verifier_bound_memory_v1__ &&
+        "${argv_ref[8]:-}" == "$verifier_path" &&
+        "${argv_ref[9]:-}" =~ ^[0-9a-f]{64}$ && -n "${argv_ref[10]:-}" &&
+        "${argv_ref[11]:-}" == --sanitized-entry &&
+        "${argv_ref[12]:-}" == --locked && "${argv_ref[13]:-}" == --offline &&
+        ${#argv_ref[@]} -eq 14 ]]; then
+        capture_script_memory "${argv_ref[10]}" "${argv_ref[9]}" captured_content captured_digest
+        [[ "${argv_ref[5]}" == "$captured_content" ]] || die "rewritten verifier command content mismatch"
+        INTERNAL_VERIFIER_DIGEST=$captured_digest
+        INTERNAL_VERIFIER_CONTENT=$captured_content
         return
     fi
     local argument
@@ -524,7 +466,7 @@ exec_clean_child() {
     canonicalize_child_bash child_argv
     authorize_verifier_continuation_fd child_argv
     close_fds_except "${PRESERVED_CHILD_FDS[@]}"
-    if [[ -n "${VERIFIER_CHILD_SCRIPT_FD:-}" ]]; then
+    if [[ "${child_argv[*]}" == *'__cubikan_verifier_bound_memory_v1__'* ]]; then
         exec "$ENV_BIN" -i CUBIKAN_VERIFIER_SANITIZED=1 HOME=/home/charles \
             CARGO_HOME="$WORKSPACE_ROOT/chain/.cache/cargo-home" \
             RUSTUP_HOME=/home/charles/.rustup LC_ALL=C LANG=C TZ=UTC \
@@ -532,7 +474,7 @@ exec_clean_child() {
             PATH=/home/charles/.cargo/bin:/usr/bin:/bin \
             GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null \
             GIT_NO_REPLACE_OBJECTS=1 GIT_OPTIONAL_LOCKS=0 \
-            "${child_argv[@]}" <&"$VERIFIER_CHILD_SCRIPT_FD"
+            "${child_argv[@]}" </dev/null
     fi
     exec "$ENV_BIN" -i HOME=/home/charles CARGO_HOME=/home/charles/.cargo \
         RUSTUP_HOME=/home/charles/.rustup LC_ALL=C LANG=C TZ=UTC TMPDIR=/tmp \
@@ -543,12 +485,12 @@ exec_clean_child() {
 run_inside() {
     [[ $# -ge 7 && "$6" == -- ]] || die "internal argv boundary is invalid"
     local launcher_netns_identity=$1 launcher_mountns_identity=$2 launcher_ipcns_identity=$3
-    INTERNAL_VERIFIER_FD=$4
-    INTERNAL_VERIFIER_IDENTITY=$5
-    [[ "$INTERNAL_VERIFIER_FD" == - || "$INTERNAL_VERIFIER_FD" =~ ^[1-9][0-9]*$ ]] ||
-        die "internal verifier descriptor token is invalid"
-    [[ "$INTERNAL_VERIFIER_IDENTITY" == - || "$INTERNAL_VERIFIER_IDENTITY" =~ ^[0-9]+:[0-9]+:[1-9][0-9]*$ ]] ||
-        die "internal verifier identity token is invalid"
+    INTERNAL_VERIFIER_DIGEST=$4
+    INTERNAL_VERIFIER_CONTENT=$5
+    [[ "$INTERNAL_VERIFIER_DIGEST" == - || "$INTERNAL_VERIFIER_DIGEST" =~ ^[0-9a-f]{64}$ ]] ||
+        die "internal verifier digest token is invalid"
+    [[ "$INTERNAL_VERIFIER_CONTENT" == - || -n "$INTERNAL_VERIFIER_CONTENT" ]] ||
+        die "internal verifier content token is invalid"
     shift 6
     [[ $# -gt 0 ]] || die "missing child argv"
 
@@ -573,15 +515,15 @@ exec_namespace_child() {
     launcher_mountns_identity="$(namespace_identity mnt)"
     launcher_ipcns_identity="$(namespace_identity ipc)"
     authorize_verifier_continuation_fd child_argv
-    close_fds_except "$LOOPBACK_REENTRY_FD" "${PRESERVED_CHILD_FDS[@]}"
+    close_fds_except "${PRESERVED_CHILD_FDS[@]}"
     export CUBIKAN_LOOPBACK_SANITIZED=1
     exec "$UNSHARE" --user --map-root-user --net --mount --ipc --propagation private \
-        /usr/bin/bash --noprofile --norc -p -s -- \
-        "$LOOPBACK_BOUND_TOKEN" "$SELF" - - __cubikan_loopback_clean_entry_v1__ \
+        /usr/bin/bash --noprofile --norc -p -c "$LOOPBACK_CONTENT" "$SELF" \
+        "$LOOPBACK_BOUND_TOKEN" "$SELF" "$LOOPBACK_CONTENT_SHA256" "$LOOPBACK_CONTENT" __cubikan_loopback_clean_entry_v1__ \
         "$INTERNAL_NETNS_TOKEN" \
         "$launcher_netns_identity" "$launcher_mountns_identity" "$launcher_ipcns_identity" \
-        "${VERIFIER_CHILD_SCRIPT_FD:--}" "${VERIFIER_CHILD_SCRIPT_IDENTITY:--}" \
-        -- "${child_argv[@]}" <&"$LOOPBACK_REENTRY_FD"
+        "${INTERNAL_VERIFIER_DIGEST:--}" "${INTERNAL_VERIFIER_CONTENT:--}" \
+        -- "${child_argv[@]}" </dev/null
 }
 
 require_clean_bootstrap
@@ -603,6 +545,6 @@ fi
 shift
 [[ $# -gt 0 ]] || die "missing child argv"
 require_safe_working_directory
-[[ -x "$UNSHARE" && -x "$STAT" && -x "$MOUNT" && -f "/proc/self/fd/$LOOPBACK_REENTRY_FD" ]] || die "pinned namespace launcher is unavailable"
+[[ -x "$UNSHARE" && -x "$STAT" && -x "$MOUNT" ]] || die "pinned namespace launcher is unavailable"
 
 exec_namespace_child "$@"

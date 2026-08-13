@@ -164,15 +164,20 @@ chmod_path = "/usr/lib/cargo/bin/coreutils/chmod"
 chmod_sha256 = "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"
 mv_path = "/usr/bin/gnumv"
 mv_sha256 = "3a56b5e8f9b40ca7fb484bb00ba048c705f6520c7a9092b45394a9c916ba0b9b"
+python_path = "/usr/bin/python3.14"
+python_version = "Python 3.14.4"
+python_sha256 = "b8d8288faefdd300201f43fcf00f6f539a27218eeed3a3dff5ab10b9c4c99700"
 
 [repository_tools]
 argv_grammar_version = "1"
 argv_grammar_path = "chain/tools/node-argv-grammar-v1.txt"
 argv_grammar_sha256 = "112655c95fcf0b1fe535d0e6b209883374bb650b40ecd9f3383d4378dd1b88b4"
 argv_normalizer_path = "chain/tools/normalize-node-argv.sh"
-argv_normalizer_sha256 = "208e4988891c4fd616ef2897566df10a5e21337fc8de4d58e7ff707c08fafdb7"
+argv_normalizer_sha256 = "2b15a0e9769b79b331a908a909fe1cfb71afb7cdce39bca47f49b1d4df68a437"
 loopback_wrapper_path = "chain/tools/loopback-netns.sh"
-loopback_wrapper_sha256 = "f990e9f846fa99d67bd134caf17787f67665751ad238c923a482c631a5d49a30"
+loopback_wrapper_sha256 = "5bc154c8db84546c1e3e10a5e6822a021741b26996749b5134a0c077e61cfdc9"
+sealed_exec_path = "chain/tools/sealed-exec.py"
+sealed_exec_sha256 = "b3cd068ac20123ca2971aca6dff5f6718778090323e14c3d3156669bc1c1f672"
 
 [foundation]
 plan_commit = "4859e8ed481df2a1b0ee4786218460b14a6f82ce"

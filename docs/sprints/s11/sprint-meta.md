@@ -23,3 +23,12 @@
   elevated-execution service exhausted its weekly allowance. This checkpoint
   does not remove T-1101 from `docs/work/tasks.md`, add completion evidence, or
   authorize T-1102.
+
+- **2026-08-13 — T-1101 blockage resolved:** Reviewed in-process shell bytes
+  and a pinned Linux sealed-memfd executor now close the same-UID helper and
+  release-asset hash-to-exec races. The gate proves post-seal writes fail with
+  `EPERM`, covers DrvFS pathname replacement, and rejects identity drift before
+  dependent execution. The exact canonical loopback-only locked/offline gate
+  subsequently passed its root checks, warnings-denied chain check, release
+  build, and Wasm verification. T-1101 may move to completed and T-1102 is
+  unblocked.

@@ -40,24 +40,28 @@ the fail-closed `loopback-netns.sh` user/network/mount/IPC namespaces, raises
 only loopback, requires an empty non-loopback interface and route inventory,
 closes inherited descriptors, and hides conventional host sockets beneath
 private `/tmp` and `/run` mounts. A nested private `nodev,nosuid` executable
-tmpfs at `/run/cubikan-exec` receives only stream-verified ELF node bytes;
+tmpfs at `/run/cubikan-exec` remains available to the pinned topology tools;
 it is bounded to 2 GiB and disappears with the namespace. The broader `/tmp`
-and `/run` mounts remain `noexec`. It then runs Cargo against a task-owned,
+and `/run` mounts remain `noexec`. Node and release-asset execution itself uses
+a write/grow/shrink/seal-locked Linux memfd, not a workspace or temporary-file
+pathname. It then runs Cargo against a task-owned,
 verified source cache with locked resolution and offline mode. Failure to
 establish those boundaries is a failed gate; `cargo --offline` by itself is
 not treated as an egress control.
 
-Repository shell tools cross each verification boundary as re-hashed private
-snapshots. The verifier first hashes the reviewed source stream, copies those
-bytes to a mode-0400 temporary, re-hashes it, opens every later continuation
-stream, and unlinks the temporary before dependent execution. The wrapper does
-the same for its own namespace re-entry and for the verifier child. Canonical
-paths remain repository-location hints only; later behavior consumes the
-unlinked snapshot stream with the pinned `/usr/bin/bash`. Path replacement or
-same-size in-place mutation after snapshot creation therefore cannot select
-different bytes. The wrapper accepts only the exact canonical verifier child
-shape for descriptor retention, rejects other `/proc/self/fd` arguments, and
-gives every non-verifier child `/dev/null` as standard input.
+Repository shell and sealing-helper tools cross each verification boundary as
+twice-read, re-hashed in-process byte strings. The verifier retains those
+reviewed bytes in readonly Bash variables and every later continuation uses
+the pinned `/usr/bin/bash -c` or pinned `/usr/bin/python3.14 -c`; canonical
+paths remain repository-location hints only. Path replacement or same-size
+in-place mutation after capture therefore cannot select different behavior.
+Before any downloaded ELF runs, the reviewed helper copies the already-open
+source descriptor into a Linux memfd, checks its exact size/SHA-256, applies
+`F_SEAL_WRITE|F_SEAL_GROW|F_SEAL_SHRINK|F_SEAL_SEAL`, proves a post-seal write
+returns `EPERM`, re-hashes the sealed object, and executes that descriptor.
+The wrapper accepts only the exact canonical verifier child shape, rejects
+other `/proc/self/fd` arguments, and gives every non-verifier child
+`/dev/null` as standard input.
 
 These finalized literal `bash FILE` commands have a deliberate clean-candidate
 shell-startup trust boundary. Bash evaluates `BASH_ENV` before it reads the
