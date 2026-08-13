@@ -508,4 +508,4 @@
 - **Completed:** 2026-08-13T21:14:16Z
 - **Files modified:** `chain/pallets/cubikan/src/provenance.rs`, `chain/pallets/cubikan/src/lib.rs`, `chain/pallets/cubikan/src/event.rs`, `chain/pallets/cubikan/src/error.rs`, `chain/pallets/cubikan/src/benchmarking.rs`, `chain/pallets/cubikan/src/weights.rs`, `chain/pallets/cubikan/src/tests/provenance.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Fixture note:** The independently authored T-1102 conformance corpus already covers association identity, subjects, capacity, authorization, and structural SCALE/reference rejection; T-1105 added no implementation-derived fixture bytes.
-- **Commit:** PENDING
+- **Commit:** `9ce2fbeee4839f624d0d9c3f1ce2ea2b9f0a6167`
