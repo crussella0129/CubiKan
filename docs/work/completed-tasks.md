@@ -484,4 +484,4 @@
 - **Intent:** [INT-0008](../intents/INT-0008-traceable-intent-instantiation.md), [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md), [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md), [INT-0014](../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
 - **Completed:** 2026-08-13T14:11:28Z
 - **Files modified:** `chain/pallets/cubikan/src/conformance.rs`, `chain/pallets/cubikan/src/tests/model.rs`, `chain/pallets/cubikan/src/types.rs`, `crates/cubikan-core/src/external_reference.rs`, `crates/cubikan-core/src/lib.rs`, `crates/cubikan-core/src/vocabulary.rs`, `crates/cubikan-core/src/workflow.rs`, `crates/cubikan-core/tests/bounded_conformance.rs`, `tests/fixtures/chain-conformance-v1.json`, `docs/intents/INT-0008-traceable-intent-instantiation.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
-- **Commit:** PENDING
+- **Commit:** `94bbbd54f15a6b95b9ff331cee8fdcff9098f2d3`
