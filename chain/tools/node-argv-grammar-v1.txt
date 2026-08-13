@@ -1,0 +1,87 @@
+CubiKan Zombienet native argv grammar v1
+
+Invocation:
+  normalize-node-argv.sh --role ROLE [--print0] -- COMMAND ARG...
+
+ROLE is exactly one of:
+  relay-a relay-b collator-a collator-b
+
+COMMAND basename:
+  relay-a, relay-b: polkadot
+  collator-a, collator-b: polkadot-omni-node
+
+Generated flags accepted on a primary side:
+  --name VALUE
+  --node-key VALUE
+  --chain VALUE
+  --base-path VALUE
+  --listen-addr VALUE
+  --port VALUE
+  --rpc-port VALUE
+  --ws-port VALUE
+  --prometheus-port VALUE
+  --bootnodes VALUE...
+  --rpc-cors all
+  --rpc-methods unsafe
+  --blocks-pruning archive
+  --state-pruning archive
+  --validator
+  --collator
+  --force-authoring
+  --insecure-validator-i-know-what-i-do
+  --no-mdns
+  --no-telemetry
+  --no-hardware-benchmarks
+  --rpc-external
+  --unsafe-rpc-external
+  --ws-external
+  --unsafe-ws-external
+  --prometheus-external
+
+Generated flags accepted after the collator separator:
+  --chain VALUE
+  --base-path VALUE
+  --listen-addr VALUE
+  --port VALUE
+  --rpc-port VALUE
+  --ws-port VALUE
+  --prometheus-port VALUE
+  --bootnodes VALUE...
+  --rpc-cors all
+  --rpc-methods unsafe
+  --execution wasm
+  --validator
+  --force-authoring
+  --insecure-validator-i-know-what-i-do
+  --no-mdns
+  --no-telemetry
+  --no-hardware-benchmarks
+  --rpc-external
+  --unsafe-rpc-external
+  --ws-external
+  --unsafe-ws-external
+  --prometheus-external
+
+Exactly one value follows every value flag except --bootnodes, which consumes
+one or more loopback-only /ip4/127.0.0.1/tcp/PORT/p2p/PEER values. A side must
+contain exactly one of --rpc-port or --ws-port; supplying both is a duplicate
+RPC-listener declaration. Flags use separate argv elements; --flag=value is not
+accepted. Duplicate flags, unknown flags, unexpected positionals, unsafe paths,
+non-loopback bootnodes, missing required generated fields, and a relay-side
+separator on a relay validator are rejected before execution.
+
+The normalizer discards every generated external-bind flag and every generated
+listener or port value, including the single generated RPC/WS spelling. It
+emits exactly one --rpc-port and supplies the following fixed values:
+  relay-a: primary rpc 9944, p2p 30333, metrics 9615
+  relay-b: primary rpc 9945, p2p 30334, metrics 9616
+  collator-a: primary rpc 9988, p2p 30335, metrics 9617;
+              relay-side rpc 9990, p2p 30337, metrics 9619
+  collator-b: primary rpc 9989, p2p 30336, metrics 9618;
+              relay-side rpc 9991, p2p 30338, metrics 9620
+
+Every supplied listen address is /ip4/127.0.0.1/tcp/PORT/ws. The normalizer
+also supplies --no-mdns and --no-telemetry when absent. Both collator primary
+sides must preserve --blocks-pruning archive and --state-pruning archive.
+ParaId is supplied by the chain specification and is never accepted as
+generated node argv.

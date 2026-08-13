@@ -1,0 +1,305 @@
+format = "cubikan-foundation-snapshot-v1"
+hash_algorithm = "sha256"
+file_count = 30
+external_tree_count = 1
+snapshot_task = "T-1101"
+plan_commit = "4859e8ed481df2a1b0ee4786218460b14a6f82ce"
+
+[snapshot]
+root_workspace = "."
+chain_workspace = "chain"
+polkadot_sdk_release = "polkadot-stable2606-1"
+polkadot_sdk_revision = "8ae9775dc43c0d8cdd0f6d87700596e14278b1e1"
+rust_channel = "1.93.0"
+wasm_target = "wasm32v1-none"
+
+[proof]
+path_token = "<PROJECT>"
+root_feature_tree_sha256 = "afb22ee9b495679b99d7854d2322886385da97caae8a7d9857fd3ca62fedadab"
+chain_feature_tree_sha256 = "19f4e37320ca87809665f009aac95d11b1b55e4c53f671bdbc48f25a7b78b314"
+runtime_wasm_path = "chain/target/release/wbuild/cubikan-runtime/cubikan_runtime.compact.compressed.wasm"
+runtime_wasm_bytes = 288
+runtime_wasm_sha256 = "0892e3be71eae9719e5cc143f2d04fa1feeec7f123120c3c25b20f015cc1bec5"
+root_tree_argv = ["cargo", "tree", "--manifest-path", "Cargo.toml", "-e", "features", "--locked", "--offline"]
+root_check_argv = ["cargo", "check", "--manifest-path", "Cargo.toml", "--workspace", "--all-targets", "--locked", "--offline"]
+chain_tree_argv = ["cargo", "tree", "--manifest-path", "chain/Cargo.toml", "-e", "features", "--locked", "--offline"]
+chain_check_argv = ["cargo", "check", "--manifest-path", "chain/Cargo.toml", "--workspace", "--locked", "--offline"]
+chain_build_argv = ["cargo", "build", "--manifest-path", "chain/Cargo.toml", "--package", "cubikan-runtime", "--release", "--locked", "--offline"]
+
+[[trees]]
+id = "rusqlite_vendor"
+role = "canonical"
+source_base = "repository"
+source = "vendor/rusqlite-0.40.2-cubikan"
+target = "vendor/rusqlite-0.40.2-cubikan"
+entry_kind = "regular-files-only"
+tree_hash_format = "sorted-path-sha256-lines-v1"
+tree_sha256 = "8cbf482a7804e3168ff233c9d50fc81a43eb7b0480a259e1174fea2abb26f49f"
+
+[[files]]
+id = "readme"
+role = "documentation"
+source = "README.md"
+bytes = 2471
+sha256 = "0e07c27a3fa883bb77e0870c9c6d53f329c3f2864bacf2a1656c6d8082c521cc"
+mode = "0644"
+
+[[files]]
+id = "root_workspace_manifest"
+role = "canonical"
+source = "payload/root/workspace-manifest.toml"
+target = "Cargo.toml"
+bytes = 674
+sha256 = "aebfaed17af23ce9ebde9545e428f96eb04066a77df58dc0bce463527ddd6f09"
+mode = "0644"
+
+[[files]]
+id = "root_lockfile"
+role = "canonical"
+source = "payload/root/lockfile.lock"
+target = "Cargo.lock"
+bytes = 9637
+sha256 = "85048fab95942c172df02a880be2b899b9f518ea2dd058e1bde6329ecddffd28"
+mode = "0644"
+
+[[files]]
+id = "root_toolchain"
+role = "canonical"
+source = "payload/root/rust-toolchain.toml"
+target = "rust-toolchain.toml"
+bytes = 86
+sha256 = "4478772744e88a3e35394171f27f9d035b17ee4a624368da7a929aa862b26c7e"
+mode = "0644"
+
+[[files]]
+id = "root_gitignore"
+role = "canonical"
+source = "payload/root/gitignore"
+target = ".gitignore"
+bytes = 193
+sha256 = "1b4741c039a3fbf7b63fdc5256c93c3b8d350a9da7d4f06e6f0174cd90fda043"
+mode = "0644"
+
+[[files]]
+id = "root_ci"
+role = "canonical"
+source = "payload/root/github/workflows/ci.yml"
+target = ".github/workflows/ci.yml"
+bytes = 1194
+sha256 = "365116856e79d1bded60b12c68a5d8f2b4965d650af2c6feeebdc918148c15e0"
+mode = "0644"
+
+[[files]]
+id = "root_dependabot"
+role = "canonical"
+source = "payload/root/github/dependabot.yml"
+target = ".github/dependabot.yml"
+bytes = 413
+sha256 = "82a51f15c58652ebae6c9da63efbaf57722a445317cf24d80c943b4e24149312"
+mode = "0644"
+
+[[files]]
+id = "root_backend_manifest"
+role = "canonical"
+source = "payload/root/crates/cubikan-backend/manifest.toml"
+target = "crates/cubikan-backend/Cargo.toml"
+bytes = 310
+sha256 = "d0f1bce51a6459fa79f4b08f52092c3a728d606445f01232279bdb85060ae8af"
+mode = "0644"
+
+[[files]]
+id = "root_cli_manifest"
+role = "canonical"
+source = "payload/root/crates/cubikan-cli/manifest.toml"
+target = "crates/cubikan-cli/Cargo.toml"
+bytes = 327
+sha256 = "c396d054823e258fbe02da2f182625e079df61ab0e594b6503964e53413f8055"
+mode = "0644"
+
+[[files]]
+id = "root_core_manifest"
+role = "canonical"
+source = "payload/root/crates/cubikan-core/manifest.toml"
+target = "crates/cubikan-core/Cargo.toml"
+bytes = 351
+sha256 = "f6c2dd0d86c45d2be2d18aecc3b81d8badf7ae03e3cd0eb16c51fd99f95ca515"
+mode = "0644"
+
+[[files]]
+id = "root_local_manifest"
+role = "canonical"
+source = "payload/root/crates/cubikan-local/manifest.toml"
+target = "crates/cubikan-local/Cargo.toml"
+bytes = 332
+sha256 = "6303494239fd201fe31067404e1274b4d5d7a7f8f70ae4e9c50df9793f3b67d3"
+mode = "0644"
+
+[[files]]
+id = "root_rusqlite_patch"
+role = "canonical"
+source = "payload/root/patches/rusqlite-0.40.2-commit-authorizer.patch"
+target = "patches/rusqlite-0.40.2-commit-authorizer.patch"
+bytes = 448
+sha256 = "9b3f1860e886bf532f22b8a4b5365189ce696ad9e91a0d9adc9c9245792329ca"
+mode = "0644"
+
+[[files]]
+id = "chain_workspace_manifest"
+role = "canonical"
+source = "payload/chain/workspace-manifest.toml"
+target = "chain/Cargo.toml"
+bytes = 1816
+sha256 = "dfeb8cdaa55d606e160471077d922912813ffa6e748db4d93c85cc46b0dc5740"
+mode = "0644"
+
+[[files]]
+id = "chain_lockfile"
+role = "canonical"
+source = "payload/chain/lockfile.lock"
+target = "chain/Cargo.lock"
+bytes = 116734
+sha256 = "e920f830b9f7627efc92b9d6cf1460a7a27f7678f79ddcd5a77913199e682938"
+mode = "0644"
+
+[[files]]
+id = "chain_toolchain"
+role = "canonical"
+source = "payload/chain/rust-toolchain.toml"
+target = "chain/rust-toolchain.toml"
+bytes = 115
+sha256 = "d10bd1b7871ad9cbca4075f4b84a89585d275089e38fc1d27f92235492d5e7a9"
+mode = "0644"
+
+[[files]]
+id = "chain_pallet_manifest"
+role = "canonical"
+source = "payload/chain/pallets/cubikan/manifest.toml"
+target = "chain/pallets/cubikan/Cargo.toml"
+bytes = 789
+sha256 = "f1c500785c4eef3b809e0e934a27f163ec4068b944c127d3317cc04b6efab4ff"
+mode = "0644"
+
+[[files]]
+id = "chain_pallet_lib"
+role = "canonical"
+source = "payload/chain/pallets/cubikan/src/lib.rs"
+target = "chain/pallets/cubikan/src/lib.rs"
+bytes = 308
+sha256 = "afcbec09c0372e7bb5f5b618a3e42095f4218b337688cc51154a921bbb845cd3"
+mode = "0644"
+
+[[files]]
+id = "chain_pallet_conformance"
+role = "canonical"
+source = "payload/chain/pallets/cubikan/src/conformance.rs"
+target = "chain/pallets/cubikan/src/conformance.rs"
+bytes = 121
+sha256 = "1c85a98543729c88c7aefd2cd8ab55fdb10836dcbcbf71e3f08d4db5cd5b9585"
+mode = "0644"
+
+[[files]]
+id = "chain_pallet_types"
+role = "canonical"
+source = "payload/chain/pallets/cubikan/src/types.rs"
+target = "chain/pallets/cubikan/src/types.rs"
+bytes = 117
+sha256 = "531224a32f8b1ca46b9a624ff43f43bbf42df5d90b066bb64fb3238718664190"
+mode = "0644"
+
+[[files]]
+id = "chain_pallet_model_test"
+role = "canonical"
+source = "payload/chain/pallets/cubikan/src/tests/model.rs"
+target = "chain/pallets/cubikan/src/tests/model.rs"
+bytes = 75
+sha256 = "5df5db5a6075fa2ad19698aec4cbc00a23442b334f58d8f7e96a967bf9de7644"
+mode = "0644"
+
+[[files]]
+id = "chain_runtime_manifest"
+role = "canonical"
+source = "payload/chain/runtime/manifest.toml"
+target = "chain/runtime/Cargo.toml"
+bytes = 1107
+sha256 = "08ad1101959c052abe1f87af40850907b31aa09d657e84ec62520d894b557761"
+mode = "0644"
+
+[[files]]
+id = "chain_runtime_build"
+role = "canonical"
+source = "payload/chain/runtime/build.rs"
+target = "chain/runtime/build.rs"
+bytes = 146
+sha256 = "cc9c212fba2380bd0fc8c10463b84026d3523408f566ee8554c53f03b653bdf2"
+mode = "0644"
+
+[[files]]
+id = "chain_runtime_lib"
+role = "canonical"
+source = "payload/chain/runtime/src/lib.rs"
+target = "chain/runtime/src/lib.rs"
+bytes = 2784
+sha256 = "6a6d5ee3eba29c556d6d8c84fc67f33021a871e08fa5e1ef6fb961fd7e4bcb75"
+mode = "0644"
+
+[[files]]
+id = "chain_runtime_wasm_reference"
+role = "proof-reference"
+source = "payload/chain/runtime/proof/cubikan_runtime.compact.compressed.wasm"
+bytes = 288
+sha256 = "0892e3be71eae9719e5cc143f2d04fa1feeec7f123120c3c25b20f015cc1bec5"
+mode = "0644"
+
+[[files]]
+id = "root_backend_probe"
+role = "proof-support"
+source = "support/root-stubs/crates/cubikan-backend/src/lib.rs"
+target = "crates/cubikan-backend/src/lib.rs"
+bytes = 162
+sha256 = "67f3ae0d0de7176dff5f69618b1f8ccbdc109a913b2dd7fa85186dd57f9efc0c"
+mode = "0644"
+
+[[files]]
+id = "root_cli_probe_lib"
+role = "proof-support"
+source = "support/root-stubs/crates/cubikan-cli/src/lib.rs"
+target = "crates/cubikan-cli/src/lib.rs"
+bytes = 158
+sha256 = "1412cfe077c4502eab03237e28f918850b89ce2262d2922d1daf7e2b0efee721"
+mode = "0644"
+
+[[files]]
+id = "root_cli_probe_bin"
+role = "proof-support"
+source = "support/root-stubs/crates/cubikan-cli/src/main.rs"
+target = "crates/cubikan-cli/src/main.rs"
+bytes = 38
+sha256 = "864130ead7d47c489a41039dd8f5353b3eb4d2071fc8622fa8612b4b4fb7e62f"
+mode = "0644"
+
+[[files]]
+id = "root_core_probe"
+role = "proof-support"
+source = "support/root-stubs/crates/cubikan-core/src/lib.rs"
+target = "crates/cubikan-core/src/lib.rs"
+bytes = 159
+sha256 = "1def7309afc395782f6101aaf37198004bf5bb7fd8562c66722498b54e02b613"
+mode = "0644"
+
+[[files]]
+id = "root_local_probe_lib"
+role = "proof-support"
+source = "support/root-stubs/crates/cubikan-local/src/lib.rs"
+target = "crates/cubikan-local/src/lib.rs"
+bytes = 160
+sha256 = "41c30b6afe1656e75473c70f22060ffd9053471ed3523b3d3f7cc3ce7101aa62"
+mode = "0644"
+
+[[files]]
+id = "root_local_probe_bin"
+role = "proof-support"
+source = "support/root-stubs/crates/cubikan-local/src/main.rs"
+target = "crates/cubikan-local/src/main.rs"
+bytes = 38
+sha256 = "864130ead7d47c489a41039dd8f5353b3eb4d2071fc8622fa8612b4b4fb7e62f"
+mode = "0644"

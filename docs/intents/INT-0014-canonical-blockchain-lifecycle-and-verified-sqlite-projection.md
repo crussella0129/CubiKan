@@ -2,7 +2,7 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0014
-- **State:** planned
+- **State:** active
 - **Work evidence:** [Sprint 11 build plan](../sprints/s11/sprint-plans/build-plan.md)
 - **Completion evidence:** none
 - **Code evidence:** none
@@ -505,3 +505,4 @@ their terminal chapters.
 - 2026-08-11: amended while `planned`, before plan finalization, to lock full archive-RPC stream attestation and single-page snapshot scope, the 256-record lifecycle/envelope bound, exact counter and rejection accounting, post-genesis anchor provenance, Root-only allowlist administration without origin-transforming wrappers, Unix hostile-path limits, strict loopback parsing, crash-recoverable derived signer journals, and collator resynchronization.
 - 2026-08-11: amended while `planned`, before plan finalization, after the Plan Critic's blocking review to lock the Linux local-filesystem boundary, backend-owned projection seam, exact SQLite runtime settings, crash-safe signer-lane publication and birth/death reconciliation, independently hashed protocol-v2 schemas, operation-specific rejection precedence, archive/resource budgets, portable offline gates, and the split T-1116 documentation/T-1117 CI sequence.
 - 2026-08-12: amended while `planned`, before plan finalization, to distinguish the relay and CubiKan parachain runtime identities, close all seven mutation outcomes, preserve original operation identity through crash recovery, and require canonical raw loopback RPC spelling.
+- 2026-08-12: moved to `active` immediately before T-1101 began the pinned isolated toolchain and runtime foundation.

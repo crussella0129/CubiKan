@@ -1,0 +1,45 @@
+[package]
+name = "cubikan-runtime"
+description = "Pinned CubiKan parachain runtime foundation"
+authors.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+build = "build.rs"
+
+[dependencies]
+cumulus-primitives-core.workspace = true
+frame-support.workspace = true
+pallet-cubikan.workspace = true
+parity-scale-codec.workspace = true
+scale-info.workspace = true
+sp-runtime.workspace = true
+sp-version.workspace = true
+
+[build-dependencies]
+substrate-wasm-builder = { workspace = true, optional = true }
+
+[features]
+default = ["std"]
+std = [
+    "cumulus-primitives-core/std",
+    "frame-support/std",
+    "pallet-cubikan/std",
+    "parity-scale-codec/std",
+    "scale-info/std",
+    "sp-runtime/std",
+    "sp-version/std",
+    "substrate-wasm-builder",
+]
+runtime-benchmarks = [
+    "frame-support/runtime-benchmarks",
+    "pallet-cubikan/runtime-benchmarks",
+    "sp-runtime/runtime-benchmarks",
+]
+try-runtime = [
+    "frame-support/try-runtime",
+    "pallet-cubikan/try-runtime",
+    "sp-runtime/try-runtime",
+]

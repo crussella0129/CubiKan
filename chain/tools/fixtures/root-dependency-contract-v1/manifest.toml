@@ -1,0 +1,30 @@
+[package]
+name = "cubikan-root-dependency-contract-v1"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.93.0"
+publish = false
+
+[workspace]
+resolver = "3"
+
+[lib]
+path = "lib.rs"
+
+[dependencies]
+futures-util = { version = "=0.3.31", default-features = false, features = ["std"] }
+parity-scale-codec = { version = "=3.7.5", default-features = false, features = ["derive", "std"] }
+rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled", "limits", "modern_sqlite", "hooks", "load_extension"] }
+rustix = { version = "=1.1.4", default-features = false, features = ["fs", "process", "std"] }
+scale-info = { version = "=2.11.6", default-features = false, features = ["derive", "std"] }
+serde = { version = "=1.0.229", features = ["derive"] }
+serde_json = "=1.0.151"
+sha2 = { version = "=0.10.9", default-features = false, features = ["std"] }
+subxt = { version = "=0.50.2", default-features = false, features = ["jsonrpsee", "native"] }
+subxt-signer = { version = "=0.50.2", default-features = false, features = ["sr25519", "subxt"] }
+tokio = { version = "=1.47.1", default-features = false, features = ["rt", "macros", "time", "sync"] }
+url = { version = "=2.5.8", default-features = false, features = ["std"] }
+uuid = { version = "=1.24.0", features = ["serde", "v4"] }
+
+[patch.crates-io]
+rusqlite = { path = "../../../../vendor/rusqlite-0.40.2-cubikan" }

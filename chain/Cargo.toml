@@ -1,0 +1,36 @@
+[workspace]
+members = [
+    "pallets/cubikan",
+    "runtime",
+]
+resolver = "2"
+
+[workspace.package]
+authors = ["CubiKan contributors"]
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/crussella0129/CubiKan"
+rust-version = "1.93.0"
+version = "0.1.0"
+
+[workspace.metadata.cubikan]
+polkadot-sdk-release = "polkadot-stable2606-1"
+polkadot-sdk-revision = "8ae9775dc43c0d8cdd0f6d87700596e14278b1e1"
+
+[workspace.dependencies]
+parity-scale-codec = { version = "=3.7.5", default-features = false, features = ["derive", "max-encoded-len"] }
+scale-info = { version = "=2.11.6", default-features = false, features = ["derive"] }
+serde = { version = "=1.0.229", default-features = false, features = ["derive", "std"] }
+serde_json = { version = "=1.0.151", default-features = false, features = ["std"] }
+
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "8ae9775dc43c0d8cdd0f6d87700596e14278b1e1", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "8ae9775dc43c0d8cdd0f6d87700596e14278b1e1", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "8ae9775dc43c0d8cdd0f6d87700596e14278b1e1", default-features = false }
+sp-version = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "8ae9775dc43c0d8cdd0f6d87700596e14278b1e1", default-features = false }
+cumulus-primitives-core = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "8ae9775dc43c0d8cdd0f6d87700596e14278b1e1", default-features = false }
+substrate-wasm-builder = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "8ae9775dc43c0d8cdd0f6d87700596e14278b1e1" }
+
+pallet-cubikan = { path = "pallets/cubikan", default-features = false }
+
+[profile.release]
+panic = "unwind"

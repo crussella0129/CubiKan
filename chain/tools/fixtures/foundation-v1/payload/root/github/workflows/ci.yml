@@ -1,0 +1,49 @@
+name: Rust CI
+
+"on":
+  pull_request:
+    branches:
+      - dev
+      - main
+  push:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Rust quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install stable Rust
+        run: rustup toolchain install stable --profile minimal --component rustfmt,clippy
+
+      - name: Check formatting
+        run: cargo +stable fmt --all -- --check
+
+      - name: Run Clippy
+        run: cargo +stable clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Check workspace
+        env:
+          RUSTFLAGS: -D warnings
+        run: cargo +stable check --workspace --all-targets
+
+      - name: Run workspace tests
+        run: cargo +stable test --workspace --all-targets
+
+      - name: Run workspace doctests
+        run: cargo +stable test --doc --workspace

@@ -1,0 +1,18 @@
+--- a/src/hooks/mod.rs
++++ b/src/hooks/mod.rs
+@@ -305,6 +305,7 @@
+ pub enum TransactionOperation {
+     Unknown,
+     Begin,
++    Commit,
+     Release,
+     Rollback,
+ }
+@@ -313,6 +314,7 @@
+     fn from_str(op_str: &str) -> Self {
+         match op_str {
+             "BEGIN" => Self::Begin,
++            "COMMIT" => Self::Commit,
+             "RELEASE" => Self::Release,
+             "ROLLBACK" => Self::Rollback,
+             _ => Self::Unknown,
