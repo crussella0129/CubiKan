@@ -492,4 +492,4 @@
 - **Completed:** 2026-08-13T16:35:19Z
 - **Files modified:** `chain/Cargo.lock`, `chain/Cargo.toml`, `chain/pallets/cubikan/Cargo.toml`, `chain/pallets/cubikan/src/lib.rs`, `chain/pallets/cubikan/src/event.rs`, `chain/pallets/cubikan/src/error.rs`, `chain/pallets/cubikan/src/benchmarking.rs`, `chain/pallets/cubikan/src/weights.rs`, `chain/pallets/cubikan/src/mock.rs`, `chain/pallets/cubikan/src/tests/lifecycle.rs`, `chain/pins.toml`, `chain/tools/verify-pins.sh`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Scope repair:** The locked task assigned executable FRAME benchmarks but omitted the direct optional `frame-benchmarking` manifest/lock/pin paths; Sprint 11 meta records the minimal same-revision dependency repair.
-- **Commit:** PENDING
+- **Commit:** `33322344bb0f587ee94a2b05002ee0da78302198`
