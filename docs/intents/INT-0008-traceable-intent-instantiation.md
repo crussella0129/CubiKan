@@ -2,7 +2,7 @@
 
 <!-- sprint-loop-intent-v2 -->
 - **Intent ID:** INT-0008
-- **State:** planned
+- **State:** active
 - **Work evidence:** [Sprint 11 build plan](../sprints/s11/sprint-plans/build-plan.md)
 - **Completion evidence:** none
 - **Code evidence:** none
@@ -150,3 +150,4 @@ and provenance events.
 - 2026-08-11: moved to `planned` when Sprint 11 mapped required-origin lifecycle, canonical provenance, Git identity, finalized projection, strict protocol v2, the local four-node proof, documentation reconciliation, and portable resource-measured gates to T-1101–T-1117.
 - 2026-08-11: amended while `planned` to lock the exact reference-namespace grammar `[a-z][a-z0-9._-]{0,63}` before the Sprint 11 plans were finalized.
 - 2026-08-12: amended while `planned` before Sprint 11 plan finalization to clarify that the multi-node proof uses distinct pinned relay and CubiKan parachain runtime identities rather than one shared runtime binary.
+- 2026-08-13: moved to `active` immediately before T-1102 began the bounded provider-neutral reference, workflow, SCALE, and independent conformance-fixture implementation.

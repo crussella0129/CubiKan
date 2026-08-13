@@ -1,0 +1,1202 @@
+{
+  "fixture_schema_version": 1,
+  "corpus_id": "cubikan-chain-conformance-v1",
+  "byte_encoding": "lowercase_hex_without_prefix",
+  "input_contract": {
+    "text_input": "exactly one of utf8 or hex; hex denotes raw bytes before UTF-8 validation",
+    "valid_value_result": "value.from=input requires byte-for-byte preservation of the decoded input",
+    "case_order": "significant and stable",
+    "normalization": "none",
+    "generator_expansion": "inclusive zero-based indices in ascending order"
+  },
+  "limits": {
+    "namespace_bytes": { "minimum": 1, "maximum": 64 },
+    "text_bytes": { "minimum": 1, "maximum": 256 },
+    "workflow_phases": { "minimum": 1, "maximum": 32 },
+    "workflow_edges": { "minimum": 0, "maximum": 128 },
+    "workflow_completion_phases": { "minimum": 0, "maximum": 32 },
+    "lifecycle_records": { "minimum": 0, "maximum": 256 },
+    "relationship_edges_per_definition": { "minimum": 0, "maximum": 128 },
+    "active_associations_per_unit": { "minimum": 0, "maximum": 128 },
+    "authorized_submitters": { "minimum": 0, "maximum": 16 },
+    "accepted_event_scale_bytes": { "maximum": 1048576 }
+  },
+  "generators": {
+    "indexed_text": {
+      "fields": ["prefix", "count", "decimal_width"],
+      "expansion": "prefix followed by the zero-padded base-10 index for each index in 0..count"
+    },
+    "indexed_edges": {
+      "fields": ["phase_prefix", "phase_count", "edge_count", "decimal_width"],
+      "expansion": "for edge index i in 0..edge_count, from is phase_prefix plus zero-padded ((i / phase_count) modulo phase_count), and to is phase_prefix plus zero-padded (i modulo phase_count)"
+    },
+    "repeat": {
+      "fields": ["value", "count"],
+      "expansion": "count byte-identical copies of value"
+    },
+    "alternating_transition_history": {
+      "fields": ["first", "second", "count"],
+      "expansion": "start in first; record i has sequence i, from the current phase, and to the other phase for every i in 1..=count"
+    },
+    "distinct_relationship_edges": {
+      "fields": ["definition", "source_prefix", "target_prefix", "count"],
+      "expansion": "count complete keys in ascending index order; each UUID is the fixed 12-byte zero prefix plus the four-byte big-endian index, formatted as lowercase RFC-4122 text with version nibble 4 and variant nibble 8"
+    },
+    "distinct_associations": {
+      "fields": ["unit_id", "namespace", "scope", "value_prefix", "count"],
+      "expansion": "count whole-unit associations in ascending index order, with value equal to value_prefix followed by the zero-padded three-digit base-10 index"
+    },
+    "indexed_account_id32": {
+      "fields": ["start", "count"],
+      "expansion": "for each index in start..start+count, encode the index as four-byte big-endian and prepend 28 zero bytes; render the resulting 32-byte AccountId32 as lowercase hex without a prefix"
+    }
+  },
+  "shared_values": {
+    "origin": {
+      "namespace": "book.intent",
+      "scope": "sprint-11",
+      "value": "INT-0008"
+    },
+    "unit_id_a": "00112233-4455-4677-8899-aabbccddeeff",
+    "unit_id_b": "10213243-5465-4767-98a9-bacbdcedfe0f",
+    "workflow_lifecycle": {
+      "id": "lifecycle-v1",
+      "phases": ["queued", "doing", "blocked"],
+      "initial_phase": "queued",
+      "edges": [
+        { "from": "queued", "to": "doing" },
+        { "from": "doing", "to": "queued" }
+      ],
+      "completion_phases": ["doing"]
+    },
+    "workflow_alternating": {
+      "id": "alternating-v1",
+      "phases": ["a", "b"],
+      "initial_phase": "a",
+      "edges": [
+        { "from": "a", "to": "b" },
+        { "from": "b", "to": "a" }
+      ],
+      "completion_phases": []
+    },
+    "definition_allows": {
+      "key": { "id": "depends_on", "version": 7 },
+      "directed": true,
+      "source_species": "task",
+      "target_species": "task",
+      "self_policy": "allow",
+      "cycle_policy": "allow"
+    },
+    "reference": {
+      "namespace": "git.commit.sha256",
+      "scope": "public-synthetic/repository",
+      "value": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+    }
+  },
+  "value_cases": [
+    {
+      "id": "namespace-empty",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "" },
+      "expected": { "outcome": "error", "error": { "kind": "empty", "path": "/namespace", "input_byte_length": 0, "minimum": 1 } }
+    },
+    {
+      "id": "namespace-exact-minimum",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "a" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "namespace-exact-maximum",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "namespace-maximum-plus-one",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
+      "expected": { "outcome": "error", "error": { "kind": "too_long", "path": "/namespace", "input_byte_length": 65, "maximum": 64 } }
+    },
+    {
+      "id": "namespace-invalid-utf8",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "hex": "61ff" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_utf8", "path": "/namespace", "input_byte_length": 2, "byte_index": 1, "invalid_byte_length": 1 } }
+    },
+    {
+      "id": "namespace-nul",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "a\u0000b" },
+      "expected": { "outcome": "error", "error": { "kind": "contains_nul", "path": "/namespace", "input_byte_length": 3, "byte_index": 1 } }
+    },
+    {
+      "id": "namespace-invalid-start-digit",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "0abc" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_namespace_start", "path": "/namespace", "input_byte_length": 4, "byte_index": 0, "byte_value": 48 } }
+    },
+    {
+      "id": "namespace-invalid-start-uppercase",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "Abc" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_namespace_start", "path": "/namespace", "input_byte_length": 3, "byte_index": 0, "byte_value": 65 } }
+    },
+    {
+      "id": "namespace-invalid-interior-byte",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "ab/c" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_namespace_byte", "path": "/namespace", "input_byte_length": 4, "byte_index": 2, "byte_value": 47 } }
+    },
+    {
+      "id": "namespace-nonascii-not-normalized",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "abé" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_namespace_byte", "path": "/namespace", "input_byte_length": 4, "byte_index": 2, "byte_value": 195 } }
+    },
+    {
+      "id": "namespace-uppercase-not-folded",
+      "target": "namespace",
+      "path": "/namespace",
+      "input": { "utf8": "abc.DEF" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_namespace_byte", "path": "/namespace", "input_byte_length": 7, "byte_index": 4, "byte_value": 68 } }
+    },
+    {
+      "id": "scope-empty",
+      "target": "scope",
+      "path": "/scope",
+      "input": { "utf8": "" },
+      "expected": { "outcome": "error", "error": { "kind": "empty", "path": "/scope", "input_byte_length": 0, "minimum": 1 } }
+    },
+    {
+      "id": "scope-exact-minimum",
+      "target": "scope",
+      "path": "/scope",
+      "input": { "utf8": "x" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "scope-exact-maximum",
+      "target": "scope",
+      "path": "/scope",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "scope-maximum-plus-one",
+      "target": "scope",
+      "path": "/scope",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdefx" },
+      "expected": { "outcome": "error", "error": { "kind": "too_long", "path": "/scope", "input_byte_length": 257, "maximum": 256 } }
+    },
+    {
+      "id": "scope-invalid-utf8",
+      "target": "scope",
+      "path": "/scope",
+      "input": { "hex": "61c328" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_utf8", "path": "/scope", "input_byte_length": 3, "byte_index": 1, "invalid_byte_length": 1 } }
+    },
+    {
+      "id": "scope-nul",
+      "target": "scope",
+      "path": "/scope",
+      "input": { "utf8": "a\u0000b" },
+      "expected": { "outcome": "error", "error": { "kind": "contains_nul", "path": "/scope", "input_byte_length": 3, "byte_index": 1 } }
+    },
+    {
+      "id": "scope-unicode-blank",
+      "target": "scope",
+      "path": "/scope",
+      "input": { "utf8": " " },
+      "expected": { "outcome": "error", "error": { "kind": "blank", "path": "/scope", "input_byte_length": 3 } }
+    },
+    {
+      "id": "scope-decomposed-unicode-preserved",
+      "target": "scope",
+      "path": "/scope",
+      "input": { "utf8": "é" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true, "input_byte_length": 3 } }
+    },
+    {
+      "id": "value-empty",
+      "target": "value",
+      "path": "/value",
+      "input": { "utf8": "" },
+      "expected": { "outcome": "error", "error": { "kind": "empty", "path": "/value", "input_byte_length": 0, "minimum": 1 } }
+    },
+    {
+      "id": "value-exact-minimum",
+      "target": "value",
+      "path": "/value",
+      "input": { "utf8": "x" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "value-exact-maximum",
+      "target": "value",
+      "path": "/value",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "value-maximum-plus-one",
+      "target": "value",
+      "path": "/value",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdefx" },
+      "expected": { "outcome": "error", "error": { "kind": "too_long", "path": "/value", "input_byte_length": 257, "maximum": 256 } }
+    },
+    {
+      "id": "value-invalid-utf8",
+      "target": "value",
+      "path": "/value",
+      "input": { "hex": "ff" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_utf8", "path": "/value", "input_byte_length": 1, "byte_index": 0, "invalid_byte_length": 1 } }
+    },
+    {
+      "id": "value-nul",
+      "target": "value",
+      "path": "/value",
+      "input": { "utf8": "x\u0000" },
+      "expected": { "outcome": "error", "error": { "kind": "contains_nul", "path": "/value", "input_byte_length": 2, "byte_index": 1 } }
+    },
+    {
+      "id": "value-ascii-blank",
+      "target": "value",
+      "path": "/value",
+      "input": { "utf8": " \t" },
+      "expected": { "outcome": "error", "error": { "kind": "blank", "path": "/value", "input_byte_length": 2 } }
+    },
+    {
+      "id": "value-precomposed-unicode-preserved",
+      "target": "value",
+      "path": "/value",
+      "input": { "utf8": "é" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true, "input_byte_length": 2 } }
+    },
+    {
+      "id": "species-empty",
+      "target": "species",
+      "path": "/species",
+      "input": { "utf8": "" },
+      "expected": { "outcome": "error", "error": { "kind": "empty", "path": "/species", "input_byte_length": 0, "minimum": 1 } }
+    },
+    {
+      "id": "species-exact-minimum",
+      "target": "species",
+      "path": "/species",
+      "input": { "utf8": "x" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "species-exact-maximum",
+      "target": "species",
+      "path": "/species",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "species-maximum-plus-one",
+      "target": "species",
+      "path": "/species",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdefx" },
+      "expected": { "outcome": "error", "error": { "kind": "too_long", "path": "/species", "input_byte_length": 257, "maximum": 256 } }
+    },
+    {
+      "id": "species-invalid-utf8",
+      "target": "species",
+      "path": "/species",
+      "input": { "hex": "f0288c28" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_utf8", "path": "/species", "input_byte_length": 4, "byte_index": 0, "invalid_byte_length": 1 } }
+    },
+    {
+      "id": "species-nul",
+      "target": "species",
+      "path": "/species",
+      "input": { "utf8": "task\u0000kind" },
+      "expected": { "outcome": "error", "error": { "kind": "contains_nul", "path": "/species", "input_byte_length": 9, "byte_index": 4 } }
+    },
+    {
+      "id": "species-blank",
+      "target": "species",
+      "path": "/species",
+      "input": { "utf8": "\n" },
+      "expected": { "outcome": "error", "error": { "kind": "blank", "path": "/species", "input_byte_length": 1 } }
+    },
+    {
+      "id": "species-case-preserved",
+      "target": "species",
+      "path": "/species",
+      "input": { "utf8": "Task" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "workflow-id-empty",
+      "target": "workflow_id",
+      "path": "/workflow/id",
+      "input": { "utf8": "" },
+      "expected": { "outcome": "error", "error": { "kind": "empty", "path": "/workflow/id", "input_byte_length": 0, "minimum": 1 } }
+    },
+    {
+      "id": "workflow-id-exact-minimum",
+      "target": "workflow_id",
+      "path": "/workflow/id",
+      "input": { "utf8": "w" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "workflow-id-exact-maximum",
+      "target": "workflow_id",
+      "path": "/workflow/id",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "workflow-id-maximum-plus-one",
+      "target": "workflow_id",
+      "path": "/workflow/id",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdefx" },
+      "expected": { "outcome": "error", "error": { "kind": "too_long", "path": "/workflow/id", "input_byte_length": 257, "maximum": 256 } }
+    },
+    {
+      "id": "workflow-id-invalid-utf8",
+      "target": "workflow_id",
+      "path": "/workflow/id",
+      "input": { "hex": "80" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_utf8", "path": "/workflow/id", "input_byte_length": 1, "byte_index": 0, "invalid_byte_length": 1 } }
+    },
+    {
+      "id": "workflow-id-nul",
+      "target": "workflow_id",
+      "path": "/workflow/id",
+      "input": { "utf8": "wf\u0000v1" },
+      "expected": { "outcome": "error", "error": { "kind": "contains_nul", "path": "/workflow/id", "input_byte_length": 5, "byte_index": 2 } }
+    },
+    {
+      "id": "workflow-id-blank",
+      "target": "workflow_id",
+      "path": "/workflow/id",
+      "input": { "utf8": "  " },
+      "expected": { "outcome": "error", "error": { "kind": "blank", "path": "/workflow/id", "input_byte_length": 2 } }
+    },
+    {
+      "id": "workflow-id-whitespace-preserved",
+      "target": "workflow_id",
+      "path": "/workflow/id",
+      "input": { "utf8": " wf " },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "phase-id-empty",
+      "target": "phase_id",
+      "path": "/workflow/phases/0",
+      "input": { "utf8": "" },
+      "expected": { "outcome": "error", "error": { "kind": "empty", "path": "/workflow/phases/0", "input_byte_length": 0, "minimum": 1 } }
+    },
+    {
+      "id": "phase-id-exact-minimum",
+      "target": "phase_id",
+      "path": "/workflow/phases/0",
+      "input": { "utf8": "p" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "phase-id-exact-maximum",
+      "target": "phase_id",
+      "path": "/workflow/phases/0",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "phase-id-maximum-plus-one",
+      "target": "phase_id",
+      "path": "/workflow/phases/0",
+      "input": { "utf8": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdefx" },
+      "expected": { "outcome": "error", "error": { "kind": "too_long", "path": "/workflow/phases/0", "input_byte_length": 257, "maximum": 256 } }
+    },
+    {
+      "id": "phase-id-invalid-utf8",
+      "target": "phase_id",
+      "path": "/workflow/phases/0",
+      "input": { "hex": "eda080" },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_utf8", "path": "/workflow/phases/0", "input_byte_length": 3, "byte_index": 0, "invalid_byte_length": 1 } }
+    },
+    {
+      "id": "phase-id-nul",
+      "target": "phase_id",
+      "path": "/workflow/phases/0",
+      "input": { "utf8": "do\u0000ing" },
+      "expected": { "outcome": "error", "error": { "kind": "contains_nul", "path": "/workflow/phases/0", "input_byte_length": 6, "byte_index": 2 } }
+    },
+    {
+      "id": "phase-id-blank",
+      "target": "phase_id",
+      "path": "/workflow/phases/0",
+      "input": { "utf8": "\r\n" },
+      "expected": { "outcome": "error", "error": { "kind": "blank", "path": "/workflow/phases/0", "input_byte_length": 2 } }
+    },
+    {
+      "id": "phase-id-leading-space-preserved",
+      "target": "phase_id",
+      "path": "/workflow/phases/0",
+      "input": { "utf8": " doing" },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    }
+  ],
+  "workflow_cases": [
+    {
+      "id": "workflow-exact-minimum",
+      "input": { "id": "w", "phases": ["p"], "initial_phase": "p", "edges": [], "completion_phases": [] },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "workflow-self-reverse-and-completion-preserved",
+      "input": {
+        "id": "custom",
+        "phases": ["a", "b"],
+        "initial_phase": "a",
+        "edges": [
+          { "from": "a", "to": "a" },
+          { "from": "a", "to": "b" },
+          { "from": "b", "to": "a" }
+        ],
+        "completion_phases": ["a", "b"]
+      },
+      "expected": { "outcome": "ok", "value": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "workflow-exact-collection-maxima",
+      "input": {
+        "id": "max-workflow",
+        "phases": { "generator": "indexed_text", "prefix": "p", "count": 32, "decimal_width": 2 },
+        "initial_phase": "p00",
+        "edges": { "generator": "indexed_edges", "phase_prefix": "p", "phase_count": 32, "edge_count": 128, "decimal_width": 2 },
+        "completion_phases": { "generator": "indexed_text", "prefix": "p", "count": 32, "decimal_width": 2 }
+      },
+      "expected": { "outcome": "ok", "value": { "from": "expanded_input", "preserve_exact_bytes": true }, "counts": { "phases": 32, "edges": 128, "completion_phases": 32 } }
+    },
+    {
+      "id": "workflow-empty-phases",
+      "input": { "id": "w", "phases": [], "initial_phase": "p", "edges": [], "completion_phases": [] },
+      "expected": { "outcome": "error", "error": { "kind": "too_few_phases", "path": "/phases", "length": 0, "minimum": 1 } }
+    },
+    {
+      "id": "workflow-phases-maximum-plus-one",
+      "input": {
+        "id": "w",
+        "phases": { "generator": "indexed_text", "prefix": "p", "count": 33, "decimal_width": 2 },
+        "initial_phase": "p00",
+        "edges": [],
+        "completion_phases": []
+      },
+      "expected": { "outcome": "error", "error": { "kind": "too_many_phases", "path": "/phases", "length": 33, "maximum": 32 } }
+    },
+    {
+      "id": "workflow-duplicate-phase",
+      "input": { "id": "w", "phases": ["p", "p"], "initial_phase": "p", "edges": [], "completion_phases": [] },
+      "expected": { "outcome": "error", "error": { "kind": "duplicate_phase", "path": "/phases/1", "first_index": 0, "duplicate_index": 1, "value": "p" } }
+    },
+    {
+      "id": "workflow-unknown-initial-phase",
+      "input": { "id": "w", "phases": ["p"], "initial_phase": "q", "edges": [], "completion_phases": [] },
+      "expected": { "outcome": "error", "error": { "kind": "unknown_initial_phase", "path": "/initial_phase", "value": "q" } }
+    },
+    {
+      "id": "workflow-edges-maximum-plus-one",
+      "input": {
+        "id": "w",
+        "phases": { "generator": "indexed_text", "prefix": "p", "count": 32, "decimal_width": 2 },
+        "initial_phase": "p00",
+        "edges": { "generator": "indexed_edges", "phase_prefix": "p", "phase_count": 32, "edge_count": 129, "decimal_width": 2 },
+        "completion_phases": []
+      },
+      "expected": { "outcome": "error", "error": { "kind": "too_many_workflow_edges", "path": "/edges", "length": 129, "maximum": 128 } }
+    },
+    {
+      "id": "workflow-unknown-edge-source",
+      "input": { "id": "w", "phases": ["p"], "initial_phase": "p", "edges": [{ "from": "q", "to": "p" }], "completion_phases": [] },
+      "expected": { "outcome": "error", "error": { "kind": "unknown_edge_source", "path": "/edges/0/from", "edge_index": 0, "value": "q" } }
+    },
+    {
+      "id": "workflow-unknown-edge-target",
+      "input": { "id": "w", "phases": ["p"], "initial_phase": "p", "edges": [{ "from": "p", "to": "q" }], "completion_phases": [] },
+      "expected": { "outcome": "error", "error": { "kind": "unknown_edge_target", "path": "/edges/0/to", "edge_index": 0, "value": "q" } }
+    },
+    {
+      "id": "workflow-duplicate-edge",
+      "input": {
+        "id": "w",
+        "phases": ["p", "q"],
+        "initial_phase": "p",
+        "edges": [{ "from": "p", "to": "q" }, { "from": "p", "to": "q" }],
+        "completion_phases": []
+      },
+      "expected": { "outcome": "error", "error": { "kind": "duplicate_workflow_edge", "path": "/edges/1", "first_index": 0, "duplicate_index": 1, "from": "p", "to": "q" } }
+    },
+    {
+      "id": "workflow-completion-phases-maximum-plus-one",
+      "input": {
+        "id": "w",
+        "phases": ["p"],
+        "initial_phase": "p",
+        "edges": [],
+        "completion_phases": { "generator": "repeat", "value": "p", "count": 33 }
+      },
+      "expected": { "outcome": "error", "error": { "kind": "too_many_completion_phases", "path": "/completion_phases", "length": 33, "maximum": 32 } }
+    },
+    {
+      "id": "workflow-unknown-completion-phase",
+      "input": { "id": "w", "phases": ["p"], "initial_phase": "p", "edges": [], "completion_phases": ["q"] },
+      "expected": { "outcome": "error", "error": { "kind": "unknown_completion_phase", "path": "/completion_phases/0", "completion_index": 0, "value": "q" } }
+    },
+    {
+      "id": "workflow-duplicate-completion-phase",
+      "input": { "id": "w", "phases": ["p"], "initial_phase": "p", "edges": [], "completion_phases": ["p", "p"] },
+      "expected": { "outcome": "error", "error": { "kind": "duplicate_completion_phase", "path": "/completion_phases/1", "first_index": 0, "duplicate_index": 1, "value": "p" } }
+    }
+  ],
+  "lifecycle_cases": [
+    {
+      "id": "lifecycle-transition-valid",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "queued",
+        "status": "active",
+        "revision": 0,
+        "history": []
+      },
+      "operation": { "type": "transition", "expected_revision": 0, "target": "doing" },
+      "expected": {
+        "outcome": "ok",
+        "state": {
+          "phase": "doing",
+          "status": "active",
+          "revision": 1,
+          "history": [{ "type": "transition", "sequence": 1, "from": "queued", "to": "doing" }]
+        },
+        "immutable_fields": ["id", "origin", "species", "workflow"]
+      }
+    },
+    {
+      "id": "lifecycle-completion-valid",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "doing",
+        "status": "active",
+        "revision": 1,
+        "history": [{ "type": "transition", "sequence": 1, "from": "queued", "to": "doing" }]
+      },
+      "operation": { "type": "complete", "expected_revision": 1 },
+      "expected": {
+        "outcome": "ok",
+        "state": {
+          "phase": "doing",
+          "status": "completed",
+          "revision": 2,
+          "history": [
+            { "type": "transition", "sequence": 1, "from": "queued", "to": "doing" },
+            { "type": "completion", "sequence": 2, "phase": "doing" }
+          ]
+        },
+        "immutable_fields": ["id", "origin", "species", "workflow"]
+      }
+    },
+    {
+      "id": "lifecycle-stale-precedes-unknown-target",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "doing",
+        "status": "active",
+        "revision": 1,
+        "history": [{ "type": "transition", "sequence": 1, "from": "queued", "to": "doing" }]
+      },
+      "operation": { "type": "transition", "expected_revision": 0, "target": "missing" },
+      "expected": { "outcome": "error", "error": { "kind": "revision_conflict", "path": "/expected_revision", "expected_revision": 0, "actual_revision": 1 }, "state_unchanged": true }
+    },
+    {
+      "id": "lifecycle-current-unknown-target",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "doing",
+        "status": "active",
+        "revision": 1,
+        "history": [{ "type": "transition", "sequence": 1, "from": "queued", "to": "doing" }]
+      },
+      "operation": { "type": "transition", "expected_revision": 1, "target": "missing" },
+      "expected": { "outcome": "error", "error": { "kind": "transition_unknown_target", "path": "/target", "value": "missing" }, "state_unchanged": true }
+    },
+    {
+      "id": "lifecycle-current-undeclared-edge",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "queued",
+        "status": "active",
+        "revision": 0,
+        "history": []
+      },
+      "operation": { "type": "transition", "expected_revision": 0, "target": "blocked" },
+      "expected": { "outcome": "error", "error": { "kind": "transition_not_allowed", "path": "/target", "from": "queued", "to": "blocked" }, "state_unchanged": true }
+    },
+    {
+      "id": "lifecycle-completion-ineligible",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "queued",
+        "status": "active",
+        "revision": 0,
+        "history": []
+      },
+      "operation": { "type": "complete", "expected_revision": 0 },
+      "expected": { "outcome": "error", "error": { "kind": "completion_phase_not_eligible", "path": "/phase", "value": "queued" }, "state_unchanged": true }
+    },
+    {
+      "id": "lifecycle-transition-already-completed",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "doing",
+        "status": "completed",
+        "revision": 2,
+        "history": [
+          { "type": "transition", "sequence": 1, "from": "queued", "to": "doing" },
+          { "type": "completion", "sequence": 2, "phase": "doing" }
+        ]
+      },
+      "operation": { "type": "transition", "expected_revision": 2, "target": "queued" },
+      "expected": { "outcome": "error", "error": { "kind": "transition_already_completed", "path": "/status" }, "state_unchanged": true }
+    },
+    {
+      "id": "lifecycle-completion-already-completed",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "doing",
+        "status": "completed",
+        "revision": 2,
+        "history": [
+          { "type": "transition", "sequence": 1, "from": "queued", "to": "doing" },
+          { "type": "completion", "sequence": 2, "phase": "doing" }
+        ]
+      },
+      "operation": { "type": "complete", "expected_revision": 2 },
+      "expected": { "outcome": "error", "error": { "kind": "completion_already_completed", "path": "/status" }, "state_unchanged": true }
+    },
+    {
+      "id": "lifecycle-restoration-valid",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "doing",
+        "status": "active",
+        "revision": 1,
+        "history": [{ "type": "transition", "sequence": 1, "from": "queued", "to": "doing" }]
+      },
+      "operation": { "type": "validate_restore" },
+      "expected": { "outcome": "ok", "state": { "from": "input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "lifecycle-restoration-revision-mismatch",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "doing",
+        "status": "active",
+        "revision": 0,
+        "history": [{ "type": "transition", "sequence": 1, "from": "queued", "to": "doing" }]
+      },
+      "operation": { "type": "validate_restore" },
+      "expected": { "outcome": "error", "error": { "kind": "revision_history_mismatch", "path": "/revision", "expected_revision": 1, "actual_revision": 0 } }
+    },
+    {
+      "id": "lifecycle-restoration-phase-mismatch",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "queued",
+        "status": "active",
+        "revision": 1,
+        "history": [{ "type": "transition", "sequence": 1, "from": "queued", "to": "doing" }]
+      },
+      "operation": { "type": "validate_restore" },
+      "expected": { "outcome": "error", "error": { "kind": "phase_history_mismatch", "path": "/phase", "expected": "doing", "actual": "queued" } }
+    },
+    {
+      "id": "lifecycle-restoration-status-mismatch",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_lifecycle",
+        "phase": "doing",
+        "status": "active",
+        "revision": 2,
+        "history": [
+          { "type": "transition", "sequence": 1, "from": "queued", "to": "doing" },
+          { "type": "completion", "sequence": 2, "phase": "doing" }
+        ]
+      },
+      "operation": { "type": "validate_restore" },
+      "expected": { "outcome": "error", "error": { "kind": "status_history_mismatch", "path": "/status", "expected": "completed", "actual": "active" } }
+    },
+    {
+      "id": "lifecycle-exact-history-maximum",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_alternating",
+        "phase": "a",
+        "status": "active",
+        "revision": 256,
+        "history": { "generator": "alternating_transition_history", "first": "a", "second": "b", "count": 256 }
+      },
+      "operation": { "type": "validate_restore" },
+      "expected": { "outcome": "ok", "state": { "from": "expanded_input", "preserve_exact_bytes": true }, "history_length": 256 }
+    },
+    {
+      "id": "lifecycle-record-maximum-plus-one",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_alternating",
+        "phase": "b",
+        "status": "active",
+        "revision": 257,
+        "history": { "generator": "alternating_transition_history", "first": "a", "second": "b", "count": 257 }
+      },
+      "operation": { "type": "validate_restore" },
+      "expected": { "outcome": "error", "error": { "kind": "too_many_lifecycle_records", "path": "/history", "length": 257, "maximum": 256 } }
+    },
+    {
+      "id": "lifecycle-capacity-precedes-domain-validity",
+      "state": {
+        "id_ref": "unit_id_a",
+        "origin_ref": "origin",
+        "species": "task",
+        "workflow_ref": "workflow_alternating",
+        "phase": "a",
+        "status": "active",
+        "revision": 256,
+        "history": { "generator": "alternating_transition_history", "first": "a", "second": "b", "count": 256 }
+      },
+      "operation": { "type": "transition", "expected_revision": 256, "target": "missing" },
+      "expected": { "outcome": "error", "error": { "kind": "lifecycle_history_capacity_exceeded", "path": "/history", "length": 256, "maximum": 256 }, "state_unchanged": true }
+    }
+  ],
+  "relationship_cases": [
+    {
+      "id": "relationship-definition-valid-nonsequential-version",
+      "kind": "definition",
+      "input_ref": "definition_allows",
+      "expected": { "outcome": "ok", "value": { "from": "expanded_input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "relationship-definition-zero-version",
+      "kind": "definition",
+      "input": {
+        "key": { "id": "depends_on", "version": 0 },
+        "directed": true,
+        "self_policy": "allow",
+        "cycle_policy": "allow"
+      },
+      "expected": { "outcome": "error", "error": { "kind": "zero_definition_version", "path": "/key/version", "value": 0, "minimum": 1 } }
+    },
+    {
+      "id": "relationship-definition-invalid-id-grammar",
+      "kind": "definition",
+      "input": {
+        "key": { "id": "Depends/On", "version": 7 },
+        "directed": true,
+        "self_policy": "allow",
+        "cycle_policy": "allow"
+      },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_namespace_start", "path": "/key/id", "input_byte_length": 10, "byte_index": 0, "byte_value": 68 } }
+    },
+    {
+      "id": "relationship-definition-invalid-self-policy",
+      "kind": "definition",
+      "input": {
+        "key": { "id": "depends_on", "version": 7 },
+        "directed": true,
+        "self_policy": "deny",
+        "cycle_policy": "allow"
+      },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_relationship_policy", "path": "/self_policy", "value": "deny", "allowed": ["allow", "reject"] } }
+    },
+    {
+      "id": "relationship-definition-invalid-cycle-policy",
+      "kind": "definition",
+      "input": {
+        "key": { "id": "depends_on", "version": 7 },
+        "directed": true,
+        "self_policy": "allow",
+        "cycle_policy": "forbid"
+      },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_relationship_policy", "path": "/cycle_policy", "value": "forbid", "allowed": ["allow", "reject"] } }
+    },
+    {
+      "id": "relationship-edge-valid-complete-identity",
+      "kind": "edge",
+      "input": {
+        "definition": { "id": "depends_on", "version": 7 },
+        "source_id_ref": "unit_id_a",
+        "target_id_ref": "unit_id_b"
+      },
+      "expected": { "outcome": "ok", "value": { "from": "expanded_input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "relationship-edge-self-identity-preserved",
+      "kind": "edge",
+      "input": {
+        "definition": { "id": "depends_on", "version": 7 },
+        "source_id_ref": "unit_id_a",
+        "target_id_ref": "unit_id_a"
+      },
+      "expected": { "outcome": "ok", "value": { "from": "expanded_input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "relationship-edge-invalid-source-id",
+      "kind": "edge",
+      "input": {
+        "definition": { "id": "depends_on", "version": 7 },
+        "source_id": "not-a-uuid",
+        "target_id_ref": "unit_id_b"
+      },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_intent_unit_id", "path": "/source_id", "input_byte_length": 10 } }
+    }
+  ],
+  "provenance_cases": [
+    {
+      "id": "association-whole-unit-valid",
+      "input": {
+        "unit_id_ref": "unit_id_a",
+        "subject": { "type": "whole_unit" },
+        "reference_ref": "reference"
+      },
+      "expected": { "outcome": "ok", "value": { "from": "expanded_input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "association-exact-revision-zero-valid-and-distinct",
+      "input": {
+        "unit_id_ref": "unit_id_a",
+        "subject": { "type": "revision", "revision": 0 },
+        "reference_ref": "reference"
+      },
+      "expected": {
+        "outcome": "ok",
+        "value": { "from": "expanded_input", "preserve_exact_bytes": true },
+        "not_equal_to_case": "association-whole-unit-valid"
+      }
+    },
+    {
+      "id": "association-interior-revision-valid",
+      "input": {
+        "unit_id_ref": "unit_id_a",
+        "subject": { "type": "revision", "revision": 1 },
+        "reference_ref": "reference"
+      },
+      "expected": { "outcome": "ok", "value": { "from": "expanded_input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "association-many-to-many-second-unit",
+      "input": {
+        "unit_id_ref": "unit_id_b",
+        "subject": { "type": "whole_unit" },
+        "reference_ref": "reference"
+      },
+      "expected": { "outcome": "ok", "value": { "from": "expanded_input", "preserve_exact_bytes": true } }
+    },
+    {
+      "id": "association-invalid-subject-tag",
+      "input": {
+        "unit_id_ref": "unit_id_a",
+        "subject": { "type": "latest" },
+        "reference_ref": "reference"
+      },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_association_subject", "path": "/subject/type", "value": "latest", "allowed": ["whole_unit", "revision"] } }
+    },
+    {
+      "id": "association-revision-subject-missing-revision",
+      "input": {
+        "unit_id_ref": "unit_id_a",
+        "subject": { "type": "revision" },
+        "reference_ref": "reference"
+      },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_association_subject", "path": "/subject/revision", "reason": "missing_required_value" } }
+    },
+    {
+      "id": "association-whole-subject-forbids-revision",
+      "input": {
+        "unit_id_ref": "unit_id_a",
+        "subject": { "type": "whole_unit", "revision": 0 },
+        "reference_ref": "reference"
+      },
+      "expected": { "outcome": "error", "error": { "kind": "invalid_association_subject", "path": "/subject/revision", "reason": "unexpected_value" } }
+    }
+  ],
+  "chain_only_cases": [
+    {
+      "id": "chain-unauthorized-submitter-distinct-from-shared-semantics",
+      "operation": { "type": "create_intent_unit", "submitter": "not_allowlisted" },
+      "core": { "outcome": "not_applicable", "reason": "authorization_is_chain_only" },
+      "chain": { "outcome": "error", "error": { "kind": "unauthorized_submitter" }, "state_unchanged": true, "events": 0 }
+    },
+    {
+      "id": "chain-relationship-capacity-boundary-accepts-128",
+      "prestate": {
+        "edges": { "generator": "distinct_relationship_edges", "definition": { "id": "depends_on", "version": 7 }, "source_prefix": "source", "target_prefix": "target", "count": 127 }
+      },
+      "operation": { "type": "create_relationship", "candidate_index": 127 },
+      "core": { "outcome": "not_applicable", "reason": "storage_capacity_is_chain_only" },
+      "chain": { "outcome": "ok", "resulting_edge_count": 128, "events": 1 }
+    },
+    {
+      "id": "chain-relationship-capacity-maximum-plus-one",
+      "prestate": {
+        "edges": { "generator": "distinct_relationship_edges", "definition": { "id": "depends_on", "version": 7 }, "source_prefix": "source", "target_prefix": "target", "count": 128 }
+      },
+      "operation": { "type": "create_relationship", "candidate_index": 128 },
+      "core": { "outcome": "not_applicable", "reason": "storage_capacity_is_chain_only" },
+      "chain": { "outcome": "error", "error": { "kind": "relationship_capacity_exceeded", "length": 128, "maximum": 128 }, "state_unchanged": true, "events": 0 }
+    },
+    {
+      "id": "chain-association-capacity-boundary-accepts-128",
+      "prestate": {
+        "associations": { "generator": "distinct_associations", "unit_id_ref": "unit_id_a", "namespace": "evidence", "scope": "synthetic", "value_prefix": "artifact-", "count": 127 }
+      },
+      "operation": { "type": "record_association", "candidate_index": 127 },
+      "core": { "outcome": "not_applicable", "reason": "storage_capacity_is_chain_only" },
+      "chain": { "outcome": "ok", "resulting_association_count": 128, "events": 1 }
+    },
+    {
+      "id": "chain-association-capacity-maximum-plus-one",
+      "prestate": {
+        "associations": { "generator": "distinct_associations", "unit_id_ref": "unit_id_a", "namespace": "evidence", "scope": "synthetic", "value_prefix": "artifact-", "count": 128 }
+      },
+      "operation": { "type": "record_association", "candidate_index": 128 },
+      "core": { "outcome": "not_applicable", "reason": "storage_capacity_is_chain_only" },
+      "chain": { "outcome": "error", "error": { "kind": "association_capacity_exceeded", "length": 128, "maximum": 128 }, "state_unchanged": true, "events": 0 }
+    },
+    {
+      "id": "chain-authorized-submitters-exact-minimum-zero",
+      "operation": { "type": "replace_authorized_submitters", "submitters": [] },
+      "core": { "outcome": "not_applicable", "reason": "authorization_is_chain_only" },
+      "chain": { "outcome": "ok", "resulting_authorized_submitter_count": 0, "administrative_events": 1, "domain_events": 0 }
+    },
+    {
+      "id": "chain-authorized-submitters-exact-maximum-sixteen",
+      "operation": {
+        "type": "replace_authorized_submitters",
+        "submitters": { "generator": "indexed_account_id32", "start": 1, "count": 16 }
+      },
+      "core": { "outcome": "not_applicable", "reason": "authorization_is_chain_only" },
+      "chain": { "outcome": "ok", "resulting_authorized_submitter_count": 16, "administrative_events": 1, "domain_events": 0 }
+    },
+    {
+      "id": "chain-authorized-submitters-maximum-plus-one-seventeen",
+      "operation": {
+        "type": "replace_authorized_submitters",
+        "submitters": { "generator": "indexed_account_id32", "start": 1, "count": 17 }
+      },
+      "core": { "outcome": "not_applicable", "reason": "authorization_is_chain_only" },
+      "chain": {
+        "outcome": "error",
+        "error": { "kind": "authorized_submitter_capacity_exceeded", "path": "/submitters", "length": 17, "maximum": 16 },
+        "state_unchanged": true,
+        "administrative_events": 0,
+        "domain_events": 0
+      }
+    }
+  ],
+  "bounded_limit_cases": [
+    {
+      "id": "projected-query-limit-exact-minimum-one",
+      "target": "projected_query_limit",
+      "path": "/limit",
+      "input": 1,
+      "expected": { "outcome": "ok", "value": 1 }
+    },
+    {
+      "id": "projected-query-limit-exact-maximum-one-hundred",
+      "target": "projected_query_limit",
+      "path": "/limit",
+      "input": 100,
+      "expected": { "outcome": "ok", "value": 100 }
+    },
+    {
+      "id": "projected-query-limit-below-minimum-zero",
+      "target": "projected_query_limit",
+      "path": "/limit",
+      "input": 0,
+      "expected": {
+        "outcome": "error",
+        "error": { "kind": "query_limit_out_of_range", "path": "/limit", "value": 0, "minimum": 1, "maximum": 100 }
+      }
+    },
+    {
+      "id": "projected-query-limit-above-maximum-one-hundred-one",
+      "target": "projected_query_limit",
+      "path": "/limit",
+      "input": 101,
+      "expected": {
+        "outcome": "error",
+        "error": { "kind": "query_limit_out_of_range", "path": "/limit", "value": 101, "minimum": 1, "maximum": 100 }
+      }
+    }
+  ],
+  "scale_preflight_cases": [
+    {
+      "id": "scale-truncated-command-schema-version",
+      "target_type": "create_unit_payload",
+      "input_hex": "01",
+      "expected": {
+        "outcome": "error",
+        "stage": "codec",
+        "error": { "kind": "unexpected_eof", "path": "/command_schema_version", "input_byte_length": 1, "byte_index": 1 },
+        "dispatch_entries": 0,
+        "domain_reads": 0,
+        "mutations": 0,
+        "events": 0
+      }
+    },
+    {
+      "id": "scale-missing-required-origin",
+      "target_type": "create_unit_payload",
+      "field_order": ["command_schema_version:u16", "id:[u8;16]", "origin", "species", "workflow"],
+      "input_hex": "010000000000000000000000000000000000",
+      "expected": {
+        "outcome": "error",
+        "stage": "codec",
+        "error": { "kind": "missing_required_origin", "path": "/origin", "input_byte_length": 18, "byte_index": 18 },
+        "dispatch_entries": 0,
+        "domain_reads": 0,
+        "mutations": 0,
+        "events": 0
+      }
+    },
+    {
+      "id": "scale-invalid-domain-payload-variant",
+      "target_type": "domain_payload",
+      "accepted_variant_tags": { "minimum": 0, "maximum": 7 },
+      "input_hex": "08",
+      "expected": {
+        "outcome": "error",
+        "stage": "codec",
+        "error": { "kind": "invalid_variant", "path": "/type", "input_byte_length": 1, "byte_index": 0, "variant": 8 },
+        "dispatch_entries": 0,
+        "domain_reads": 0,
+        "mutations": 0,
+        "events": 0
+      }
+    },
+    {
+      "id": "scale-malformed-compact-length",
+      "target_type": "workflow_phase_collection",
+      "input_hex": "03",
+      "expected": {
+        "outcome": "error",
+        "stage": "codec",
+        "error": { "kind": "malformed_compact_length", "path": "/workflow/phases", "input_byte_length": 1, "byte_index": 1 },
+        "dispatch_entries": 0,
+        "domain_reads": 0,
+        "mutations": 0,
+        "events": 0
+      }
+    },
+    {
+      "id": "scale-over-bound-scope-257-bytes",
+      "target_type": "external_reference",
+      "field_order": ["namespace", "scope", "value"],
+      "input_hex": "046105046161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161",
+      "expected": {
+        "outcome": "error",
+        "stage": "codec",
+        "error": { "kind": "over_bound_collection", "path": "/scope", "length": 257, "maximum": 256, "byte_index": 2 },
+        "dispatch_entries": 0,
+        "domain_reads": 0,
+        "mutations": 0,
+        "events": 0
+      }
+    },
+    {
+      "id": "scale-over-bound-workflow-phases-33",
+      "target_type": "workflow_phase_collection",
+      "input_hex": "84047004700470047004700470047004700470047004700470047004700470047004700470047004700470047004700470047004700470047004700470047004700470",
+      "expected": {
+        "outcome": "error",
+        "stage": "codec",
+        "error": { "kind": "over_bound_collection", "path": "/workflow/phases", "length": 33, "maximum": 32, "byte_index": 0 },
+        "dispatch_entries": 0,
+        "domain_reads": 0,
+        "mutations": 0,
+        "events": 0
+      }
+    },
+    {
+      "id": "scale-invalid-utf8-before-dispatch",
+      "target_type": "bounded_text_256",
+      "input_hex": "0861ff",
+      "expected": {
+        "outcome": "error",
+        "stage": "preflight",
+        "error": { "kind": "invalid_utf8", "path": "/value", "input_byte_length": 2, "byte_index": 1, "invalid_byte_length": 1 },
+        "dispatch_entries": 0,
+        "domain_reads": 0,
+        "mutations": 0,
+        "events": 0
+      }
+    },
+    {
+      "id": "scale-nul-before-dispatch",
+      "target_type": "bounded_text_256",
+      "input_hex": "0c610062",
+      "expected": {
+        "outcome": "error",
+        "stage": "preflight",
+        "error": { "kind": "contains_nul", "path": "/value", "input_byte_length": 3, "byte_index": 1 },
+        "dispatch_entries": 0,
+        "domain_reads": 0,
+        "mutations": 0,
+        "events": 0
+      }
+    }
+  ]
+}

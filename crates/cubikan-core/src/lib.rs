@@ -57,16 +57,29 @@
 
 #![forbid(unsafe_code)]
 
+mod external_reference;
 mod id;
 mod intent_unit;
 mod vocabulary;
 mod workflow;
 
+pub use external_reference::{
+    AssociationSubject, AssociationSubjectError, ExternalReference, MAX_NAMESPACE_BYTES,
+    MAX_TEXT_BYTES, RecordedAssociation, ReferenceNamespace, ReferenceNamespaceError,
+    ReferenceText, ReferenceTextError, RelationshipDefinition, RelationshipDefinitionKey,
+    RelationshipDefinitionVersion, RelationshipDefinitionVersionError, RelationshipIdentity,
+    RelationshipPolicy, RelationshipPolicyError,
+};
 pub use id::{IntentUnitId, ParseIntentUnitIdError};
 pub use intent_unit::{
     CompletionError, CompletionRecord, IntentUnit, IntentUnitRevision, IntentUnitStatus,
     LifecycleRecord, RevisionConflict, RevisionedCompletionError, RevisionedTransitionError,
     TransitionError, TransitionRecord,
 };
-pub use vocabulary::{IntentSpecies, PhaseId, VocabularyError, WorkflowId};
-pub use workflow::{Workflow, WorkflowEdge, WorkflowError};
+pub use vocabulary::{
+    IntentSpecies, PhaseId, VocabularyError, VocabularyValidationError, WorkflowId,
+};
+pub use workflow::{
+    BoundedWorkflowError, MAX_COMPLETION_PHASES, MAX_WORKFLOW_EDGES, MAX_WORKFLOW_PHASES, Workflow,
+    WorkflowEdge, WorkflowError,
+};

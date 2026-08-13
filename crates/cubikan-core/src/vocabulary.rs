@@ -17,6 +17,35 @@ impl fmt::Display for VocabularyError {
 
 impl Error for VocabularyError {}
 
+/// Precise error for the additive bounded vocabulary conversion.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum VocabularyValidationError {
+    Empty,
+    TooLong { length: usize, maximum: usize },
+    InvalidUtf8 { index: usize, length: usize },
+    Nul { index: usize },
+    Blank,
+}
+
+impl fmt::Display for VocabularyValidationError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Empty => formatter.write_str("value is empty"),
+            Self::TooLong { length, maximum } => {
+                write!(formatter, "value is {length} bytes; maximum is {maximum}")
+            }
+            Self::InvalidUtf8 { index, length } => write!(
+                formatter,
+                "value has {length} invalid UTF-8 byte(s) at byte index {index}"
+            ),
+            Self::Nul { index } => write!(formatter, "value contains NUL at byte index {index}"),
+            Self::Blank => formatter.write_str("value must not be blank"),
+        }
+    }
+}
+
+impl Error for VocabularyValidationError {}
+
 macro_rules! define_text_value {
     ($(#[$attribute:meta])* $name:ident) => {
         $(#[$attribute])*
@@ -24,6 +53,33 @@ macro_rules! define_text_value {
         pub struct $name(String);
 
         impl $name {
+            /// Validates raw bytes and reports malformed UTF-8 precisely.
+            pub fn from_bytes(value: &[u8]) -> Result<Self, VocabularyValidationError> {
+                if value.is_empty() {
+                    return Err(VocabularyValidationError::Empty);
+                }
+                if value.len() > crate::MAX_TEXT_BYTES {
+                    return Err(VocabularyValidationError::TooLong {
+                        length: value.len(),
+                        maximum: crate::MAX_TEXT_BYTES,
+                    });
+                }
+                let text = std::str::from_utf8(value).map_err(|error| {
+                    let index = error.valid_up_to();
+                    VocabularyValidationError::InvalidUtf8 {
+                        index,
+                        length: error.error_len().unwrap_or(value.len() - index),
+                    }
+                })?;
+                if let Some(index) = value.iter().position(|byte| *byte == 0) {
+                    return Err(VocabularyValidationError::Nul { index });
+                }
+                if text.trim().is_empty() {
+                    return Err(VocabularyValidationError::Blank);
+                }
+                Ok(Self(text.to_owned()))
+            }
+
             /// Validates and preserves caller-supplied text exactly.
             pub fn new(value: impl Into<String>) -> Result<Self, VocabularyError> {
                 let value = value.into();
@@ -147,5 +203,20 @@ mod tests {
         assert!(serde_json::from_str::<WorkflowId>(r#""""#).is_err());
         assert!(serde_json::from_str::<PhaseId>(r#""   ""#).is_err());
         assert!(serde_json::from_str::<IntentSpecies>(r#""\t""#).is_err());
+    }
+
+    #[test]
+    fn test_domain_values_enforce_shared_byte_and_nul_bounds() {
+        assert_eq!(
+            WorkflowId::from_bytes("é".repeat(129).as_bytes()),
+            Err(VocabularyValidationError::TooLong {
+                length: 258,
+                maximum: 256,
+            })
+        );
+        assert_eq!(
+            PhaseId::from_bytes("é\0x".as_bytes()),
+            Err(VocabularyValidationError::Nul { index: 2 })
+        );
     }
 }

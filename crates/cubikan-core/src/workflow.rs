@@ -2,6 +2,13 @@ use std::{collections::HashSet, error::Error, fmt};
 
 use crate::{PhaseId, WorkflowId};
 
+/// Maximum number of phases in one workflow snapshot.
+pub const MAX_WORKFLOW_PHASES: usize = 32;
+/// Maximum number of directed edges in one workflow snapshot.
+pub const MAX_WORKFLOW_EDGES: usize = 128;
+/// Maximum number of completion-eligible phases in one workflow snapshot.
+pub const MAX_COMPLETION_PHASES: usize = 32;
+
 /// A directed edge declared by a workflow.
 #[derive(Clone, Debug, Eq, Hash, PartialEq, serde::Deserialize, serde::Serialize)]
 pub struct WorkflowEdge {
@@ -40,6 +47,39 @@ pub struct Workflow {
 }
 
 impl Workflow {
+    /// Applies the Sprint 11 collection ceilings before normal topology checks.
+    pub fn new_bounded(
+        id: WorkflowId,
+        phases: impl IntoIterator<Item = PhaseId>,
+        initial_phase: PhaseId,
+        edges: impl IntoIterator<Item = WorkflowEdge>,
+        completion_phases: impl IntoIterator<Item = PhaseId>,
+    ) -> Result<Self, BoundedWorkflowError> {
+        let phases: Vec<_> = phases.into_iter().collect();
+        let edges: Vec<_> = edges.into_iter().collect();
+        let completion_phases: Vec<_> = completion_phases.into_iter().collect();
+        if phases.len() > MAX_WORKFLOW_PHASES {
+            return Err(BoundedWorkflowError::TooManyPhases {
+                length: phases.len(),
+                maximum: MAX_WORKFLOW_PHASES,
+            });
+        }
+        if edges.len() > MAX_WORKFLOW_EDGES {
+            return Err(BoundedWorkflowError::TooManyEdges {
+                length: edges.len(),
+                maximum: MAX_WORKFLOW_EDGES,
+            });
+        }
+        if completion_phases.len() > MAX_COMPLETION_PHASES {
+            return Err(BoundedWorkflowError::TooManyCompletionPhases {
+                length: completion_phases.len(),
+                maximum: MAX_COMPLETION_PHASES,
+            });
+        }
+        Self::new(id, phases, initial_phase, edges, completion_phases)
+            .map_err(BoundedWorkflowError::Topology)
+    }
+
     /// Validates and constructs a directed workflow definition.
     pub fn new(
         id: WorkflowId,
@@ -215,6 +255,48 @@ impl fmt::Display for WorkflowError {
 }
 
 impl Error for WorkflowError {}
+
+/// Additive bounded conversion error used before T-1107 rebaselines consumers.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum BoundedWorkflowError {
+    TooManyPhases { length: usize, maximum: usize },
+    TooManyEdges { length: usize, maximum: usize },
+    TooManyCompletionPhases { length: usize, maximum: usize },
+    Topology(WorkflowError),
+}
+
+impl fmt::Display for BoundedWorkflowError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::TooManyPhases { length, maximum } => {
+                write!(
+                    formatter,
+                    "workflow has {length} phases; maximum is {maximum}"
+                )
+            }
+            Self::TooManyEdges { length, maximum } => {
+                write!(
+                    formatter,
+                    "workflow has {length} edges; maximum is {maximum}"
+                )
+            }
+            Self::TooManyCompletionPhases { length, maximum } => write!(
+                formatter,
+                "workflow has {length} completion phases; maximum is {maximum}"
+            ),
+            Self::Topology(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl Error for BoundedWorkflowError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Topology(error) => Some(error),
+            _ => None,
+        }
+    }
+}
 
 #[derive(serde::Deserialize)]
 struct WorkflowRepr {

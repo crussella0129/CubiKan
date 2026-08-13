@@ -478,3 +478,10 @@
 - **Completed:** 2026-08-13T06:38:49Z
 - **Files modified:** `.gitignore`, `Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `patches/rusqlite-0.40.2-commit-authorizer.patch`, `vendor/rusqlite-0.40.2-cubikan/**`, `chain/Cargo.toml`, `chain/Cargo.lock`, `chain/rust-toolchain.toml`, `chain/README.md`, `chain/pins.toml`, `chain/pallets/cubikan/**`, `chain/runtime/**`, `chain/tools/**`, `docs/intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Commit:** `700ca5377b7447f312d1c6938c9972796fd6c19c`
+
+## T-1102 (sprint 11)
+- **Description:** Define bounded SCALE values and independent conformance fixtures
+- **Intent:** [INT-0008](../intents/INT-0008-traceable-intent-instantiation.md), [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md), [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md), [INT-0014](../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
+- **Completed:** 2026-08-13T14:11:28Z
+- **Files modified:** `chain/pallets/cubikan/src/conformance.rs`, `chain/pallets/cubikan/src/tests/model.rs`, `chain/pallets/cubikan/src/types.rs`, `crates/cubikan-core/src/external_reference.rs`, `crates/cubikan-core/src/lib.rs`, `crates/cubikan-core/src/vocabulary.rs`, `crates/cubikan-core/src/workflow.rs`, `crates/cubikan-core/tests/bounded_conformance.rs`, `tests/fixtures/chain-conformance-v1.json`, `docs/intents/INT-0008-traceable-intent-instantiation.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Commit:** PENDING
