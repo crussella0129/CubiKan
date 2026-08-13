@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-1103 (sprint 11) [intent: INT-0008, INT-0009, INT-0014]: Implement canonical lifecycle events and pallet mutations — touches: pallet lifecycle/event/error/benchmark/weights/mock/tests
 - [ ] T-1104 (sprint 11) [intent: INT-0012, INT-0014]: Port bounded relationship definitions and edges to the pallet — touches: pallet relationship/event/error/benchmark/weights/tests and conformance fixture
 - [ ] T-1105 (sprint 11) [intent: INT-0008, INT-0014]: Implement canonical provenance record and revocation — touches: pallet provenance/event/error/benchmark/weights/tests and conformance fixture
 - [ ] T-1106 (sprint 11) [intent: INT-0014]: Integrate the fixed local parachain runtime and artifact contract — touches: chain runtime/config/metadata/artifacts/pins/tools/runtime and weight tests

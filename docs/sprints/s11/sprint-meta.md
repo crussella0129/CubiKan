@@ -32,3 +32,14 @@
   subsequently passed its root checks, warnings-denied chain check, release
   build, and Wasm verification. T-1101 may move to completed and T-1102 is
   unblocked.
+
+- **2026-08-13 — T-1103 benchmark dependency omission resolved:** T-1103 owns
+  executable pallet benchmarks and T-1106 must generate weights from them, but
+  neither task's locked Touches included the manifests and lockfile needed for
+  FRAME v2's direct `frame-benchmarking` dependency. The minimal repair adds
+  the optional, default-feature-disabled dependency from the already pinned
+  stable2606 SDK revision, updates only the chain manifests/lock and their
+  pin-verifier identity, and introduces no root dependency, SDK-source, or
+  runtime-semantic expansion. All four lifecycle dispatchables now have
+  executable maximum-bound benchmarks; T-1106 remains responsible for running
+  the benchmark node and replacing provisional weights with generated output.

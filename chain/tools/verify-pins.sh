@@ -127,7 +127,7 @@ SEALED_EXEC_CONTENT_SHA256=""
 # Updated only after the complete pin document has passed independent review.
 # This closes the bootstrap hole where a modified pin file could bless a
 # modified namespace executable before the rest of the verifier runs.
-readonly EXPECTED_PINS_SHA256="96401055f6bfd1832e651033159c5f8193c54400bf8e2f879dfe248c574f0374"
+readonly EXPECTED_PINS_SHA256="1972b3864440beae9246b9049789ec3f5eb63937c4ed1ba269029167dadd7a65"
 
 die() {
     printf 'verify-pins: %s\n' "$*" >&2
@@ -390,7 +390,7 @@ verify_pin_contract() {
 
     local key
     for key in \
-        frame_support:48.0.0 frame_system:48.0.0 sp_runtime:48.0.0 \
+        frame_support:48.0.0 frame_system:48.0.0 frame_benchmarking:49.0.0 sp_runtime:48.0.0 \
         sp_version:46.0.0 cumulus_primitives_core:0.26.0 \
         substrate_wasm_builder:34.0.0 parity_scale_codec:3.7.5 scale_info:2.11.6; do
         require_exact_literal chain_dependencies "${key%%:*}" "${key##*:}"
@@ -1011,6 +1011,17 @@ verify_lock_and_manifest_bytes() {
         [[ "$source" == "$expected_source" ]] || die "chain lock has an unpinned Polkadot SDK source: $source"
     done < <(/usr/bin/gawk -F'"' '/^source = "git\+/{print $2}' "$PROJECT_ROOT/chain/Cargo.lock" | /usr/lib/cargo/bin/coreutils/sort -u)
     [[ $sdk_source_count -eq 1 ]] || die "chain lock does not contain exactly one pinned git source identity"
+    actual="$(/usr/bin/gawk '
+        /^\[\[package\]\]/{inside=0; version=""; source=""}
+        /^name = "frame-benchmarking"$/{inside=1}
+        inside && /^version = /{version=$3; gsub(/"/,"",version)}
+        inside && /^source = /{source=$3; gsub(/"/,"",source)}
+        inside && version != "" && source != ""{print version "\034" source; exit}
+    ' "$PROJECT_ROOT/chain/Cargo.lock")"
+    [[ "$actual" == "$(pin chain_dependencies frame_benchmarking)"$'\034'"$expected_source" ]] ||
+        die "chain frame-benchmarking lock identity mismatch"
+    /usr/bin/grep -F "frame-benchmarking = { git = \"https://github.com/paritytech/polkadot-sdk.git\", rev = \"$(pin polkadot_sdk revision)\", default-features = false }" \
+        "$PROJECT_ROOT/chain/Cargo.toml" >/dev/null || die "chain frame-benchmarking declaration drift"
     [[ -z "$(/usr/bin/grep -En 'polkadot-sdk|paritytech/(substrate|cumulus)' "$PROJECT_ROOT/Cargo.lock" || true)" ]] || die "Polkadot SDK source leaked into root lock"
     verify_live_root_dependency_boundary
 
