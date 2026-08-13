@@ -11,6 +11,7 @@ extern crate alloc;
 pub mod conformance;
 pub mod error;
 pub mod event;
+pub mod provenance;
 pub mod relationship;
 pub mod types;
 pub mod weights;
@@ -28,6 +29,7 @@ mod mock;
 mod tests {
     mod lifecycle;
     mod model;
+    mod provenance;
     mod relationships;
 }
 
@@ -49,9 +51,10 @@ pub mod pallet {
             PALLET_STORAGE_SCHEMA_VERSION,
         },
         types::{
-            CreateUnitPayload, DefinitionKey, DomainPayload, ExternalReference, IntentSpecies,
-            IntentUnitId, IntentUnitState, PhaseId, RelationshipDefinition, RelationshipKey,
-            RelationshipPolicy, Workflow, MAX_AUTHORIZED_SUBMITTERS, MAX_RELATIONSHIP_EDGES,
+            AssociationKey, CreateUnitPayload, DefinitionKey, DomainPayload, ExternalReference,
+            IntentSpecies, IntentUnitId, IntentUnitState, PhaseId, RelationshipDefinition,
+            RelationshipKey, RelationshipPolicy, Workflow, MAX_ACTIVE_ASSOCIATIONS,
+            MAX_AUTHORIZED_SUBMITTERS, MAX_RELATIONSHIP_EDGES,
         },
         weights::WeightInfo,
     };
@@ -67,6 +70,9 @@ pub mod pallet {
 
     /// Complete live directed-edge set for one immutable definition version.
     pub type RelationshipEdgesOf = BoundedVec<RelationshipKey, ConstU32<128>>;
+
+    /// Complete active provenance identities for one exact Intent Unit.
+    pub type ActiveAssociationsOf = BoundedVec<AssociationKey, ConstU32<128>>;
 
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(PALLET_STORAGE_SCHEMA_VERSION);
 
@@ -101,6 +107,12 @@ pub mod pallet {
     #[pallet::getter(fn relationship_edges)]
     pub type RelationshipEdges<T: Config> =
         StorageMap<_, Blake2_128Concat, DefinitionKey, RelationshipEdgesOf, ValueQuery>;
+
+    /// Bounded many-to-many provenance membership keyed by Intent Unit.
+    #[pallet::storage]
+    #[pallet::getter(fn active_associations)]
+    pub type ActiveAssociations<T: Config> =
+        StorageMap<_, Blake2_128Concat, IntentUnitId, ActiveAssociationsOf, ValueQuery>;
 
     /// Directly signed technical accounts permitted to submit domain calls.
     #[pallet::storage]
@@ -227,6 +239,12 @@ pub mod pallet {
         RelationshipCapacityExceeded,
         RelationshipCycleRejected,
         RelationshipNotFound,
+        AssociationUnitNotFound,
+        AssociationRevisionNotFound,
+        AssociationReferenceInvalid,
+        AssociationAlreadyExists,
+        AssociationCapacityExceeded,
+        AssociationNotFound,
         GlobalSequenceExhausted,
         DuplicateAuthorizedSubmitter,
         TooManyAuthorizedSubmitters,
@@ -495,6 +513,88 @@ pub mod pallet {
                 global_sequence,
                 signer,
                 DomainPayload::RelationshipDeleted(relationship),
+            );
+            Ok(())
+        }
+
+        /// Record one exact active whole-unit or revision association.
+        #[pallet::call_index(7)]
+        #[pallet::weight(T::WeightInfo::record_association())]
+        pub fn record_association(
+            origin: OriginFor<T>,
+            command_schema_version: u16,
+            association: AssociationKey,
+        ) -> DispatchResult {
+            let signer = Self::authorized_signer(command_schema_version, origin)?;
+            let unit_id = association.unit_id();
+            let unit = IntentUnits::<T>::get(unit_id).ok_or(Error::<T>::AssociationUnitNotFound)?;
+            ensure!(
+                crate::provenance::subject_exists(&unit, association.subject()),
+                Error::<T>::AssociationRevisionNotFound
+            );
+            ensure!(
+                crate::provenance::reference_is_valid(association.reference()),
+                Error::<T>::AssociationReferenceInvalid
+            );
+
+            let mut active = ActiveAssociations::<T>::get(unit_id);
+            ensure!(
+                !active.contains(&association),
+                Error::<T>::AssociationAlreadyExists
+            );
+            ensure!(
+                active.len() < MAX_ACTIVE_ASSOCIATIONS,
+                Error::<T>::AssociationCapacityExceeded
+            );
+            let global_sequence = Self::next_global_sequence()?;
+
+            active
+                .try_push(association.clone())
+                .map_err(|_| Error::<T>::AssociationCapacityExceeded)?;
+            ActiveAssociations::<T>::insert(unit_id, active);
+            GlobalSequence::<T>::put(global_sequence);
+            Self::deposit_accepted(
+                global_sequence,
+                signer,
+                DomainPayload::AssociationRecorded(association),
+            );
+            Ok(())
+        }
+
+        /// Revoke only the named active membership and retain event history.
+        #[pallet::call_index(8)]
+        #[pallet::weight(T::WeightInfo::revoke_association())]
+        pub fn revoke_association(
+            origin: OriginFor<T>,
+            command_schema_version: u16,
+            association: AssociationKey,
+        ) -> DispatchResult {
+            let signer = Self::authorized_signer(command_schema_version, origin)?;
+            let unit_id = association.unit_id();
+            let unit = IntentUnits::<T>::get(unit_id).ok_or(Error::<T>::AssociationUnitNotFound)?;
+            ensure!(
+                crate::provenance::subject_exists(&unit, association.subject()),
+                Error::<T>::AssociationRevisionNotFound
+            );
+            ensure!(
+                crate::provenance::reference_is_valid(association.reference()),
+                Error::<T>::AssociationReferenceInvalid
+            );
+
+            let mut active = ActiveAssociations::<T>::get(unit_id);
+            let position = active
+                .iter()
+                .position(|stored| stored == &association)
+                .ok_or(Error::<T>::AssociationNotFound)?;
+            let global_sequence = Self::next_global_sequence()?;
+
+            active.remove(position);
+            ActiveAssociations::<T>::insert(unit_id, active);
+            GlobalSequence::<T>::put(global_sequence);
+            Self::deposit_accepted(
+                global_sequence,
+                signer,
+                DomainPayload::AssociationRevoked(association),
             );
             Ok(())
         }

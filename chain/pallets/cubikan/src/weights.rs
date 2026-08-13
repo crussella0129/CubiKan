@@ -1,10 +1,10 @@
-//! Provisional conservative lifecycle and relationship dispatch weights.
+//! Provisional conservative lifecycle, relationship, and provenance weights.
 //!
 //! These nonzero values intentionally cover the largest bounded aggregate and
 //! keep every call usable before runtime benchmarking. They are not represented
 //! as generated output: T-1106 runs `src/benchmarking.rs` against the composed
 //! benchmark-capable runtime, records the command and hardware provenance, and
-//! replaces this file with the generated stable2606 weights.
+//! selects the generated stable2606 implementation from the runtime.
 
 use core::marker::PhantomData;
 
@@ -13,7 +13,7 @@ use frame_support::{
     weights::{constants::RocksDbWeight, Weight},
 };
 
-/// Weight functions required by the lifecycle pallet.
+/// Weight functions required by every CubiKan pallet dispatchable.
 pub trait WeightInfo {
     fn create_unit() -> Weight;
     fn transition_unit() -> Weight;
@@ -22,6 +22,8 @@ pub trait WeightInfo {
     fn create_relationship_definition() -> Weight;
     fn create_relationship() -> Weight;
     fn delete_relationship() -> Weight;
+    fn record_association() -> Weight;
+    fn revoke_association() -> Weight;
 }
 
 /// Conservative database-aware weights used until T-1106 generation.
@@ -70,6 +72,18 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
             .saturating_add(T::DbWeight::get().reads(10))
             .saturating_add(T::DbWeight::get().writes(4))
     }
+
+    fn record_association() -> Weight {
+        Weight::from_parts(550_000_000, 900_000)
+            .saturating_add(T::DbWeight::get().reads(8))
+            .saturating_add(T::DbWeight::get().writes(4))
+    }
+
+    fn revoke_association() -> Weight {
+        Weight::from_parts(500_000_000, 900_000)
+            .saturating_add(T::DbWeight::get().reads(8))
+            .saturating_add(T::DbWeight::get().writes(4))
+    }
 }
 
 impl WeightInfo for () {
@@ -113,6 +127,18 @@ impl WeightInfo for () {
     fn delete_relationship() -> Weight {
         Weight::from_parts(650_000_000, 700_000)
             .saturating_add(RocksDbWeight::get().reads(10))
+            .saturating_add(RocksDbWeight::get().writes(4))
+    }
+
+    fn record_association() -> Weight {
+        Weight::from_parts(550_000_000, 900_000)
+            .saturating_add(RocksDbWeight::get().reads(8))
+            .saturating_add(RocksDbWeight::get().writes(4))
+    }
+
+    fn revoke_association() -> Weight {
+        Weight::from_parts(500_000_000, 900_000)
+            .saturating_add(RocksDbWeight::get().reads(8))
             .saturating_add(RocksDbWeight::get().writes(4))
     }
 }

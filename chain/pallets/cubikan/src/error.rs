@@ -1,4 +1,7 @@
-//! Deterministic conversion from bounded domain semantics to pallet errors.
+//! Deterministic conversion from bounded lifecycle semantics to pallet errors.
+//!
+//! Relationship and provenance errors are emitted directly at their locked
+//! dispatch-precedence seams; lifecycle model failures share this conversion.
 
 use crate::{
     pallet::{Config, Error},

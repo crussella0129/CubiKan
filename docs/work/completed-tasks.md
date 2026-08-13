@@ -501,3 +501,11 @@
 - **Files modified:** `chain/pallets/cubikan/src/relationship.rs`, `chain/pallets/cubikan/src/lib.rs`, `chain/pallets/cubikan/src/event.rs`, `chain/pallets/cubikan/src/error.rs`, `chain/pallets/cubikan/src/benchmarking.rs`, `chain/pallets/cubikan/src/weights.rs`, `chain/pallets/cubikan/src/tests/relationships.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Fixture note:** The independently authored T-1102 conformance corpus already carries the bounded relationship value and 128/129 capacity cases; T-1104 added no implementation-derived fixture bytes.
 - **Commit:** `96fb0749e6b01fcc3ca80a157f3ef653b797f884`
+
+## T-1105 (sprint 11)
+- **Description:** Implement canonical provenance record and revocation
+- **Intent:** [INT-0008](../intents/INT-0008-traceable-intent-instantiation.md), [INT-0014](../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
+- **Completed:** 2026-08-13T21:14:16Z
+- **Files modified:** `chain/pallets/cubikan/src/provenance.rs`, `chain/pallets/cubikan/src/lib.rs`, `chain/pallets/cubikan/src/event.rs`, `chain/pallets/cubikan/src/error.rs`, `chain/pallets/cubikan/src/benchmarking.rs`, `chain/pallets/cubikan/src/weights.rs`, `chain/pallets/cubikan/src/tests/provenance.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Fixture note:** The independently authored T-1102 conformance corpus already covers association identity, subjects, capacity, authorization, and structural SCALE/reference rejection; T-1105 added no implementation-derived fixture bytes.
+- **Commit:** PENDING

@@ -1,4 +1,4 @@
-//! Executable FRAME v2 benchmarks for every lifecycle and relationship call.
+//! Executable FRAME v2 benchmarks for every canonical pallet call.
 //!
 //! Domain fixtures deliberately exercise the production maxima. Transition
 //! and completion setup fills 255 of 256 lifecycle records so the measured
@@ -13,16 +13,16 @@ use frame_system::RawOrigin;
 use crate::{
     event::COMMAND_SCHEMA_VERSION,
     types::{
-        DefinitionKey, DefinitionVersion, ExternalReference, IntentSpecies, IntentUnitId,
-        IntentUnitState, Namespace, PhaseId, ReferenceScope, ReferenceValue,
-        RelationshipDefinition, RelationshipKey, RelationshipPolicy, Workflow, WorkflowEdge,
-        WorkflowId, MAX_AUTHORIZED_SUBMITTERS, MAX_COMPLETION_PHASES, MAX_LIFECYCLE_RECORDS,
-        MAX_NAMESPACE_BYTES, MAX_RELATIONSHIP_EDGES, MAX_TEXT_BYTES, MAX_WORKFLOW_EDGES,
-        MAX_WORKFLOW_PHASES,
+        AssociationKey, AssociationSubject, DefinitionKey, DefinitionVersion, ExternalReference,
+        IntentSpecies, IntentUnitId, IntentUnitState, Namespace, PhaseId, ReferenceScope,
+        ReferenceValue, RelationshipDefinition, RelationshipKey, RelationshipPolicy, Workflow,
+        WorkflowEdge, WorkflowId, MAX_ACTIVE_ASSOCIATIONS, MAX_AUTHORIZED_SUBMITTERS,
+        MAX_COMPLETION_PHASES, MAX_LIFECYCLE_RECORDS, MAX_NAMESPACE_BYTES, MAX_RELATIONSHIP_EDGES,
+        MAX_TEXT_BYTES, MAX_WORKFLOW_EDGES, MAX_WORKFLOW_PHASES,
     },
-    AuthorizedSubmitterInput, AuthorizedSubmitters, AuthorizedSubmittersOf, Call, Config,
-    GlobalSequence, IntentUnits, Pallet, RelationshipDefinitions, RelationshipEdges,
-    RelationshipEdgesOf,
+    ActiveAssociations, ActiveAssociationsOf, AuthorizedSubmitterInput, AuthorizedSubmitters,
+    AuthorizedSubmittersOf, Call, Config, GlobalSequence, IntentUnits, Pallet,
+    RelationshipDefinitions, RelationshipEdges, RelationshipEdgesOf,
 };
 
 fn maximal_text(marker: u8, index: usize) -> [u8; MAX_TEXT_BYTES] {
@@ -43,6 +43,19 @@ fn maximal_origin() -> ExternalReference {
         Namespace::try_from_bytes(&namespace).expect("maximal namespace is valid"),
         ReferenceScope::try_from_bytes(&maximal_text(b's', 0)).expect("valid scope"),
         ReferenceValue::try_from_bytes(&maximal_text(b'v', 0)).expect("valid value"),
+    )
+}
+
+fn maximal_reference(index: usize) -> ExternalReference {
+    let namespace = [b'p'; MAX_NAMESPACE_BYTES];
+    let mut value = maximal_text(b'v', 0);
+    value[MAX_TEXT_BYTES - 3] = b'0' + u8::try_from((index / 100) % 10).expect("one decimal digit");
+    value[MAX_TEXT_BYTES - 2] = b'0' + u8::try_from((index / 10) % 10).expect("one decimal digit");
+    value[MAX_TEXT_BYTES - 1] = b'0' + u8::try_from(index % 10).expect("one decimal digit");
+    ExternalReference::new(
+        Namespace::try_from_bytes(&namespace).expect("maximal namespace is valid"),
+        ReferenceScope::try_from_bytes(&maximal_text(b'a', 0)).expect("valid scope"),
+        ReferenceValue::try_from_bytes(&value).expect("valid indexed value"),
     )
 }
 
@@ -206,6 +219,29 @@ fn fill_stored_lifecycle_to_capacity<T: Config>(id: IntentUnitId) {
     IntentUnits::<T>::insert(id, state);
 }
 
+fn maximal_association(unit_id: IntentUnitId, index: usize) -> AssociationKey {
+    AssociationKey::new(
+        unit_id,
+        AssociationSubject::Revision(MAX_LIFECYCLE_RECORDS as u64),
+        maximal_reference(index),
+    )
+}
+
+fn store_maximal_associations<T: Config>(
+    unit_id: IntentUnitId,
+    count: usize,
+) -> Vec<AssociationKey> {
+    let associations: Vec<_> = (0..count)
+        .map(|index| maximal_association(unit_id, index))
+        .collect();
+    let bounded: ActiveAssociationsOf = associations
+        .clone()
+        .try_into()
+        .expect("association fixture count is within the active bound");
+    ActiveAssociations::<T>::insert(unit_id, bounded);
+    associations
+}
+
 #[benchmarks]
 mod benchmarks {
     use super::*;
@@ -363,6 +399,59 @@ mod benchmarks {
         let edges = RelationshipEdges::<T>::get(definition);
         assert_eq!(edges.len(), MAX_RELATIONSHIP_EDGES - 1);
         assert!(!edges.contains(&relationship));
+    }
+
+    #[benchmark]
+    fn record_association() {
+        let caller: T::AccountId = whitelisted_caller();
+        authorize::<T>(caller.clone());
+        let unit_id = store_maximal_unit::<T>(0xe1);
+        fill_stored_lifecycle_to_capacity::<T>(unit_id);
+        store_maximal_associations::<T>(unit_id, MAX_ACTIVE_ASSOCIATIONS - 1);
+        let association = maximal_association(unit_id, MAX_ACTIVE_ASSOCIATIONS - 1);
+
+        #[extrinsic_call]
+        record_association(
+            RawOrigin::Signed(caller),
+            COMMAND_SCHEMA_VERSION,
+            association.clone(),
+        );
+
+        let active = ActiveAssociations::<T>::get(unit_id);
+        let unit = IntentUnits::<T>::get(unit_id).expect("associated unit remains stored");
+        assert_eq!(active.len(), MAX_ACTIVE_ASSOCIATIONS);
+        assert_eq!(active.last(), Some(&association));
+        assert_eq!(unit.revision(), MAX_LIFECYCLE_RECORDS as u64);
+        assert_eq!(unit.history().len(), MAX_LIFECYCLE_RECORDS);
+        assert_eq!(GlobalSequence::<T>::get(), Some(1));
+    }
+
+    #[benchmark]
+    fn revoke_association() {
+        let caller: T::AccountId = whitelisted_caller();
+        authorize::<T>(caller.clone());
+        let unit_id = store_maximal_unit::<T>(0xe2);
+        fill_stored_lifecycle_to_capacity::<T>(unit_id);
+        let associations = store_maximal_associations::<T>(unit_id, MAX_ACTIVE_ASSOCIATIONS);
+        let association = associations
+            .last()
+            .expect("maximal association fixture is nonempty")
+            .clone();
+
+        #[extrinsic_call]
+        revoke_association(
+            RawOrigin::Signed(caller),
+            COMMAND_SCHEMA_VERSION,
+            association.clone(),
+        );
+
+        let active = ActiveAssociations::<T>::get(unit_id);
+        let unit = IntentUnits::<T>::get(unit_id).expect("associated unit remains stored");
+        assert_eq!(active.len(), MAX_ACTIVE_ASSOCIATIONS - 1);
+        assert!(!active.contains(&association));
+        assert_eq!(unit.revision(), MAX_LIFECYCLE_RECORDS as u64);
+        assert_eq!(unit.history().len(), MAX_LIFECYCLE_RECORDS);
+        assert_eq!(GlobalSequence::<T>::get(), Some(1));
     }
 
     #[cfg(test)]

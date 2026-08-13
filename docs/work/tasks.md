@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-1105 (sprint 11) [intent: INT-0008, INT-0014]: Implement canonical provenance record and revocation — touches: pallet provenance/event/error/benchmark/weights/tests and conformance fixture
 - [ ] T-1106 (sprint 11) [intent: INT-0014]: Integrate the fixed local parachain runtime and artifact contract — touches: chain runtime/config/metadata/artifacts/pins/tools/runtime and weight tests
 - [ ] T-1107 (sprint 11) [intent: INT-0008, INT-0009, INT-0014]: Rebaseline the chain-neutral core around required origin — touches: core, backend, CLI and local models/consumers/tests
 - [ ] T-1108 (sprint 11) [intent: INT-0008, INT-0014]: Build the exact hardened SQLite v3/envelope v2 projection store — touches: root/backend manifests, schema/store/security code/tests, filesystem/authorizer/envelope fixtures
