@@ -500,4 +500,4 @@
 - **Completed:** 2026-08-13T20:14:47Z
 - **Files modified:** `chain/pallets/cubikan/src/relationship.rs`, `chain/pallets/cubikan/src/lib.rs`, `chain/pallets/cubikan/src/event.rs`, `chain/pallets/cubikan/src/error.rs`, `chain/pallets/cubikan/src/benchmarking.rs`, `chain/pallets/cubikan/src/weights.rs`, `chain/pallets/cubikan/src/tests/relationships.rs`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Fixture note:** The independently authored T-1102 conformance corpus already carries the bounded relationship value and 128/129 capacity cases; T-1104 added no implementation-derived fixture bytes.
-- **Commit:** PENDING
+- **Commit:** `96fb0749e6b01fcc3ca80a157f3ef653b797f884`
