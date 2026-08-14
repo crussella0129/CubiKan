@@ -526,4 +526,4 @@
 - **Files modified:** `crates/cubikan-core/src/lib.rs`, `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/tests/**`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/stored.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/migration.rs`, `crates/cubikan-backend/tests/**`, `crates/cubikan-cli/src/**`, `crates/cubikan-cli/tests/**`, `crates/cubikan-local/src/**`, `crates/cubikan-local/tests/**`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Scope repair:** The locked Touches omitted `crates/cubikan-backend/src/migration.rs`; Sprint 11 meta records the minimal fail-closed removal of the otherwise-successful originless v1-to-v2 migration.
 - **Verification:** Root workspace all-target tests and doctests, warnings-denied Clippy, rustfmt, the Book-v2 validator, immutable fixture hashes, and an independent E2 authority audit passed.
-- **Commit:** PENDING
+- **Commit:** `80c7a1f984534eba62d38b69e57abdc1ac373c75`
