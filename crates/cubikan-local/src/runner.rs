@@ -11,11 +11,8 @@ use crate::{ResponseClass, execute_request, protocol::request_too_large_response
 /// Maximum number of raw request bytes accepted by the local runner.
 pub const MAX_REQUEST_BYTES: usize = 1_048_576;
 
-const EXIT_SUCCESS: u8 = 0;
 const EXIT_OPERATIONAL: u8 = 1;
 const EXIT_REQUEST: u8 = 2;
-const EXIT_COMMAND: u8 = 3;
-const EXIT_STORAGE: u8 = 4;
 const USAGE: &[u8] = b"usage: cubikan-local --database PATH\n";
 
 /// Operational stdin/stdout failure outside the modeled JSON protocol.
@@ -113,10 +110,7 @@ where
     };
 
     match run(database_path, reader, writer) {
-        Ok(ResponseClass::Success) => EXIT_SUCCESS,
         Ok(ResponseClass::RequestRejected) => EXIT_REQUEST,
-        Ok(ResponseClass::CommandRejected) => EXIT_COMMAND,
-        Ok(ResponseClass::StorageRejected) => EXIT_STORAGE,
         Err(error) => {
             let _ = writeln!(stderr, "{error}");
             let _ = stderr.flush();

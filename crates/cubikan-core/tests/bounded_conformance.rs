@@ -1,9 +1,9 @@
 use cubikan_core::{
     AssociationSubject, BoundedWorkflowError, CompletionError, ExternalReference, IntentSpecies,
     IntentUnit, IntentUnitId, IntentUnitRevision, IntentUnitStatus, MAX_COMPLETION_PHASES,
-    MAX_NAMESPACE_BYTES, MAX_TEXT_BYTES, MAX_WORKFLOW_EDGES, MAX_WORKFLOW_PHASES, PhaseId,
-    RecordedAssociation, ReferenceNamespace, ReferenceNamespaceError, ReferenceText,
-    ReferenceTextError, RelationshipDefinition, RelationshipDefinitionKey,
+    MAX_LIFECYCLE_RECORDS, MAX_NAMESPACE_BYTES, MAX_TEXT_BYTES, MAX_WORKFLOW_EDGES,
+    MAX_WORKFLOW_PHASES, PhaseId, RecordedAssociation, ReferenceNamespace, ReferenceNamespaceError,
+    ReferenceText, ReferenceTextError, RelationshipDefinition, RelationshipDefinitionKey,
     RelationshipDefinitionVersion, RelationshipIdentity, RelationshipPolicy,
     RevisionedCompletionError, RevisionedTransitionError, TransitionError, Workflow, WorkflowEdge,
     WorkflowError, WorkflowId,
@@ -443,6 +443,7 @@ fn intent_unit_json(fixture: &Value, state: &Value) -> Value {
     let history = expand_history(&state["history"]);
     json!({
         "id": fixture["shared_values"][state["id_ref"].as_str().unwrap()],
+        "origin": fixture["shared_values"][state["origin_ref"].as_str().unwrap()],
         "species": state["species"],
         "workflow": workflow,
         "phase": state["phase"],
@@ -459,6 +460,9 @@ fn intent_unit_json(fixture: &Value, state: &Value) -> Value {
 fn lifecycle_error_kind_transition(error: &RevisionedTransitionError) -> &'static str {
     match error {
         RevisionedTransitionError::Conflict(_) => "revision_conflict",
+        RevisionedTransitionError::Transition(
+            TransitionError::LifecycleHistoryCapacityExceeded { .. },
+        ) => "lifecycle_history_capacity_exceeded",
         RevisionedTransitionError::Transition(TransitionError::AlreadyCompleted) => {
             "transition_already_completed"
         }
@@ -474,6 +478,9 @@ fn lifecycle_error_kind_transition(error: &RevisionedTransitionError) -> &'stati
 fn lifecycle_error_kind_completion(error: &RevisionedCompletionError) -> &'static str {
     match error {
         RevisionedCompletionError::Conflict(_) => "revision_conflict",
+        RevisionedCompletionError::Completion(
+            CompletionError::LifecycleHistoryCapacityExceeded { .. },
+        ) => "lifecycle_history_capacity_exceeded",
         RevisionedCompletionError::Completion(CompletionError::AlreadyCompleted) => {
             "completion_already_completed"
         }
@@ -492,12 +499,8 @@ fn evaluate_core_lifecycle_cases(fixture: &Value) {
         let expected = &case["expected"];
         let json = intent_unit_json(fixture, state);
         if operation == "validate_restore" {
-            let history_length = expand_history(&state["history"]).len();
-            let result = if history_length > 256 {
-                Err("too_many_lifecycle_records".to_owned())
-            } else {
-                serde_json::from_value::<IntentUnit>(json).map_err(|error| error.to_string())
-            };
+            let result =
+                serde_json::from_value::<IntentUnit>(json).map_err(|error| error.to_string());
             assert_eq!(
                 result.is_ok(),
                 expected["outcome"] == "ok",
@@ -511,6 +514,12 @@ fn evaluate_core_lifecycle_cases(fixture: &Value) {
                     state["revision"].as_u64().unwrap() as usize
                 );
                 assert_eq!(unit.phase().as_str(), state["phase"].as_str().unwrap());
+                assert_eq!(
+                    unit.origin(),
+                    &reference_from_value(
+                        &fixture["shared_values"][state["origin_ref"].as_str().unwrap()]
+                    )
+                );
                 assert_eq!(
                     unit.status(),
                     if state["status"] == "active" {
@@ -529,9 +538,6 @@ fn evaluate_core_lifecycle_cases(fixture: &Value) {
         let expected_revision =
             IntentUnitRevision::new(case["operation"]["expected_revision"].as_u64().unwrap());
         let result_kind = match operation {
-            "transition" if state["history"].as_array().is_none() => {
-                Some("lifecycle_history_capacity_exceeded")
-            }
             "transition" => {
                 let target =
                     PhaseId::from_bytes(case["operation"]["target"].as_str().unwrap().as_bytes())
@@ -566,7 +572,7 @@ fn evaluate_core_lifecycle_cases(fixture: &Value) {
                 IntentUnitStatus::Completed
             };
             assert_eq!(unit.status(), expected_status);
-        } else if result_kind != Some("lifecycle_history_capacity_exceeded") {
+        } else {
             assert_eq!(
                 serde_json::to_value(&unit).unwrap(),
                 before,
@@ -575,6 +581,148 @@ fn evaluate_core_lifecycle_cases(fixture: &Value) {
             );
         }
     }
+}
+
+#[test]
+fn test_core_requires_and_preserves_immutable_origin() {
+    fn require_constructor_signature(
+        _: fn(IntentUnitId, ExternalReference, IntentSpecies, Workflow) -> IntentUnit,
+    ) {
+    }
+    require_constructor_signature(IntentUnit::new);
+
+    let fixture = fixture();
+    let origin = reference_from_value(&fixture["shared_values"]["origin"]);
+    let workflow: Workflow =
+        serde_json::from_value(fixture["shared_values"]["workflow_lifecycle"].clone())
+            .expect("shared workflow must restore through core validation");
+    let id = fixture["shared_values"]["unit_id_a"]
+        .as_str()
+        .unwrap()
+        .parse::<IntentUnitId>()
+        .expect("shared unit ID must parse");
+    let mut unit = IntentUnit::new(
+        id,
+        origin.clone(),
+        IntentSpecies::new("task").expect("shared species must be valid"),
+        workflow,
+    );
+
+    assert_eq!(unit.origin(), &origin);
+    unit.transition_to(&PhaseId::new("doing").expect("shared phase must be valid"))
+        .expect("shared transition must succeed");
+    assert_eq!(unit.origin(), &origin);
+    unit.complete().expect("shared completion must succeed");
+    assert_eq!(unit.origin(), &origin);
+
+    let serialized = serde_json::to_value(&unit).expect("unit must serialize");
+    assert_eq!(serialized["origin"], fixture["shared_values"]["origin"]);
+    let restored: IntentUnit =
+        serde_json::from_value(serialized.clone()).expect("valid origin must restore");
+    assert_eq!(restored, unit);
+    assert_eq!(restored.origin(), &origin);
+
+    for invalid_origin in [None, Some(Value::Null)] {
+        let mut invalid = serialized.clone();
+        match invalid_origin {
+            None => {
+                invalid
+                    .as_object_mut()
+                    .expect("unit representation must be an object")
+                    .remove("origin");
+            }
+            Some(value) => invalid["origin"] = value,
+        }
+        assert!(
+            serde_json::from_value::<IntentUnit>(invalid).is_err(),
+            "missing and null origins must not restore"
+        );
+    }
+}
+
+#[test]
+fn test_core_and_chain_share_256_record_capacity() {
+    let fixture = fixture();
+    let fixture_maximum = fixture["limits"]["lifecycle_records"]["maximum"]
+        .as_u64()
+        .expect("shared lifecycle maximum must be an integer") as usize;
+    assert_eq!(MAX_LIFECYCLE_RECORDS, fixture_maximum);
+
+    let workflow: Workflow =
+        serde_json::from_value(fixture["shared_values"]["workflow_alternating"].clone())
+            .expect("shared alternating workflow must restore");
+    let origin = reference_from_value(&fixture["shared_values"]["origin"]);
+    let id = fixture["shared_values"]["unit_id_a"]
+        .as_str()
+        .unwrap()
+        .parse::<IntentUnitId>()
+        .expect("shared unit ID must parse");
+    let a = PhaseId::new("a").expect("shared phase must be valid");
+    let b = PhaseId::new("b").expect("shared phase must be valid");
+    let mut unit = IntentUnit::new(
+        id,
+        origin.clone(),
+        IntentSpecies::new("task").expect("shared species must be valid"),
+        workflow,
+    );
+
+    for next in 1..=MAX_LIFECYCLE_RECORDS {
+        let expected = IntentUnitRevision::new(
+            u64::try_from(next - 1).expect("bounded revision must fit u64"),
+        );
+        let target = if next % 2 == 1 { &b } else { &a };
+        let committed = unit
+            .transition_to_if_revision(target, expected)
+            .expect("records through the exact shared maximum must succeed");
+        assert_eq!(committed.value(), u64::try_from(next).unwrap());
+        assert_eq!(unit.revision(), committed);
+        assert_eq!(unit.history().len(), next);
+        assert_eq!(unit.origin(), &origin);
+    }
+
+    let exact_case = fixture["lifecycle_cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|case| case["id"] == "lifecycle-exact-history-maximum")
+        .expect("shared exact-capacity case must exist");
+    assert_eq!(
+        serde_json::to_value(&unit).expect("bounded unit must serialize"),
+        intent_unit_json(&fixture, &exact_case["state"])
+    );
+
+    let before = unit.clone();
+    let missing = PhaseId::new("missing").expect("invalid-domain target text must still parse");
+    assert_eq!(
+        unit.transition_to_if_revision(&missing, IntentUnitRevision::new(256)),
+        Err(RevisionedTransitionError::Transition(
+            TransitionError::LifecycleHistoryCapacityExceeded {
+                length: MAX_LIFECYCLE_RECORDS,
+                maximum: MAX_LIFECYCLE_RECORDS,
+            }
+        ))
+    );
+    assert_eq!(unit, before, "record 257 must not mutate the aggregate");
+
+    assert!(matches!(
+        unit.transition_to_if_revision(&missing, IntentUnitRevision::new(255)),
+        Err(RevisionedTransitionError::Conflict(_))
+    ));
+    assert_eq!(unit, before, "stale rejection at capacity must be atomic");
+
+    let over_case = fixture["lifecycle_cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|case| case["id"] == "lifecycle-record-maximum-plus-one")
+        .expect("shared over-capacity case must exist");
+    let error =
+        serde_json::from_value::<IntentUnit>(intent_unit_json(&fixture, &over_case["state"]))
+            .expect_err("a 257-record aggregate must fail actual restoration");
+    assert_eq!(
+        error.to_string(),
+        "lifecycle history has 257 records; maximum is 256"
+    );
 }
 
 fn expand_text_list(value: &Value) -> Vec<String> {

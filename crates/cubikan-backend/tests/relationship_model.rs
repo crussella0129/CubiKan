@@ -1,25 +1,30 @@
-mod common;
-
 use std::{error::Error, str::FromStr};
 
-use common::TestDatabase;
 use cubikan_backend::{
-    BackendError, BackendSchemaVersion, CreateIntentUnit, CreateRelationship,
-    CreateRelationshipDefinition, DeleteRelationship, DirectRelationshipPredicate,
-    IntentUnitSummary, IntentUnitView, ListCursor, ListFilters, ListRelationships, MigrationError,
-    PageLimit, ProjectionPage, ProjectionQueryV1, RelationshipCursor, RelationshipDefinitionId,
-    RelationshipDefinitionIdError, RelationshipDefinitionKey, RelationshipDefinitionVersion,
-    RelationshipDefinitionVersionError, RelationshipDefinitionView, RelationshipDirection,
-    RelationshipEndpoint, RelationshipError, RelationshipIdentity, RelationshipPage,
-    RelationshipPolicy, RelationshipQueryError, RelationshipView, SqliteBackend,
+    BackendError, BackendSchemaVersion, CreateRelationship, CreateRelationshipDefinition,
+    DeleteRelationship, DirectRelationshipPredicate, IntentUnitSummary, IntentUnitView, ListCursor,
+    ListFilters, ListRelationships, MigrationError, PageLimit, ProjectionPage, ProjectionQueryV1,
+    RelationshipCursor, RelationshipDefinitionId, RelationshipDefinitionIdError,
+    RelationshipDefinitionKey, RelationshipDefinitionVersion, RelationshipDefinitionVersionError,
+    RelationshipDefinitionView, RelationshipDirection, RelationshipEndpoint, RelationshipError,
+    RelationshipIdentity, RelationshipPage, RelationshipPolicy, RelationshipQueryError,
+    RelationshipView,
 };
 use cubikan_core::{
-    IntentSpecies, IntentUnit, IntentUnitId, IntentUnitStatus, PhaseId, Workflow, WorkflowEdge,
-    WorkflowId,
+    ExternalReference, IntentSpecies, IntentUnit, IntentUnitId, IntentUnitStatus, PhaseId,
+    ReferenceNamespace, ReferenceText, Workflow, WorkflowEdge, WorkflowId,
 };
 
 fn fixed_id(value: &str) -> IntentUnitId {
     value.parse().expect("fixture UUID should be valid")
+}
+
+fn origin() -> ExternalReference {
+    ExternalReference::new(
+        ReferenceNamespace::new("github").expect("fixture namespace should be valid"),
+        ReferenceText::new("crussella0129/CubiKan").expect("fixture scope should be valid"),
+        ReferenceText::new("issue:1107").expect("fixture value should be valid"),
+    )
 }
 
 fn definition(value: &str, version: u64) -> RelationshipDefinitionKey {
@@ -243,7 +248,7 @@ fn test_public_relationship_model_exposes_complete_contract() {
         Some(PhaseId::new("queued").unwrap()),
         Some(IntentUnitStatus::Active),
     );
-    let unit = IntentUnit::new(source, source_species, workflow());
+    let unit = IntentUnit::new(source, origin(), source_species, workflow());
     let summary = IntentUnitSummary::from_view(&IntentUnitView::from_intent_unit(&unit));
     let list_cursor = ListCursor::from_str("00000000-0000-0000-0000-000000000001").unwrap();
     let outgoing_query = ProjectionQueryV1::new(
@@ -446,42 +451,10 @@ fn test_relationship_error_taxonomy_is_typed_and_source_preserving() {
                 == Some(&BackendError::IntentUnitNotFound { id })
     ));
 
-    let storage_backend = SqliteBackend::open("").expect_err("empty path should fail in storage");
-    assert!(matches!(storage_backend, BackendError::Storage(_)));
-    let storage = RelationshipError::from(storage_backend);
+    let storage = RelationshipError::from(BackendError::UnsupportedSchemaVersion { found: 2 });
     let backend_source = Error::source(&storage).expect("wrapper should preserve backend source");
     assert!(backend_source.downcast_ref::<BackendError>().is_some());
-    assert!(backend_source.source().is_some());
-
-    let database = TestDatabase::new("relationship-error-busy");
-    let mut backend =
-        SqliteBackend::open(database.path()).expect("fixture store should initialize");
-    let lock_holder = database.connect();
-    lock_holder
-        .execute_batch("BEGIN IMMEDIATE")
-        .expect("independent writer should acquire the fixture lock");
-    let busy_backend = backend
-        .create(CreateIntentUnit::new(Some(id), feature.clone(), workflow()))
-        .expect_err("writer held through the bounded timeout should report busy");
-    lock_holder
-        .execute_batch("ROLLBACK")
-        .expect("fixture writer should release its lock");
-    assert!(matches!(busy_backend, BackendError::StorageBusy(_)));
-    let busy = RelationshipError::from(busy_backend);
-    assert_eq!(relationship_kind(&busy), "backend");
-    let busy_backend_source =
-        Error::source(&busy).expect("relationship wrapper should retain the busy backend error");
-    assert!(matches!(
-        busy_backend_source.downcast_ref::<BackendError>(),
-        Some(BackendError::StorageBusy(_))
-    ));
-    let storage_failure = busy_backend_source
-        .source()
-        .expect("busy backend error should retain its storage failure");
-    assert!(
-        storage_failure.source().is_some(),
-        "storage failure should retain the raw SQLite diagnostic"
-    );
+    assert!(backend_source.source().is_none());
 
     fn exhaustive_backend_kind(error: &BackendError) -> &'static str {
         match error {
@@ -508,7 +481,7 @@ fn test_relationship_error_taxonomy_is_typed_and_source_preserving() {
                 .downcast_ref::<BackendError>()
                 .unwrap()
         ),
-        "storage"
+        "schema-version"
     );
 
     let source_version = MigrationError::SourceVersionNotOne { found: 2 };

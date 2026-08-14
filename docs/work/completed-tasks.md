@@ -518,3 +518,12 @@
 - **Scope repair:** The locked Touches omitted `chain/Cargo.toml`, `chain/Cargo.lock`, and the maximum-fixture source `chain/pallets/cubikan/src/benchmarking.rs`; Sprint 11 meta records the minimal same-revision dependency, lock, and benchmark-source repair.
 - **Artifact evidence:** deployable Wasm SHA-256 `640cc616674fe7393fc93928904f0fd92d77571209c8200f08b8da6290c6a275`; chain-spec SHA-256 `dc7945fbeed5b18d21c1839f8f4f5ab13a1660ca956a3513b8a9946bab6334c7`; metadata SHA-256 `171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302`; resolved anchor SHA-256 `38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7`; generated weights SHA-256 `5300fec791e7d352be42abdfbf8a7168beafa736bc7f665883ab03e1eac3e1f8`; relay genesis `0xeb2ada687ce553d3b9d695afd5d9d0a9c44a0b82e1f6eb823ac87e81638200f0`; parachain genesis `0x627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17`.
 - **Commit:** `5b3cf5548ce6670b70ee9289283abc369912f338`
+
+## T-1107 (sprint 11)
+- **Description:** Rebaseline the chain-neutral core around required origin
+- **Intent:** [INT-0008](../intents/INT-0008-traceable-intent-instantiation.md), [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md), [INT-0014](../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
+- **Completed:** 2026-08-14T05:25:40Z
+- **Files modified:** `crates/cubikan-core/src/lib.rs`, `crates/cubikan-core/src/intent_unit.rs`, `crates/cubikan-core/tests/**`, `crates/cubikan-backend/src/model.rs`, `crates/cubikan-backend/src/stored.rs`, `crates/cubikan-backend/src/sqlite.rs`, `crates/cubikan-backend/src/migration.rs`, `crates/cubikan-backend/tests/**`, `crates/cubikan-cli/src/**`, `crates/cubikan-cli/tests/**`, `crates/cubikan-local/src/**`, `crates/cubikan-local/tests/**`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Scope repair:** The locked Touches omitted `crates/cubikan-backend/src/migration.rs`; Sprint 11 meta records the minimal fail-closed removal of the otherwise-successful originless v1-to-v2 migration.
+- **Verification:** Root workspace all-target tests and doctests, warnings-denied Clippy, rustfmt, the Book-v2 validator, immutable fixture hashes, and an independent E2 authority audit passed.
+- **Commit:** PENDING

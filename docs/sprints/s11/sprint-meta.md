@@ -54,3 +54,12 @@
   the maximum global-sequence boundary before generating the retained measured
   evidence and runtime-owned weights. It does not widen the runtime call or
   origin surface.
+
+- **2026-08-14 — T-1107 legacy-migration scope omission resolved:** Required
+  origin makes the historical schema-v1-to-v2 migration incapable of producing
+  a valid current aggregate without synthetic attribution. The locked Touches
+  omitted `crates/cubikan-backend/src/migration.rs`, even though leaving its
+  successful migration path compiled would preserve transitional write
+  authority. The minimal repair changes only that legacy entry point to return
+  the existing typed unsupported-schema error before filesystem access; schema
+  v3 remains fresh-only and is introduced by T-1108.

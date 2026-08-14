@@ -6,8 +6,9 @@ use cubikan_backend::{
     MutationResult, PageLimit, TransitionIntentUnit,
 };
 use cubikan_core::{
-    IntentSpecies, IntentUnit, IntentUnitId, IntentUnitRevision, IntentUnitStatus, PhaseId,
-    Workflow, WorkflowEdge, WorkflowId,
+    ExternalReference, IntentSpecies, IntentUnit, IntentUnitId, IntentUnitRevision,
+    IntentUnitStatus, PhaseId, ReferenceNamespace, ReferenceText, Workflow, WorkflowEdge,
+    WorkflowId,
 };
 
 fn phase(value: &str) -> PhaseId {
@@ -29,6 +30,14 @@ fn workflow() -> Workflow {
 
 fn fixed_id(text: &str) -> IntentUnitId {
     text.parse().expect("fixture UUID should be valid")
+}
+
+fn origin() -> ExternalReference {
+    ExternalReference::new(
+        ReferenceNamespace::new("github").expect("fixture namespace should be valid"),
+        ReferenceText::new("crussella0129/CubiKan").expect("fixture scope should be valid"),
+        ReferenceText::new("issue:1107").expect("fixture value should be valid"),
+    )
 }
 
 #[test]
@@ -88,7 +97,8 @@ fn test_public_backend_model_exposes_complete_commands_and_results() {
     assert_eq!(list.limit().value(), 10);
     assert_eq!(list.filters().workflow_id(), Some(workflow.id()));
 
-    let unit = IntentUnit::new(id, species, workflow);
+    let origin = origin();
+    let unit = IntentUnit::new(id, origin.clone(), species, workflow);
     let view = IntentUnitView::from_intent_unit(&unit);
     let summary = IntentUnitSummary::from_view(&view);
     let cursor = ListCursor::from_str("00000000-0000-0000-0000-000000000001")
@@ -97,6 +107,7 @@ fn test_public_backend_model_exposes_complete_commands_and_results() {
     let mutation = MutationResult::new(view.revision(), view.clone());
 
     assert_eq!(view.id(), id);
+    assert_eq!(view.origin(), &origin);
     assert_eq!(view.species().as_str(), "feature");
     assert_eq!(view.workflow_id().as_str(), "delivery");
     assert_eq!(view.phase().as_str(), "queued");
@@ -104,6 +115,7 @@ fn test_public_backend_model_exposes_complete_commands_and_results() {
     assert_eq!(view.revision(), IntentUnitRevision::INITIAL);
     assert!(view.history().is_empty());
     assert_eq!(summary.id(), id);
+    assert_eq!(summary.origin(), &origin);
     assert_eq!(summary.workflow_id().as_str(), "delivery");
     assert_eq!(summary.species().as_str(), "feature");
     assert_eq!(summary.phase().as_str(), "queued");

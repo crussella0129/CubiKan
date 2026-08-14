@@ -14,8 +14,9 @@
 //!
 //! ```
 //! use cubikan_core::{
-//!     IntentSpecies, IntentUnit, IntentUnitId, IntentUnitRevision, IntentUnitStatus, PhaseId,
-//!     Workflow, WorkflowEdge, WorkflowId,
+//!     ExternalReference, IntentSpecies, IntentUnit, IntentUnitId, IntentUnitRevision,
+//!     IntentUnitStatus, PhaseId, ReferenceNamespace, ReferenceText, Workflow, WorkflowEdge,
+//!     WorkflowId,
 //! };
 //!
 //! let queued = PhaseId::new("queued")?;
@@ -33,6 +34,11 @@
 //! )?;
 //! let mut unit = IntentUnit::new(
 //!     IntentUnitId::generate(),
+//!     ExternalReference::new(
+//!         ReferenceNamespace::new("book.intent")?,
+//!         ReferenceText::new("example")?,
+//!         ReferenceText::new("INT-0008")?,
+//!     ),
 //!     IntentSpecies::new("feature")?,
 //!     workflow,
 //! );
@@ -73,8 +79,8 @@ pub use external_reference::{
 pub use id::{IntentUnitId, ParseIntentUnitIdError};
 pub use intent_unit::{
     CompletionError, CompletionRecord, IntentUnit, IntentUnitRevision, IntentUnitStatus,
-    LifecycleRecord, RevisionConflict, RevisionedCompletionError, RevisionedTransitionError,
-    TransitionError, TransitionRecord,
+    LifecycleRecord, MAX_LIFECYCLE_RECORDS, RevisionConflict, RevisionedCompletionError,
+    RevisionedTransitionError, TransitionError, TransitionRecord,
 };
 pub use vocabulary::{
     IntentSpecies, PhaseId, VocabularyError, VocabularyValidationError, WorkflowId,

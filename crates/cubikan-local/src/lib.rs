@@ -1,8 +1,7 @@
-//! Versioned one-request local adapter for the durable CubiKan backend.
+//! Unsupported-only bridge for the retired durable JSON protocol v1.
 //!
-//! This library owns protocol v1 decoding, semantic validation, execution, and
-//! response encoding. Process argument, input-size, output, and exit handling
-//! remain a separate runner boundary.
+//! The requested database path is retained for process compatibility but is
+//! never opened, created, read, or written by this bridge.
 
 #![forbid(unsafe_code)]
 

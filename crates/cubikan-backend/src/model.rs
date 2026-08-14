@@ -1,8 +1,8 @@
 use std::{fmt, str::FromStr};
 
 use cubikan_core::{
-    IntentSpecies, IntentUnit, IntentUnitId, IntentUnitRevision, IntentUnitStatus, LifecycleRecord,
-    PhaseId, Workflow, WorkflowId,
+    ExternalReference, IntentSpecies, IntentUnit, IntentUnitId, IntentUnitRevision,
+    IntentUnitStatus, LifecycleRecord, PhaseId, Workflow, WorkflowId,
 };
 
 use crate::{ListCursorError, PageLimitError};
@@ -285,6 +285,7 @@ impl ListIntentUnits {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct IntentUnitView {
     id: IntentUnitId,
+    origin: ExternalReference,
     species: IntentSpecies,
     workflow: Workflow,
     phase: PhaseId,
@@ -298,6 +299,7 @@ impl IntentUnitView {
     pub fn from_intent_unit(unit: &IntentUnit) -> Self {
         Self {
             id: unit.id(),
+            origin: unit.origin().clone(),
             species: unit.species().clone(),
             workflow: unit.workflow().clone(),
             phase: unit.phase().clone(),
@@ -310,6 +312,11 @@ impl IntentUnitView {
     #[must_use]
     pub const fn id(&self) -> IntentUnitId {
         self.id
+    }
+    /// Returns the immutable external origin required by the aggregate.
+    #[must_use]
+    pub const fn origin(&self) -> &ExternalReference {
+        &self.origin
     }
     #[must_use]
     pub const fn species(&self) -> &IntentSpecies {
@@ -345,6 +352,7 @@ impl IntentUnitView {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct IntentUnitSummary {
     id: IntentUnitId,
+    origin: ExternalReference,
     workflow_id: WorkflowId,
     species: IntentSpecies,
     phase: PhaseId,
@@ -356,6 +364,7 @@ impl IntentUnitSummary {
     pub(crate) fn from_intent_unit(unit: &IntentUnit) -> Self {
         Self {
             id: unit.id(),
+            origin: unit.origin().clone(),
             workflow_id: unit.workflow_id().clone(),
             species: unit.species().clone(),
             phase: unit.phase().clone(),
@@ -368,6 +377,7 @@ impl IntentUnitSummary {
     pub fn from_view(view: &IntentUnitView) -> Self {
         Self {
             id: view.id,
+            origin: view.origin.clone(),
             workflow_id: view.workflow.id().clone(),
             species: view.species.clone(),
             phase: view.phase.clone(),
@@ -379,6 +389,11 @@ impl IntentUnitSummary {
     #[must_use]
     pub const fn id(&self) -> IntentUnitId {
         self.id
+    }
+    /// Returns the immutable external origin required by the aggregate.
+    #[must_use]
+    pub const fn origin(&self) -> &ExternalReference {
+        &self.origin
     }
     #[must_use]
     pub const fn workflow_id(&self) -> &WorkflowId {
@@ -453,7 +468,9 @@ impl MutationResult {
 
 #[cfg(test)]
 mod tests {
-    use cubikan_core::{RevisionedTransitionError, WorkflowEdge};
+    use cubikan_core::{
+        ReferenceNamespace, ReferenceText, RevisionedTransitionError, WorkflowEdge,
+    };
 
     use super::*;
     use crate::BackendError;
@@ -481,6 +498,14 @@ mod tests {
             .expect("fixture UUID should be valid")
     }
 
+    fn origin() -> ExternalReference {
+        ExternalReference::new(
+            ReferenceNamespace::new("github").expect("fixture namespace should be valid"),
+            ReferenceText::new("crussella0129/CubiKan").expect("fixture scope should be valid"),
+            ReferenceText::new("issue:1107").expect("fixture value should be valid"),
+        )
+    }
+
     #[test]
     fn test_public_backend_model_preserves_typed_u64_revisions() {
         for value in [0, i64::MAX as u64 + 1, u64::MAX] {
@@ -489,6 +514,7 @@ mod tests {
             let completion = CompleteIntentUnit::new(id(), revision);
             let view = IntentUnitView {
                 id: id(),
+                origin: origin(),
                 species: IntentSpecies::new("feature").expect("species should be valid"),
                 workflow: workflow(),
                 phase: phase("queued"),
@@ -503,6 +529,7 @@ mod tests {
             assert_eq!(transition.expected_revision().value(), value);
             assert_eq!(completion.expected_revision().value(), value);
             assert_eq!(view.revision().value(), value);
+            assert_eq!(summary.origin(), view.origin());
             assert_eq!(summary.revision().value(), value);
             assert_eq!(page.items()[0].revision().value(), value);
             assert_eq!(mutation.committed_revision().value(), value);
@@ -510,6 +537,7 @@ mod tests {
 
             let mut aggregate = IntentUnit::new(
                 id(),
+                origin(),
                 IntentSpecies::new("feature").expect("species should be valid"),
                 workflow(),
             );

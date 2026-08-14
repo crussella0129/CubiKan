@@ -7,7 +7,7 @@ use cubikan_core::{
 };
 use std::error::Error as _;
 
-use common::{fixed_id, linear_unit, phase, species};
+use common::{fixed_id, linear_unit, origin, phase, species};
 
 fn assert_one_lifecycle_advance(
     unit: &IntentUnit,
@@ -143,7 +143,7 @@ fn test_unconditioned_mutations_advance_revision_once_per_record() {
         vec![done.clone()],
     )
     .expect("revision fixture workflow should be valid");
-    let mut unit = IntentUnit::new(fixed_id(), species(), workflow);
+    let mut unit = IntentUnit::new(fixed_id(), origin(), species(), workflow);
 
     for target in [&doing, &queued, &queued, &done] {
         let previous_revision = unit.revision();
@@ -227,7 +227,7 @@ fn test_guarded_transition_returns_exact_successor_revision() {
         vec![done],
     )
     .expect("guarded transition fixture should be valid");
-    let mut unit = IntentUnit::new(fixed_id(), species(), workflow);
+    let mut unit = IntentUnit::new(fixed_id(), origin(), species(), workflow);
     let id = unit.id();
     let species = unit.species().clone();
     let workflow = unit.workflow().clone();
@@ -528,6 +528,7 @@ fn test_custom_workflow_configuration_composes_domain_values() {
     .expect("caller-defined workflow should be valid");
     let unit = IntentUnit::new(
         fixed_id(),
+        origin(),
         IntentSpecies::new("customer-request").expect("species should be valid"),
         workflow,
     );
@@ -635,7 +636,7 @@ fn test_explicit_rework_cycle_is_honored() {
         vec![done.clone()],
     )
     .expect("rework workflow should be valid");
-    let mut unit = IntentUnit::new(fixed_id(), species(), workflow);
+    let mut unit = IntentUnit::new(fixed_id(), origin(), species(), workflow);
 
     unit.transition_to(&doing)
         .expect("forward transition should succeed");

@@ -1,7 +1,8 @@
 use std::str::FromStr;
 
 use cubikan_core::{
-    IntentSpecies, IntentUnit, IntentUnitId, PhaseId, Workflow, WorkflowEdge, WorkflowId,
+    ExternalReference, IntentSpecies, IntentUnit, IntentUnitId, PhaseId, ReferenceNamespace,
+    ReferenceText, Workflow, WorkflowEdge, WorkflowId,
 };
 
 pub fn fixed_id() -> IntentUnitId {
@@ -14,6 +15,14 @@ pub fn phase(value: &str) -> PhaseId {
 
 pub fn species() -> IntentSpecies {
     IntentSpecies::new("feature").expect("fixture species should be valid")
+}
+
+pub fn origin() -> ExternalReference {
+    ExternalReference::new(
+        ReferenceNamespace::new("book.intent").expect("fixture namespace should be valid"),
+        ReferenceText::new("core-tests").expect("fixture scope should be valid"),
+        ReferenceText::new("INT-0008").expect("fixture value should be valid"),
+    )
 }
 
 pub fn linear_workflow() -> Workflow {
@@ -34,5 +43,5 @@ pub fn linear_workflow() -> Workflow {
 }
 
 pub fn linear_unit() -> IntentUnit {
-    IntentUnit::new(fixed_id(), species(), linear_workflow())
+    IntentUnit::new(fixed_id(), origin(), species(), linear_workflow())
 }

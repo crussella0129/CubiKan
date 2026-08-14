@@ -1,6 +1,9 @@
 use std::{error::Error, fmt};
 
-use crate::{IntentSpecies, IntentUnitId, PhaseId, Workflow, WorkflowId};
+use crate::{ExternalReference, IntentSpecies, IntentUnitId, PhaseId, Workflow, WorkflowId};
+
+/// Maximum number of lifecycle records retained by a current-generation unit.
+pub const MAX_LIFECYCLE_RECORDS: usize = 256;
 
 /// Monotonic, clock-independent version of one Intent Unit's lifecycle state.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -157,6 +160,7 @@ impl LifecycleRecord {
 #[derive(Clone, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct IntentUnit {
     id: IntentUnitId,
+    origin: ExternalReference,
     species: IntentSpecies,
     workflow: Workflow,
     phase: PhaseId,
@@ -168,10 +172,16 @@ pub struct IntentUnit {
 impl IntentUnit {
     /// Creates an active unit at the owned workflow snapshot's initial phase.
     #[must_use]
-    pub fn new(id: IntentUnitId, species: IntentSpecies, workflow: Workflow) -> Self {
+    pub fn new(
+        id: IntentUnitId,
+        origin: ExternalReference,
+        species: IntentSpecies,
+        workflow: Workflow,
+    ) -> Self {
         let phase = workflow.initial_phase().clone();
         Self {
             id,
+            origin,
             species,
             workflow,
             phase,
@@ -185,6 +195,12 @@ impl IntentUnit {
     #[must_use]
     pub const fn id(&self) -> IntentUnitId {
         self.id
+    }
+
+    /// Returns the immutable external origin that caused this unit to exist.
+    #[must_use]
+    pub const fn origin(&self) -> &ExternalReference {
+        &self.origin
     }
 
     /// Returns the immutable species provenance.
@@ -231,6 +247,12 @@ impl IntentUnit {
 
     /// Moves the unit across an edge declared by its workflow snapshot.
     pub fn transition_to(&mut self, target: &PhaseId) -> Result<(), TransitionError> {
+        self.require_lifecycle_capacity().map_err(|error| {
+            TransitionError::LifecycleHistoryCapacityExceeded {
+                length: error.length,
+                maximum: error.maximum,
+            }
+        })?;
         if self.status == IntentUnitStatus::Completed {
             return Err(TransitionError::AlreadyCompleted);
         }
@@ -282,6 +304,12 @@ impl IntentUnit {
 
     /// Completes the unit when its current phase is marked eligible.
     pub fn complete(&mut self) -> Result<(), CompletionError> {
+        self.require_lifecycle_capacity().map_err(|error| {
+            CompletionError::LifecycleHistoryCapacityExceeded {
+                length: error.length,
+                maximum: error.maximum,
+            }
+        })?;
         if self.status == IntentUnitStatus::Completed {
             return Err(CompletionError::AlreadyCompleted);
         }
@@ -339,6 +367,17 @@ impl IntentUnit {
         (sequence, next_revision)
     }
 
+    fn require_lifecycle_capacity(&self) -> Result<(), LifecycleHistoryCapacityError> {
+        if self.history.len() >= MAX_LIFECYCLE_RECORDS {
+            Err(LifecycleHistoryCapacityError {
+                length: self.history.len(),
+                maximum: MAX_LIFECYCLE_RECORDS,
+            })
+        } else {
+            Ok(())
+        }
+    }
+
     fn commit_lifecycle_record(
         &mut self,
         record: LifecycleRecord,
@@ -349,9 +388,17 @@ impl IntentUnit {
     }
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct LifecycleHistoryCapacityError {
+    length: usize,
+    maximum: usize,
+}
+
 /// Rejection from an attempted phase transition.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TransitionError {
+    /// The current-generation unit already retains its complete bounded history.
+    LifecycleHistoryCapacityExceeded { length: usize, maximum: usize },
     /// Terminal Intent Units cannot move again.
     AlreadyCompleted,
     /// The requested target does not belong to the workflow snapshot.
@@ -363,6 +410,10 @@ pub enum TransitionError {
 impl fmt::Display for TransitionError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::LifecycleHistoryCapacityExceeded { length, maximum } => write!(
+                formatter,
+                "lifecycle history capacity exceeded: length {length}, maximum {maximum}"
+            ),
             Self::AlreadyCompleted => formatter.write_str("Intent Unit is already completed"),
             Self::UnknownTarget { target } => {
                 write!(formatter, "target phase `{target}` is not declared")
@@ -379,6 +430,8 @@ impl Error for TransitionError {}
 /// Rejection from an attempted terminal completion.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum CompletionError {
+    /// The current-generation unit already retains its complete bounded history.
+    LifecycleHistoryCapacityExceeded { length: usize, maximum: usize },
     /// Terminal Intent Units cannot complete again.
     AlreadyCompleted,
     /// The current phase is not marked completion-eligible.
@@ -388,6 +441,10 @@ pub enum CompletionError {
 impl fmt::Display for CompletionError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::LifecycleHistoryCapacityExceeded { length, maximum } => write!(
+                formatter,
+                "lifecycle history capacity exceeded: length {length}, maximum {maximum}"
+            ),
             Self::AlreadyCompleted => formatter.write_str("Intent Unit is already completed"),
             Self::PhaseNotEligible { phase } => {
                 write!(formatter, "phase `{phase}` is not eligible for completion")
@@ -455,6 +512,7 @@ impl Error for RevisionedCompletionError {
 #[derive(serde::Deserialize)]
 struct IntentUnitRepr {
     id: IntentUnitId,
+    origin: ExternalReference,
     species: IntentSpecies,
     workflow: Workflow,
     phase: PhaseId,
@@ -486,10 +544,16 @@ impl TryFrom<IntentUnitRepr> for IntentUnit {
     type Error = RestoreIntentUnitError;
 
     fn try_from(repr: IntentUnitRepr) -> Result<Self, Self::Error> {
+        if repr.history.len() > MAX_LIFECYCLE_RECORDS {
+            return Err(RestoreIntentUnitError::TooManyLifecycleRecords {
+                length: repr.history.len(),
+                maximum: MAX_LIFECYCLE_RECORDS,
+            });
+        }
         let expected_phase = repr.phase;
         let expected_status = repr.status;
         let expected_revision = repr.revision;
-        let mut unit = Self::new(repr.id, repr.species, repr.workflow);
+        let mut unit = Self::new(repr.id, repr.origin, repr.species, repr.workflow);
 
         for (index, record) in repr.history.into_iter().enumerate() {
             let expected_sequence = index + 1;
@@ -564,6 +628,10 @@ impl<'de> serde::Deserialize<'de> for IntentUnit {
 
 #[derive(Debug)]
 enum RestoreIntentUnitError {
+    TooManyLifecycleRecords {
+        length: usize,
+        maximum: usize,
+    },
     SequenceMismatch {
         expected: usize,
         actual: usize,
@@ -595,6 +663,10 @@ enum RestoreIntentUnitError {
 impl fmt::Display for RestoreIntentUnitError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::TooManyLifecycleRecords { length, maximum } => write!(
+                formatter,
+                "lifecycle history has {length} records; maximum is {maximum}"
+            ),
             Self::SequenceMismatch { expected, actual } => write!(
                 formatter,
                 "lifecycle sequence mismatch: expected {expected}, found {actual}"
@@ -690,11 +762,20 @@ mod tests {
         IntentSpecies::new("feature").expect("species should be valid")
     }
 
+    fn origin() -> ExternalReference {
+        ExternalReference::new(
+            crate::ReferenceNamespace::new("book.intent")
+                .expect("origin namespace should be valid"),
+            crate::ReferenceText::new("core-unit-tests").expect("origin scope should be valid"),
+            crate::ReferenceText::new("INT-0008").expect("origin value should be valid"),
+        )
+    }
+
     #[test]
     fn test_intent_unit_starts_active_at_initial_phase() {
         let workflow = workflow();
         let expected_phase = workflow.initial_phase().clone();
-        let unit = IntentUnit::new(fixed_id(), species(), workflow);
+        let unit = IntentUnit::new(fixed_id(), origin(), species(), workflow);
 
         assert_eq!(unit.id(), fixed_id());
         assert_eq!(unit.species().as_str(), "feature");
@@ -715,7 +796,7 @@ mod tests {
     fn test_intent_unit_owns_workflow_snapshot() {
         let workflow = workflow();
         let expected = workflow.clone();
-        let unit = IntentUnit::new(fixed_id(), species(), workflow);
+        let unit = IntentUnit::new(fixed_id(), origin(), species(), workflow);
 
         assert_eq!(unit.workflow(), &expected);
         assert_eq!(unit.workflow_id(), expected.id());
@@ -729,6 +810,7 @@ mod tests {
         let expected_workflow_id = expected_workflow.id().clone();
         let unit = IntentUnit::new(
             expected_id,
+            origin(),
             expected_species.clone(),
             expected_workflow.clone(),
         );
@@ -745,7 +827,7 @@ mod tests {
 
     #[test]
     fn test_allowed_transition_moves_and_appends_record() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
         let queued = phase("queued");
         let doing = phase("doing");
 
@@ -764,7 +846,7 @@ mod tests {
 
     #[test]
     fn test_disallowed_transition_is_atomic() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
         let before = unit.clone();
         let done = phase("done");
 
@@ -784,7 +866,7 @@ mod tests {
 
     #[test]
     fn test_unknown_target_transition_is_atomic() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
         let before = unit.clone();
         let missing = phase("missing");
 
@@ -798,7 +880,7 @@ mod tests {
 
     #[test]
     fn test_configured_reverse_transition_succeeds() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
 
         unit.transition_to(&phase("doing"))
             .expect("forward edge should succeed");
@@ -811,7 +893,7 @@ mod tests {
 
     #[test]
     fn test_transition_history_preserves_order() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
         let doing = phase("doing");
         let done = phase("done");
 
@@ -833,7 +915,7 @@ mod tests {
 
     #[test]
     fn test_transition_preserves_identity() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
         let id = unit.id();
         let species = unit.species().clone();
         let workflow_id = unit.workflow_id().clone();
@@ -848,7 +930,7 @@ mod tests {
 
     #[test]
     fn test_completion_from_eligible_phase_is_terminal() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
         unit.transition_to(&phase("doing"))
             .expect("first edge should succeed");
         unit.transition_to(&phase("done"))
@@ -868,7 +950,7 @@ mod tests {
 
     #[test]
     fn test_completion_from_ineligible_phase_is_atomic() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
         let before = unit.clone();
 
         let error = unit
@@ -886,7 +968,7 @@ mod tests {
 
     #[test]
     fn test_second_completion_is_rejected_without_mutation() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), workflow());
         unit.transition_to(&phase("done"))
             .expect("completion phase should be reachable");
         unit.complete().expect("first completion should succeed");
@@ -898,7 +980,7 @@ mod tests {
 
     #[test]
     fn test_transition_after_completion_is_rejected_without_mutation() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), workflow());
         unit.transition_to(&phase("done"))
             .expect("completion phase should be reachable");
         unit.complete().expect("completion should succeed");
@@ -913,7 +995,7 @@ mod tests {
 
     #[test]
     fn test_completion_preserves_identity_and_species() {
-        let mut unit = IntentUnit::new(fixed_id(), species(), workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), workflow());
         let id = unit.id();
         let species = unit.species().clone();
         let workflow_id = unit.workflow_id().clone();
@@ -928,7 +1010,7 @@ mod tests {
     }
 
     fn active_serialized_unit() -> IntentUnit {
-        let mut unit = IntentUnit::new(fixed_id(), species(), transition_workflow());
+        let mut unit = IntentUnit::new(fixed_id(), origin(), species(), transition_workflow());
         unit.transition_to(&phase("doing"))
             .expect("fixture transition should succeed");
         unit
