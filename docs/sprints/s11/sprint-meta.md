@@ -43,3 +43,14 @@
   runtime-semantic expansion. All four lifecycle dispatchables now have
   executable maximum-bound benchmarks; T-1106 remains responsible for running
   the benchmark node and replacing provisional weights with generated output.
+
+- **2026-08-13 — T-1106 runtime and benchmark scope omissions resolved:** The
+  locked task requires an operational FRAME/Cumulus runtime, a regenerated
+  chain lock, and weights measured at every declared maximum, but its Touches
+  omitted `chain/Cargo.toml`, `chain/Cargo.lock`, and the shared maximum-fixture
+  source `chain/pallets/cubikan/src/benchmarking.rs`. The minimal repair adds
+  only direct dependencies from the already pinned stable2606 SDK revision,
+  records their exact lock graph, and seeds the existing benchmark fixtures at
+  the maximum global-sequence boundary before generating the retained measured
+  evidence and runtime-owned weights. It does not widen the runtime call or
+  origin surface.

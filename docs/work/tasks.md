@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-1106 (sprint 11) [intent: INT-0014]: Integrate the fixed local parachain runtime and artifact contract — touches: chain runtime/config/metadata/artifacts/pins/tools/runtime and weight tests
 - [ ] T-1107 (sprint 11) [intent: INT-0008, INT-0009, INT-0014]: Rebaseline the chain-neutral core around required origin — touches: core, backend, CLI and local models/consumers/tests
 - [ ] T-1108 (sprint 11) [intent: INT-0008, INT-0014]: Build the exact hardened SQLite v3/envelope v2 projection store — touches: root/backend manifests, schema/store/security code/tests, filesystem/authorizer/envelope fixtures
 - [ ] T-1109 (sprint 11) [intent: INT-0008, INT-0012, INT-0014]: Implement capability-gated v3 queries — touches: backend model/query/relationship/provenance/verified-read APIs and tests

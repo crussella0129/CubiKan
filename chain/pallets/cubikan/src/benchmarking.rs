@@ -242,6 +242,10 @@ fn store_maximal_associations<T: Config>(
     associations
 }
 
+fn seed_global_sequence_maximum_successor<T: Config>() {
+    GlobalSequence::<T>::put(u64::MAX - 1);
+}
+
 #[benchmarks]
 mod benchmarks {
     use super::*;
@@ -251,6 +255,7 @@ mod benchmarks {
         let caller: T::AccountId = whitelisted_caller();
         authorize::<T>(caller.clone());
         let id = IntentUnitId::from_bytes([0x11; 16]);
+        seed_global_sequence_maximum_successor::<T>();
 
         #[extrinsic_call]
         create_unit(
@@ -266,7 +271,7 @@ mod benchmarks {
         assert_eq!(stored.revision(), 0);
         assert_eq!(stored.workflow().phases().len(), MAX_WORKFLOW_PHASES);
         assert_eq!(stored.workflow().edges().len(), MAX_WORKFLOW_EDGES);
-        assert_eq!(GlobalSequence::<T>::get(), Some(1));
+        assert_eq!(GlobalSequence::<T>::get(), Some(u64::MAX));
     }
 
     #[benchmark]
@@ -277,6 +282,7 @@ mod benchmarks {
         create_maximal_unit::<T>(caller.clone(), id);
         fill_lifecycle_to_max_minus_one::<T>(caller.clone(), id);
         let expected_revision = u64::try_from(MAX_LIFECYCLE_RECORDS - 1).expect("bound fits u64");
+        seed_global_sequence_maximum_successor::<T>();
 
         #[extrinsic_call]
         transition_unit(
@@ -291,6 +297,7 @@ mod benchmarks {
         assert_eq!(stored.revision(), MAX_LIFECYCLE_RECORDS as u64);
         assert_eq!(stored.history().len(), MAX_LIFECYCLE_RECORDS);
         assert_eq!(stored.phase(), &maximal_phase(31));
+        assert_eq!(GlobalSequence::<T>::get(), Some(u64::MAX));
     }
 
     #[benchmark]
@@ -301,6 +308,7 @@ mod benchmarks {
         create_maximal_unit::<T>(caller.clone(), id);
         fill_lifecycle_to_max_minus_one::<T>(caller.clone(), id);
         let expected_revision = u64::try_from(MAX_LIFECYCLE_RECORDS - 1).expect("bound fits u64");
+        seed_global_sequence_maximum_successor::<T>();
 
         #[extrinsic_call]
         complete_unit(
@@ -314,6 +322,7 @@ mod benchmarks {
         assert_eq!(stored.revision(), MAX_LIFECYCLE_RECORDS as u64);
         assert_eq!(stored.history().len(), MAX_LIFECYCLE_RECORDS);
         assert_eq!(stored.status(), crate::types::IntentUnitStatus::Completed);
+        assert_eq!(GlobalSequence::<T>::get(), Some(u64::MAX));
     }
 
     #[benchmark]
@@ -340,6 +349,7 @@ mod benchmarks {
         authorize::<T>(caller.clone());
         let definition = maximal_definition(RelationshipPolicy::Reject, RelationshipPolicy::Reject);
         let key = definition.key().clone();
+        seed_global_sequence_maximum_successor::<T>();
 
         #[extrinsic_call]
         create_relationship_definition(
@@ -349,7 +359,7 @@ mod benchmarks {
         );
 
         assert_eq!(RelationshipDefinitions::<T>::get(key), Some(definition));
-        assert_eq!(GlobalSequence::<T>::get(), Some(1));
+        assert_eq!(GlobalSequence::<T>::get(), Some(u64::MAX));
     }
 
     #[benchmark]
@@ -361,6 +371,7 @@ mod benchmarks {
         fill_stored_lifecycle_to_capacity::<T>(units[MAX_RELATIONSHIP_EDGES]);
         let relationship =
             RelationshipKey::new(definition.clone(), units[MAX_RELATIONSHIP_EDGES], units[0]);
+        seed_global_sequence_maximum_successor::<T>();
 
         #[extrinsic_call]
         create_relationship(
@@ -372,6 +383,7 @@ mod benchmarks {
         let edges = RelationshipEdges::<T>::get(definition);
         assert_eq!(edges.len(), MAX_RELATIONSHIP_EDGES);
         assert_eq!(edges.last(), Some(&relationship));
+        assert_eq!(GlobalSequence::<T>::get(), Some(u64::MAX));
     }
 
     #[benchmark]
@@ -388,6 +400,7 @@ mod benchmarks {
                 .try_push(relationship.clone())
                 .expect("128th edge reaches the exact capacity")
         });
+        seed_global_sequence_maximum_successor::<T>();
 
         #[extrinsic_call]
         delete_relationship(
@@ -399,6 +412,7 @@ mod benchmarks {
         let edges = RelationshipEdges::<T>::get(definition);
         assert_eq!(edges.len(), MAX_RELATIONSHIP_EDGES - 1);
         assert!(!edges.contains(&relationship));
+        assert_eq!(GlobalSequence::<T>::get(), Some(u64::MAX));
     }
 
     #[benchmark]
@@ -409,6 +423,7 @@ mod benchmarks {
         fill_stored_lifecycle_to_capacity::<T>(unit_id);
         store_maximal_associations::<T>(unit_id, MAX_ACTIVE_ASSOCIATIONS - 1);
         let association = maximal_association(unit_id, MAX_ACTIVE_ASSOCIATIONS - 1);
+        seed_global_sequence_maximum_successor::<T>();
 
         #[extrinsic_call]
         record_association(
@@ -423,7 +438,7 @@ mod benchmarks {
         assert_eq!(active.last(), Some(&association));
         assert_eq!(unit.revision(), MAX_LIFECYCLE_RECORDS as u64);
         assert_eq!(unit.history().len(), MAX_LIFECYCLE_RECORDS);
-        assert_eq!(GlobalSequence::<T>::get(), Some(1));
+        assert_eq!(GlobalSequence::<T>::get(), Some(u64::MAX));
     }
 
     #[benchmark]
@@ -437,6 +452,7 @@ mod benchmarks {
             .last()
             .expect("maximal association fixture is nonempty")
             .clone();
+        seed_global_sequence_maximum_successor::<T>();
 
         #[extrinsic_call]
         revoke_association(
@@ -451,7 +467,7 @@ mod benchmarks {
         assert!(!active.contains(&association));
         assert_eq!(unit.revision(), MAX_LIFECYCLE_RECORDS as u64);
         assert_eq!(unit.history().len(), MAX_LIFECYCLE_RECORDS);
-        assert_eq!(GlobalSequence::<T>::get(), Some(1));
+        assert_eq!(GlobalSequence::<T>::get(), Some(u64::MAX));
     }
 
     #[cfg(test)]

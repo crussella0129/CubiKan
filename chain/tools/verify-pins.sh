@@ -127,7 +127,7 @@ SEALED_EXEC_CONTENT_SHA256=""
 # Updated only after the complete pin document has passed independent review.
 # This closes the bootstrap hole where a modified pin file could bless a
 # modified namespace executable before the rest of the verifier runs.
-readonly EXPECTED_PINS_SHA256="1972b3864440beae9246b9049789ec3f5eb63937c4ed1ba269029167dadd7a65"
+readonly EXPECTED_PINS_SHA256="fcc4970325112e50461dfe42be72e131258a5c73e3b544c6e84db85486b50441"
 
 die() {
     printf 'verify-pins: %s\n' "$*" >&2
@@ -387,6 +387,16 @@ verify_pin_contract() {
     require_exact_literal foundation snapshot_format cubikan-foundation-snapshot-v1
     require_exact_literal foundation snapshot_file_count 30
     require_exact_literal foundation snapshot_external_tree_count 1
+    require_exact_literal runtime_artifacts bootstrap_state resolved
+    require_exact_literal runtime_artifacts anchor_path chain/artifacts/local-deployment-anchor-v1.json
+    require_exact_literal runtime_artifacts anchor_sha256 38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7
+    require_exact_literal runtime_artifacts chain_spec_path chain/config/cubikan-local.json
+    require_exact_literal runtime_artifacts chain_spec_sha256 dc7945fbeed5b18d21c1839f8f4f5ab13a1660ca956a3513b8a9946bab6334c7
+    require_exact_literal runtime_artifacts metadata_path chain/metadata/cubikan-runtime-v1.scale
+    require_exact_literal runtime_artifacts metadata_sha256 171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302
+    require_exact_literal runtime_artifacts runtime_wasm_path chain/artifacts/cubikan-runtime-v1.compact.compressed.wasm
+    require_exact_literal runtime_artifacts runtime_wasm_sha256 640cc616674fe7393fc93928904f0fd92d77571209c8200f08b8da6290c6a275
+    require_exact_literal runtime_artifacts runtime_code_blake2_256 e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00
 
     local key
     for key in \
@@ -404,7 +414,7 @@ verify_pin_contract() {
     require_exact_literal assets.frame-omni-bencher role same-commit-benchmark
 
     local section key_name
-    for section in polkadot_sdk scaffold rust subxt root_dependency_contract zombienet node host_tools repository_tools foundation rusqlite; do
+    for section in polkadot_sdk scaffold rust subxt root_dependency_contract zombienet node host_tools repository_tools foundation rusqlite runtime_artifacts; do
         while IFS= read -r key_name; do
             [[ -n "$key_name" ]] || continue
             pin "$section" "$key_name" >/dev/null
@@ -420,6 +430,22 @@ verify_pin_contract() {
             pin "assets.$asset" "$key_name" >/dev/null
         done
     done
+}
+
+verify_runtime_artifact_pin_seal() {
+    local anchor chain_spec metadata runtime_wasm
+    anchor="$PROJECT_ROOT/$(pin runtime_artifacts anchor_path)"
+    chain_spec="$PROJECT_ROOT/$(pin runtime_artifacts chain_spec_path)"
+    metadata="$PROJECT_ROOT/$(pin runtime_artifacts metadata_path)"
+    runtime_wasm="$PROJECT_ROOT/$(pin runtime_artifacts runtime_wasm_path)"
+    require_size "$anchor" 5868
+    require_hash "$anchor" "$(pin runtime_artifacts anchor_sha256)"
+    require_size "$chain_spec" 1278643
+    require_hash "$chain_spec" "$(pin runtime_artifacts chain_spec_sha256)"
+    require_size "$metadata" 63327
+    require_hash "$metadata" "$(pin runtime_artifacts metadata_sha256)"
+    require_size "$runtime_wasm" 637930
+    require_hash "$runtime_wasm" "$(pin runtime_artifacts runtime_wasm_sha256)"
 }
 
 fetch_all() {
@@ -1130,6 +1156,7 @@ verify_feature_closures_and_builds() {
 
 verify_local_static_inputs() {
     verify_pin_contract
+    verify_runtime_artifact_pin_seal
     verify_repository_tool_bytes
     verify_host_tool_bytes
     verify_lock_and_manifest_bytes

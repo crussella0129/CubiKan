@@ -1,0 +1,224 @@
+{
+  "artifacts": {
+    "chain_spec": {
+      "path": "chain/config/cubikan-local.json",
+      "sha256": "dc7945fbeed5b18d21c1839f8f4f5ab13a1660ca956a3513b8a9946bab6334c7",
+      "size": 1278643
+    },
+    "metadata": {
+      "path": "chain/metadata/cubikan-runtime-v1.scale",
+      "provenance": {
+        "endpoint_role": "parachain-collator-alice-rpc",
+        "method": "state_getMetadata",
+        "params": [
+          "$parachain_block_0_hash"
+        ],
+        "rpc_url": "ws://127.0.0.1:9988/"
+      },
+      "sha256": "171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302",
+      "size": 63327
+    },
+    "runtime_wasm": {
+      "path": "chain/artifacts/cubikan-runtime-v1.compact.compressed.wasm",
+      "provenance": {
+        "builder": "substrate-wasm-builder",
+        "profile": "release",
+        "source_path": "chain/target/release/wbuild/cubikan-runtime/cubikan_runtime.compact.compressed.wasm"
+      },
+      "sha256": "640cc616674fe7393fc93928904f0fd92d77571209c8200f08b8da6290c6a275",
+      "size": 637930
+    }
+  },
+  "deployment": {
+    "deployment_id": "0x3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+    "deployment_id_derivation": {
+      "algorithm": "sha256",
+      "input_utf8": "CubiKan local deployment v1\n"
+    },
+    "event_schema_version": 1,
+    "pallet_storage_version": 1,
+    "para_id": 1000,
+    "source": "decoded-pallet-cubikan-genesis-state",
+    "state_records": {
+      "deployment_id": {
+        "provenance": {
+          "endpoint_role": "parachain-collator-alice-rpc",
+          "method": "state_getStorage",
+          "params": [
+            "0x2609aef1a1450f1b658394d12c417d249cc1dff5d6cf049a569219f2724d2e09",
+            "$parachain_block_0_hash"
+          ],
+          "rpc_url": "ws://127.0.0.1:9988/"
+        },
+        "scale_hex": "0x3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+        "value": "0x3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42"
+      },
+      "event_schema_version": {
+        "provenance": {
+          "endpoint_role": "parachain-collator-alice-rpc",
+          "method": "state_getStorage",
+          "params": [
+            "0x2609aef1a1450f1b658394d12c417d24be4eb7443b9de1b5f041137c841f02ac",
+            "$parachain_block_0_hash"
+          ],
+          "rpc_url": "ws://127.0.0.1:9988/"
+        },
+        "scale_hex": "0x0100",
+        "value": 1
+      },
+      "pallet_storage_version": {
+        "provenance": {
+          "endpoint_role": "parachain-collator-alice-rpc",
+          "method": "state_getStorage",
+          "params": [
+            "0x2609aef1a1450f1b658394d12c417d241601562ebcdff856cb2f34e65f3b2659",
+            "$parachain_block_0_hash"
+          ],
+          "rpc_url": "ws://127.0.0.1:9988/"
+        },
+        "scale_hex": "0x0100",
+        "value": 1
+      },
+      "para_id": {
+        "provenance": {
+          "endpoint_role": "parachain-collator-alice-rpc",
+          "method": "state_getStorage",
+          "params": [
+            "0x0d715f2646c8f85767b5d2764bb2782604a74d81251e398fd8a0a4d55023bb3f",
+            "$parachain_block_0_hash"
+          ],
+          "rpc_url": "ws://127.0.0.1:9988/"
+        },
+        "scale_hex": "0xe8030000",
+        "value": 1000
+      }
+    }
+  },
+  "format": "cubikan-local-deployment-anchor-v1",
+  "namespace": "polkadot-sdk-parachain",
+  "parachain_genesis": {
+    "block_number": 0,
+    "hash": "0x627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+    "provenance": {
+      "endpoint_role": "parachain-collator-alice-rpc",
+      "method": "chain_getBlockHash",
+      "params": [
+        0
+      ],
+      "rpc_url": "ws://127.0.0.1:9988/"
+    }
+  },
+  "relay_genesis": {
+    "block_number": 0,
+    "hash": "0xeb2ada687ce553d3b9d695afd5d9d0a9c44a0b82e1f6eb823ac87e81638200f0",
+    "provenance": {
+      "endpoint_role": "relay-validator-alice-rpc",
+      "method": "chain_getBlockHash",
+      "params": [
+        0
+      ],
+      "rpc_url": "ws://127.0.0.1:9944/"
+    }
+  },
+  "runtime": {
+    "apis": [
+      [
+        "0xab3c0572291feb8b",
+        2
+      ],
+      [
+        "0xea93e3f16f3d6962",
+        3
+      ],
+      [
+        "0x37e397fc7c91f5e4",
+        2
+      ],
+      [
+        "0x37c8bb1350a9a2a8",
+        4
+      ],
+      [
+        "0xbc9d89904f5b923f",
+        1
+      ],
+      [
+        "0xdf6acb689907609b",
+        5
+      ],
+      [
+        "0xd7bdd8a272ca0d65",
+        2
+      ],
+      [
+        "0x075f8cd374350e84",
+        1
+      ],
+      [
+        "0xd2bc9897eed08f15",
+        3
+      ],
+      [
+        "0xfbc577b9d747efd6",
+        1
+      ],
+      [
+        "0xf78b278be53f454c",
+        2
+      ],
+      [
+        "0xa2ddb6a58477bf63",
+        1
+      ],
+      [
+        "0xdd718d5cc53262d4",
+        1
+      ],
+      [
+        "0x04e70521a0d3d2f8",
+        2
+      ],
+      [
+        "0x40fe3ad401f8959a",
+        6
+      ],
+      [
+        "0xccd9de6396c899ca",
+        1
+      ],
+      [
+        "0xf3ff14d5ab527059",
+        3
+      ]
+    ],
+    "authoring_version": 1,
+    "code": {
+      "blake2_256": "0xe95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00",
+      "provenance": {
+        "endpoint_role": "parachain-collator-alice-rpc",
+        "method": "state_getStorage",
+        "params": [
+          "0x3a636f6465",
+          "$parachain_block_0_hash"
+        ],
+        "rpc_url": "ws://127.0.0.1:9988/"
+      }
+    },
+    "impl_name": "cubikan-runtime",
+    "impl_version": 0,
+    "provenance": {
+      "endpoint_role": "parachain-collator-alice-rpc",
+      "method": "state_getRuntimeVersion",
+      "params": [
+        "$parachain_block_0_hash"
+      ],
+      "rpc_url": "ws://127.0.0.1:9988/"
+    },
+    "spec_name": "cubikan-runtime",
+    "spec_version": 1,
+    "state_version": 1,
+    "system_version": 1,
+    "transaction_version": 1
+  },
+  "status": "resolved"
+}
