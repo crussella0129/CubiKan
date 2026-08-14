@@ -1,0 +1,20 @@
+{
+  "fixture_format": "cubikan-envelope-v2-case-v1",
+  "fixture_version": 1,
+  "case_id": "reject-unknown-history-member",
+  "payload_encoding": "utf8-concatenate-json-string-segments",
+  "payload_utf8_segments": [
+    "{\"representation_version\":2,\"id\":\"00000000-0000-4000-8000-000000000001\",\"origin\":{\"namespace\":\"fixture\",\"scope\":\"scope\",\"value\":\"value\"},\"species\":\"intent\",\"workflow\":{\"id\":\"one-step\",\"phases\":[\"ready\"],\"initial_phase\":\"ready\",\"edges\":[],\"completion_phases\":[\"ready\"]},\"phase\":\"ready\",\"status\":\"completed\",\"revision\":\"1\",\"history\":[{\"type\":\"completion\",\"sequence\":\"1\",\"phase\":\"ready\",\"extra\":false}]}"
+  ],
+  "payload_bytes": 400,
+  "payload_sha256": "2f349d3eafce06e4563d150bff6fda8bb12924d7e6d8550d4817dce8a8a3805c",
+  "sqlite_envelope_version": 2,
+  "expectation": {
+    "result": "reject",
+    "stage": "closed_object_decode",
+    "error": "unknown_member"
+  },
+  "evidence": {
+    "unknown_member": "history[0].extra"
+  }
+}

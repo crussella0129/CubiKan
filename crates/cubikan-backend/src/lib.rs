@@ -10,6 +10,7 @@ mod error;
 mod migration;
 mod model;
 mod projection;
+mod projection_store;
 mod query;
 mod relationship;
 mod relationship_store;

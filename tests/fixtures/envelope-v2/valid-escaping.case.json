@@ -1,0 +1,25 @@
+{
+  "fixture_format": "cubikan-envelope-v2-case-v1",
+  "fixture_version": 1,
+  "case_id": "valid-escaping",
+  "payload_encoding": "utf8-concatenate-json-string-segments",
+  "payload_utf8_segments": [
+    "{\"representation_version\":2,\"id\":\"123e4567-e89b-42d3-a456-426614174000\",\"origin\":{\"namespace\":\"fixture.escape\",\"scope\":\"quote\\\" backslash\\\\ slash/ short:\\b\\t\\n\\f\\r other:\\u0001 nonascii:é\",\"value\":\"emoji:🦀 decomposed:é\"},\"species\":\"species/\\\"\\\\\\u0002é\",\"workflow\":{\"id\":\"flow/\\\"\\\\\\u0003é\",\"phases\":[\"from\\\"\\\\/\\\\short:\\b\\t\\n\\f\\r\\u0001é\",\"to\\\"\\\\/\\\\other:\\u0002🦀\"],\"initial_phase\":\"from\\\"\\\\/\\\\short:\\b\\t\\n\\f\\r\\u0001é\",\"edges\":[{\"from\":\"from\\\"\\\\/\\\\short:\\b\\t\\n\\f\\r\\u0001é\",\"to\":\"to\\\"\\\\/\\\\other:\\u0002🦀\"}],\"completion_phases\":[\"to\\\"\\\\/\\\\other:\\u0002🦀\"]},\"phase\":\"to\\\"\\\\/\\\\other:\\u0002🦀\",\"status\":\"active\",\"revision\":\"1\",\"history\":[{\"type\":\"transition\",\"sequence\":\"1\",\"from\":\"from\\\"\\\\/\\\\short:\\b\\t\\n\\f\\r\\u0001é\",\"to\":\"to\\\"\\\\/\\\\other:\\u0002🦀\"}]}"
+  ],
+  "payload_bytes": 765,
+  "payload_sha256": "25b28689449464e87b12e7e8cb353aaf1ed83b6eda64e3207c4e17bf686404c6",
+  "sqlite_envelope_version": 2,
+  "expectation": {
+    "result": "accept"
+  },
+  "evidence": {
+    "canonical_escaping": [
+      "quote",
+      "backslash",
+      "unescaped_slash",
+      "short_control_escapes",
+      "lowercase_u00xx",
+      "direct_non_ascii_utf8"
+    ]
+  }
+}

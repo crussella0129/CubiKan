@@ -127,7 +127,7 @@ SEALED_EXEC_CONTENT_SHA256=""
 # Updated only after the complete pin document has passed independent review.
 # This closes the bootstrap hole where a modified pin file could bless a
 # modified namespace executable before the rest of the verifier runs.
-readonly EXPECTED_PINS_SHA256="fcc4970325112e50461dfe42be72e131258a5c73e3b544c6e84db85486b50441"
+readonly EXPECTED_PINS_SHA256="af06eae31811359dd4af9215a29d5b8dcf34e3fab1ca4635f12a79242dfcfd38"
 
 die() {
     printf 'verify-pins: %s\n' "$*" >&2
@@ -855,6 +855,11 @@ verify_rusqlite_reconstruction() {
     else
         [[ $? -eq 1 ]] || die "failed to construct normalized rusqlite diff"
     fi
+    if /usr/bin/diff -U0 --label a/src/version.rs --label b/src/version.rs "$pristine/src/version.rs" "$PROJECT_ROOT/$(pin rusqlite vendor_path)/src/version.rs" >>"$diff_file"; then
+        die "rusqlite inspection-wrapper diff unexpectedly empty"
+    else
+        [[ $? -eq 1 ]] || die "failed to construct rusqlite inspection-wrapper diff"
+    fi
     require_hash "$diff_file" "$(pin rusqlite normalized_diff_sha256)"
     /usr/bin/gnurm -rf -- "$work"
     trap - RETURN
@@ -940,7 +945,7 @@ verify_foundation_snapshot_bytes() {
 }
 
 verify_live_root_dependency_boundary() {
-    local actual expected manifest_subxt=0
+    local actual expected manifest_subxt=0 manifest_hash lock_hash
     expected=$'subxt 0.50.2\nsubxt-codegen 0.50.2\nsubxt-lightclient 0.50.2\nsubxt-macro 0.50.2\nsubxt-metadata 0.50.2\nsubxt-rpcs 0.50.2\nsubxt-signer 0.50.2\nsubxt-utils-accountid32 0.50.2\nsubxt-utils-fetchmetadata 0.50.2'
     if /usr/bin/grep -E '^[[:space:]]*subxt(-signer)?[[:space:]]*=' "$PROJECT_ROOT/Cargo.toml" >/dev/null; then
         manifest_subxt=1
@@ -952,8 +957,51 @@ verify_live_root_dependency_boundary() {
     ' "$PROJECT_ROOT/Cargo.lock" | /usr/lib/cargo/bin/coreutils/sort)"
     if [[ -z "$actual" ]]; then
         [[ $manifest_subxt -eq 0 ]] || die "root declares Subxt without its exact locked family"
-        require_hash "$PROJECT_ROOT/Cargo.toml" "$(pin foundation root_manifest_sha256)"
-        require_hash "$PROJECT_ROOT/Cargo.lock" "$(pin foundation root_lock_sha256)"
+        manifest_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum -- "$PROJECT_ROOT/Cargo.toml")"
+        manifest_hash=${manifest_hash%% *}
+        lock_hash="$(/usr/lib/cargo/bin/coreutils/sha256sum -- "$PROJECT_ROOT/Cargo.lock")"
+        lock_hash=${lock_hash%% *}
+        if [[ "$manifest_hash" == "$(pin foundation root_manifest_sha256)" &&
+            "$lock_hash" == "$(pin foundation root_lock_sha256)" ]]; then
+            return
+        fi
+
+        # T-1108 is the sole pre-Subxt phase allowed to evolve the live root
+        # graph.  Its exact SQLite/rustix/SHA declarations and closed direct
+        # set are checked semantically while the immutable foundation bytes
+        # above remain separately authenticated.  T-1110 transitions to the
+        # final Subxt branch below.
+        for declaration in \
+            'rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled", "limits", "modern_sqlite", "hooks", "load_extension"] }' \
+            'rustix = { version = "=1.1.4", default-features = false, features = ["fs", "process", "std"] }' \
+            'serde = { version = "1.0", features = ["derive"] }' \
+            'serde_json = "1.0"' \
+            'sha2 = { version = "=0.10.9", default-features = false, features = ["std"] }' \
+            'uuid = { version = "1.24", features = ["serde", "v4"] }'; do
+            /usr/bin/grep -Fx "$declaration" "$PROJECT_ROOT/Cargo.toml" >/dev/null ||
+                die "T-1108 root dependency declaration drift: $declaration"
+        done
+        actual="$(/usr/bin/gawk '
+            /^\[workspace.dependencies\]$/ {active=1; next}
+            /^\[/ {active=0}
+            active && /^[A-Za-z0-9_-]+[[:space:]]*=/ {key=$0; sub(/[[:space:]]*=.*/, "", key); print key}
+        ' "$PROJECT_ROOT/Cargo.toml" | /usr/lib/cargo/bin/coreutils/sort)"
+        expected=$'rusqlite\nrustix\nserde\nserde_json\nsha2\nuuid'
+        [[ "$actual" == "$expected" ]] || die "T-1108 root direct dependency set is not closed"
+        actual="$(/usr/bin/gawk '
+            /^\[\[package\]\]$/ {emit(); name=""; version=""; source=""; next}
+            /^name = / {name=$3; gsub(/"/, "", name); next}
+            /^version = / {version=$3; gsub(/"/, "", version); next}
+            /^source = / {source=$3; gsub(/"/, "", source); next}
+            function emit() {
+                if (name == "rustix" || name == "sha2") print name, version, source
+            }
+            END {emit()}
+        ' "$PROJECT_ROOT/Cargo.lock" | /usr/lib/cargo/bin/coreutils/sort)"
+        expected=$'rustix 1.1.4 registry+https://github.com/rust-lang/crates.io-index\nsha2 0.10.9 registry+https://github.com/rust-lang/crates.io-index'
+        [[ "$actual" == "$expected" ]] || die "T-1108 root lock dependency identity drift"
+        /usr/bin/gawk '/^source = "git\+/{bad=1} END{exit bad ? 1 : 0}' "$PROJECT_ROOT/Cargo.lock" ||
+            die "T-1108 root lock contains an unapproved git source"
         return
     fi
     [[ $manifest_subxt -eq 1 ]] || die "root lock contains Subxt without an approved direct declaration"

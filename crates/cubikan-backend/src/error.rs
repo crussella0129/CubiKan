@@ -106,6 +106,10 @@ pub enum BackendError {
     CompletionRejected(CompletionError),
     /// The database contains user-owned state that CubiKan cannot adopt.
     UnownedDatabase,
+    /// Projection files are not supported on the current operating system.
+    UnsupportedPlatform,
+    /// A projection path or its filesystem boundary failed a security invariant.
+    InsecureProjectionPath,
     /// The SQLite schema version is not supported.
     UnsupportedSchemaVersion { found: i64 },
     /// A supported schema version does not match its exact owned shape.
@@ -118,6 +122,8 @@ pub enum BackendError {
     ProjectionMismatch,
     /// SQLite could not acquire its local writer within the configured bound.
     StorageBusy(StorageFailure),
+    /// SQLite reached the configured projection page budget.
+    StorageFull(StorageFailure),
     /// A revision-qualified update violated the backend's CAS invariant.
     ConcurrentStorageChange,
     /// Another SQLite or local-filesystem operation failed.
@@ -145,6 +151,12 @@ impl fmt::Display for BackendError {
             Self::UnownedDatabase => {
                 formatter.write_str("database is not an owned CubiKan database")
             }
+            Self::UnsupportedPlatform => {
+                formatter.write_str("projection storage is unsupported on this platform")
+            }
+            Self::InsecureProjectionPath => {
+                formatter.write_str("projection path failed its security boundary")
+            }
             Self::UnsupportedSchemaVersion { found } => {
                 write!(formatter, "unsupported CubiKan schema version {found}")
             }
@@ -157,6 +169,7 @@ impl fmt::Display for BackendError {
                 formatter.write_str("stored Intent Unit projection disagrees with its envelope")
             }
             Self::StorageBusy(_) => formatter.write_str("CubiKan storage is busy"),
+            Self::StorageFull(_) => formatter.write_str("CubiKan projection storage is full"),
             Self::ConcurrentStorageChange => {
                 formatter.write_str("stored revision changed during guarded update")
             }
@@ -172,6 +185,7 @@ impl Error for BackendError {
             Self::TransitionRejected(error) => Some(error),
             Self::CompletionRejected(error) => Some(error),
             Self::StorageBusy(error) => Some(error),
+            Self::StorageFull(error) => Some(error),
             Self::Storage(error) => Some(error),
             _ => None,
         }

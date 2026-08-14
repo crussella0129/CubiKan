@@ -219,10 +219,10 @@ archive_size = "177215"
 archive_sha256 = "23f2a97da3e3873c73cb2a2e71b35c40ff95e0b1eefa8d72d8499a6928c3b5b3"
 pristine_tree_sha256 = "e79833aa76b8297947c2eb7cb8a9f6337609418d4f5f8d40aa8e0d46f6483ba7"
 patch_path = "patches/rusqlite-0.40.2-commit-authorizer.patch"
-patch_sha256 = "9b3f1860e886bf532f22b8a4b5365189ce696ad9e91a0d9adc9c9245792329ca"
+patch_sha256 = "8e96e9fbbcb13ff93c096564b1021344211b8b744675e41216fe0d681f646ccf"
 vendor_path = "vendor/rusqlite-0.40.2-cubikan"
-patched_tree_sha256 = "8cbf482a7804e3168ff233c9d50fc81a43eb7b0480a259e1174fea2abb26f49f"
-normalized_diff_sha256 = "9b3f1860e886bf532f22b8a4b5365189ce696ad9e91a0d9adc9c9245792329ca"
+patched_tree_sha256 = "bf9a87dc970dd0a2321fe8af8a56a22bf2e55bdb1ec09c43519a032b3dfa7240"
+normalized_diff_sha256 = "8e96e9fbbcb13ff93c096564b1021344211b8b744675e41216fe0d681f646ccf"
 
 [assets.polkadot]
 role = "relay-validator"

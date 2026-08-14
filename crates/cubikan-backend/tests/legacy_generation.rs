@@ -102,21 +102,16 @@ fn test_root_consumers_reject_v1_before_removed_authority() {
     assert!(!create_source.contains("origin"));
 
     let stored_source = include_str!("../src/stored.rs");
-    let envelope_start = stored_source
-        .find("struct StoredEnvelopeV1")
-        .expect("historical envelope should remain declared");
-    let envelope_end = stored_source[envelope_start..]
-        .find("enum StoredStatusV1")
-        .map(|offset| envelope_start + offset)
-        .expect("envelope should have a stable following boundary");
-    assert!(!stored_source[envelope_start..envelope_end].contains("origin"));
+    assert!(!stored_source.contains("struct StoredEnvelopeV1"));
+    assert!(stored_source.contains("pub(crate) const ENVELOPE_VERSION: u64 = 2"));
+    assert!(stored_source.contains("UnsupportedEnvelopeVersion"));
 
     for source in [
         include_str!("../src/sqlite.rs"),
         include_str!("../src/migration.rs"),
-        stored_source,
     ] {
         assert!(!source.contains("IntentUnit::new"));
         assert!(!source.contains("synthetic_origin"));
     }
+    assert!(!stored_source.contains("synthetic_origin"));
 }

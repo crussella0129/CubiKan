@@ -1,0 +1,103 @@
+{
+  "fixture_format": "cubikan-envelope-v2-formula-evidence-v1",
+  "fixture_version": 1,
+  "authority": "independently_authored_locked_plan_oracle",
+  "case_id": "valid-maximal-256",
+  "payload_sha256": "be60b9b3d7663640ecd5b2cef3da65055b66d8f902b40c8418e90b05f4227f33",
+  "contract": {
+    "envelope_ceiling_bytes": 2097152,
+    "lifecycle_record_maximum": 256,
+    "text_utf8_maximum_bytes": 256,
+    "phase_maximum": 32,
+    "edge_maximum": 128,
+    "completion_phase_maximum": 32,
+    "canonical_payload_has_trailing_lf": false
+  },
+  "escaping_bound": {
+    "selected_scalar": "U+0001",
+    "selected_scalar_utf8_bytes": 1,
+    "canonical_json_content_bytes_per_scalar": 6,
+    "canonical_spelling": "\\u0001",
+    "maximally_escaped_text_content_bytes": "256 * 6 = 1536",
+    "maximally_escaped_quoted_text_bytes": "1536 + 2 = 1538",
+    "unique_phase_construction": "254 U+0001 scalars plus two scalars selected from U+0001..U+001F excluding U+0008,U+0009,U+000A,U+000C,U+000D; every suffix scalar retains six-byte lowercase \\\\u00xx spelling",
+    "slash_transport_rule": "slash is not escaped",
+    "non_ascii_transport_rule": "Unicode scalar values are emitted directly as UTF-8"
+  },
+  "bounded_graph_construction": {
+    "phases": {
+      "count": 32,
+      "each_utf8_bytes": 256,
+      "each_canonical_json_bytes": 1538,
+      "unique": true
+    },
+    "edges": {
+      "count": 128,
+      "unique": true,
+      "construction": "the Cartesian pairs from phases 0..3 to phases 0..31",
+      "self_edge_for_history": "phase[0] -> phase[0]"
+    },
+    "completion_phases": {
+      "count": 32,
+      "construction": "all 32 declared phases"
+    },
+    "history": {
+      "count": 256,
+      "variant": "transition",
+      "construction": "256 declared phase[0] self-transitions with exact ordered sequence strings 1..256"
+    },
+    "revision": "256",
+    "phase": "phase[0]",
+    "status": "active"
+  },
+  "exact_byte_formula": {
+    "top_level_fixed_keys_commas_colons_braces": 108,
+    "representation_version_integer": 1,
+    "uuid_quoted": 38,
+    "origin": {
+      "fixed_keys_commas_colons_braces": 32,
+      "namespace_quoted": 66,
+      "scope_quoted": 1538,
+      "value_quoted": 1538,
+      "subtotal": 3174
+    },
+    "species_quoted": 1538,
+    "workflow": {
+      "fixed_keys_commas_colons_braces": 64,
+      "id_quoted": 1538,
+      "phases_array": "2 brackets + 31 commas + 32 * 1538 = 49249",
+      "initial_phase_quoted": 1538,
+      "each_edge_object": "15 fixed bytes + 2 * 1538 = 3091",
+      "edges_array": "2 brackets + 127 commas + 128 * 3091 = 395777",
+      "completion_phases_array": "2 brackets + 31 commas + 32 * 1538 = 49249",
+      "subtotal": 497415
+    },
+    "phase_quoted": 1538,
+    "status_active_quoted": 8,
+    "revision_256_quoted": 5,
+    "history": {
+      "each_transition_without_sequence_digits": "3125 + digits(sequence)",
+      "sequence_digit_sum_1_through_256": "9 * 1 + 90 * 2 + 157 * 3 = 660",
+      "array_brackets_and_commas": "2 + 255 = 257",
+      "subtotal": "256 * 3125 + 660 + 257 = 800917"
+    },
+    "total": "108 + 1 + 38 + 3174 + 1538 + 497415 + 1538 + 8 + 5 + 800917 = 1304742"
+  },
+  "checked_result": {
+    "payload_bytes": 1304742,
+    "ceiling_bytes": 2097152,
+    "headroom_bytes": 792410,
+    "inequality": "1304742 <= 2097152",
+    "over_ceiling_case_id": "reject-over-ceiling",
+    "over_ceiling_payload_bytes": 2097153,
+    "over_ceiling_payload_sha256": "3d26133ca3c650f4176630078013c681ac9502b752fee0fefc0bb56c49c5d61e"
+  },
+  "verifier_requirements": [
+    "concatenate payload_utf8_segments in listed order and UTF-8 encode without adding bytes",
+    "recompute payload_bytes and payload_sha256",
+    "parse accepted payloads with duplicate-key observation retained",
+    "serialize accepted values independently and compare exact payload bytes",
+    "prove counts, uniqueness, topology, replay, revision, phase, and status",
+    "never generate or refresh this oracle from production serializer output"
+  ]
+}

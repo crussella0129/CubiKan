@@ -1,0 +1,18 @@
+{
+  "fixture_format": "cubikan-envelope-v2-case-v1",
+  "fixture_version": 1,
+  "case_id": "reject-malformed-truncated",
+  "payload_encoding": "utf8-concatenate-json-string-segments",
+  "payload_utf8_segments": [
+    "{\"representation_version\":2,\"id\":\"00000000-0000-4000-8000-000000000001\",\"origin\":{\"namespace\":\"fixture\",\"scope\":\"scope\",\"value\":\"value\"},\"species\":\"intent\",\"workflow\":{\"id\":\"one-step\",\"phases\":[\"ready\"],\"initial_phase\":\"ready\",\"edges\":[],\"completion_phases\":[\"ready\"]},\"phase\":\"ready\",\"status\":\"active\",\"revision\":\"0\",\"history\":[]"
+  ],
+  "payload_bytes": 330,
+  "payload_sha256": "5042a97db9e1aeaa16472b76404fb6b0ce98aaebe4be90d6f2cc8934691cd747",
+  "sqlite_envelope_version": 2,
+  "expectation": {
+    "result": "reject",
+    "stage": "json_syntax",
+    "error": "malformed_json"
+  },
+  "evidence": {}
+}

@@ -1,0 +1,18 @@
+{
+  "fixture_format": "cubikan-envelope-v2-case-v1",
+  "fixture_version": 1,
+  "case_id": "valid-minimal",
+  "payload_encoding": "utf8-concatenate-json-string-segments",
+  "payload_utf8_segments": [
+    "{\"representation_version\":2,\"id\":\"00000000-0000-4000-8000-000000000001\",\"origin\":{\"namespace\":\"fixture\",\"scope\":\"scope\",\"value\":\"value\"},\"species\":\"intent\",\"workflow\":{\"id\":\"one-step\",\"phases\":[\"ready\"],\"initial_phase\":\"ready\",\"edges\":[],\"completion_phases\":[\"ready\"]},\"phase\":\"ready\",\"status\":\"active\",\"revision\":\"0\",\"history\":[]}"
+  ],
+  "payload_bytes": 331,
+  "payload_sha256": "c4564d4a6eb67d2787d473e283d60a47fbbe02907c71103867058211d338e870",
+  "sqlite_envelope_version": 2,
+  "expectation": {
+    "result": "accept"
+  },
+  "evidence": {
+    "history_records": 0
+  }
+}

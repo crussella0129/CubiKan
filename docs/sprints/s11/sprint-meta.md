@@ -63,3 +63,31 @@
   authority. The minimal repair changes only that legacy entry point to return
   the existing typed unsupported-schema error before filesystem access; schema
   v3 remains fresh-only and is introduced by T-1108.
+
+- **2026-08-14 — T-1108 SQLite inspection scope omissions resolved:** Exact
+  fail-before-access validation of the linked SQLite compile-option vector and
+  registered built-in VFS identities cannot be implemented through rusqlite
+  0.40.2's public safe API. The minimal repair adds safe, read-only wrappers for
+  the corresponding SQLite C inspection functions inside the already pinned
+  vendored rusqlite source, without exposing pointer-valued implementation
+  state or adding SQL authority. The repository-owned patch, pin identities,
+  and reconstruction verifier are extended over those exact bytes. T-1108's
+  locked root-manifest/lock evolution also requires the verifier's pre-Subxt
+  phase to accept only the closed six-dependency projection graph before
+  T-1110 transitions to the already sealed final Subxt graph. The new backend
+  error variants additionally require exhaustive taxonomy and retired-envelope
+  expectation updates in the existing backend integration tests
+  `relationship_model.rs` and `legacy_generation.rs`; neither repair changes
+  projection data authority or the public query surface.
+
+- **2026-08-14 — T-1108 approved-filesystem execution remains queued:** The
+  shared classifier corpus, fail-closed DrvFS/tmpfs branches, schema/envelope
+  tests, authorizer tests, warnings-denied workspace tests, and Clippy all run
+  in the current sandbox. The production create/reopen/page-limit/Busy branch
+  deliberately requires `CUBIKAN_TEST_SUPPORTED_ROOT` on an approved ext2/3/4,
+  XFS, or Btrfs test-owned directory; the writable workspace is DrvFS and
+  `/tmp` is tmpfs, both correctly rejected. An elevated ext4 test-root request
+  could not run because the local elevated-execution service has exhausted its
+  weekly allowance. No approved-filesystem success is claimed, and T-1108
+  remains queued until that exact branch executes or the blockage is resolved
+  through a later locked plan.

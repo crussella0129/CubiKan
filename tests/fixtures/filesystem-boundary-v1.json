@@ -1,0 +1,1114 @@
+{
+  "fixture_format": "cubikan-filesystem-boundary-v1",
+  "fixture_version": 1,
+  "authority": "independently_authored_locked_plan_oracle",
+  "decision_contract": {
+    "accept": "all supplied observations prove the locked Linux local-filesystem and built-in-unix boundary",
+    "reject_before_access": "reject before SQLite open, journal/sidecar creation, recovery, adoption, or external-path creation",
+    "default_for_unlisted_or_unknown": "reject_before_access"
+  },
+  "classifier_contract": {
+    "containing_mount_rule": "decode mountinfo escapes, require a path-component-containing mount point, then choose the unique longest mount point",
+    "allowed_filesystems": [
+      {
+        "filesystem_type": "ext2",
+        "statfs_magic": "0x000000000000ef53"
+      },
+      {
+        "filesystem_type": "ext3",
+        "statfs_magic": "0x000000000000ef53"
+      },
+      {
+        "filesystem_type": "ext4",
+        "statfs_magic": "0x000000000000ef53"
+      },
+      {
+        "filesystem_type": "xfs",
+        "statfs_magic": "0x0000000058465342"
+      },
+      {
+        "filesystem_type": "btrfs",
+        "statfs_magic": "0x000000009123683e"
+      }
+    ],
+    "required_sqlite_vfs": {
+      "requested_name": "unix",
+      "registered": true,
+      "built_in": true
+    },
+    "disallowed_semantics": [
+      "non_linux",
+      "missing_or_malformed_mountinfo",
+      "type_magic_mismatch",
+      "overlay",
+      "network",
+      "9p_or_drvfs",
+      "fuse",
+      "tmpfs",
+      "unknown_filesystem",
+      "custom_or_spoofed_vfs"
+    ]
+  },
+  "sqlite_open_contract": {
+    "path_source": "canonical absolute stable directory joined to one validated direct-child basename",
+    "sqlite_flags_by_operation": {
+      "creator_existing_inode": [
+        "SQLITE_OPEN_READWRITE",
+        "SQLITE_OPEN_NOFOLLOW"
+      ],
+      "existing_preflight": [
+        "SQLITE_OPEN_READONLY",
+        "SQLITE_OPEN_NOFOLLOW"
+      ],
+      "projector_writer": [
+        "SQLITE_OPEN_READWRITE",
+        "SQLITE_OPEN_NOFOLLOW"
+      ],
+      "public_reader": [
+        "SQLITE_OPEN_READONLY",
+        "SQLITE_OPEN_NOFOLLOW"
+      ]
+    },
+    "forbidden_flags": [
+      "SQLITE_OPEN_CREATE",
+      "SQLITE_OPEN_EXCLUSIVE",
+      "SQLITE_OPEN_URI"
+    ],
+    "literal_file_colon_basename": true
+  },
+  "mount_classifier_cases": [
+    {
+      "id": "accept-ext2",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext2 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "accept",
+        "selected_mount_point": "/srv/cubikan",
+        "filesystem_type": "ext2"
+      }
+    },
+    {
+      "id": "accept-ext3",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext3 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "accept",
+        "selected_mount_point": "/srv/cubikan",
+        "filesystem_type": "ext3"
+      }
+    },
+    {
+      "id": "accept-ext4",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "accept",
+        "selected_mount_point": "/srv/cubikan",
+        "filesystem_type": "ext4"
+      }
+    },
+    {
+      "id": "accept-xfs",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - xfs /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x0000000058465342",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "accept",
+        "selected_mount_point": "/srv/cubikan",
+        "filesystem_type": "xfs"
+      }
+    },
+    {
+      "id": "accept-btrfs",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - btrfs /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000009123683e",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "accept",
+        "selected_mount_point": "/srv/cubikan",
+        "filesystem_type": "btrfs"
+      }
+    },
+    {
+      "id": "accept-longest-containing-mount",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/nested/db",
+      "mountinfo_lines": [
+        "31 25 8:1 / / rw,relatime - ext4 /dev/root rw",
+        "42 31 0:45 /subvol /srv/cubikan rw,relatime - xfs /dev/sdb1 rw",
+        "43 42 0:46 /subvol/nested /srv/cubikan/nested rw,relatime - btrfs /dev/sdc1 rw"
+      ],
+      "statfs_magic": "0x000000009123683e",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "accept",
+        "selected_mount_point": "/srv/cubikan/nested",
+        "filesystem_type": "btrfs"
+      }
+    },
+    {
+      "id": "accept-mount-order-independent",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/nested/db",
+      "mountinfo_lines": [
+        "43 42 0:46 /subvol/nested /srv/cubikan/nested rw,relatime - btrfs /dev/sdc1 rw",
+        "31 25 8:1 / / rw,relatime - ext4 /dev/root rw",
+        "42 31 0:45 /subvol /srv/cubikan rw,relatime - xfs /dev/sdb1 rw"
+      ],
+      "statfs_magic": "0x000000009123683e",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "accept",
+        "selected_mount_point": "/srv/cubikan/nested",
+        "filesystem_type": "btrfs"
+      }
+    },
+    {
+      "id": "accept-escaped-space-mountpoint",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan store/db",
+      "mountinfo_lines": [
+        "31 25 8:1 / / rw,relatime - ext4 /dev/root rw",
+        "44 31 8:2 / /srv/cubikan\\040store rw,relatime - ext4 /dev/sdb2 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "accept",
+        "selected_mount_point": "/srv/cubikan store",
+        "filesystem_type": "ext4"
+      }
+    },
+    {
+      "id": "reject-non-linux",
+      "platform": "freebsd",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "unsupported_platform"
+      }
+    },
+    {
+      "id": "reject-empty-mountinfo",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "mount_identity_missing"
+      }
+    },
+    {
+      "id": "reject-no-containing-mount",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /opt/data rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "containing_mount_missing"
+      }
+    },
+    {
+      "id": "reject-missing-separator",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "mountinfo_malformed"
+      }
+    },
+    {
+      "id": "reject-short-pre-separator-fields",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "mountinfo_malformed"
+      }
+    },
+    {
+      "id": "reject-short-post-separator-fields",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "mountinfo_malformed"
+      }
+    },
+    {
+      "id": "reject-invalid-mount-escape",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan\\04x rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "mountinfo_malformed"
+      }
+    },
+    {
+      "id": "reject-ambiguous-longest-mount",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4 /dev/sda1 rw",
+        "42 25 8:2 / /srv/cubikan rw,relatime - xfs /dev/sdb1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "mount_identity_ambiguous"
+      }
+    },
+    {
+      "id": "reject-path-prefix-is-not-containment",
+      "platform": "linux",
+      "canonical_directory": "/srv/database/db",
+      "mountinfo_lines": [
+        "31 25 8:1 / / rw,relatime - overlay overlay rw",
+        "41 31 8:2 / /srv/data rw,relatime - ext4 /dev/sdb1 rw"
+      ],
+      "statfs_magic": "0x00000000794c7630",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved",
+        "selected_mount_point": "/"
+      }
+    },
+    {
+      "id": "reject-ext4-xfs-magic-mismatch",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x0000000058465342",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_magic_mismatch"
+      }
+    },
+    {
+      "id": "reject-xfs-ext-magic-mismatch",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - xfs /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_magic_mismatch"
+      }
+    },
+    {
+      "id": "reject-btrfs-ext-magic-mismatch",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - btrfs /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_magic_mismatch"
+      }
+    },
+    {
+      "id": "reject-overlay",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - overlay overlay rw"
+      ],
+      "statfs_magic": "0x00000000794c7630",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-nfs",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - nfs server:/export rw"
+      ],
+      "statfs_magic": "0x0000000000006969",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-nfs4",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - nfs4 server:/export rw"
+      ],
+      "statfs_magic": "0x0000000000006969",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-cifs",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - cifs //server/share rw"
+      ],
+      "statfs_magic": "0x00000000ff534d42",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-nine-p",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - 9p drvfs rw"
+      ],
+      "statfs_magic": "0x0000000001021997",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-drvfs-name",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - drvfs C: rw"
+      ],
+      "statfs_magic": "0x0000000001021997",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-fuse",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - fuse.sshfs host:/ rw"
+      ],
+      "statfs_magic": "0x0000000065735546",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-fuseblk",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - fuseblk /dev/sdb1 rw"
+      ],
+      "statfs_magic": "0x0000000065735546",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-tmpfs",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - tmpfs tmpfs rw"
+      ],
+      "statfs_magic": "0x0000000001021994",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-unknown-filesystem",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 0:42 / /srv/cubikan rw,relatime - futurefs /dev/future rw"
+      ],
+      "statfs_magic": "0x123456789abcdef0",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "filesystem_type_unapproved"
+      }
+    },
+    {
+      "id": "reject-unix-vfs-not-registered",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": false,
+        "built_in": false
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "sqlite_vfs_unavailable"
+      }
+    },
+    {
+      "id": "reject-custom-vfs-selection",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "custom-unix",
+        "registered": true,
+        "built_in": false
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "sqlite_vfs_not_builtin_unix"
+      }
+    },
+    {
+      "id": "reject-unix-name-case-variant",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "Unix",
+        "registered": true,
+        "built_in": true
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "sqlite_vfs_not_builtin_unix"
+      }
+    },
+    {
+      "id": "reject-unix-name-spoof",
+      "platform": "linux",
+      "canonical_directory": "/srv/cubikan/db",
+      "mountinfo_lines": [
+        "41 25 8:1 / /srv/cubikan rw,relatime - ext4 /dev/sda1 rw"
+      ],
+      "statfs_magic": "0x000000000000ef53",
+      "sqlite_vfs": {
+        "requested_name": "unix",
+        "registered": true,
+        "built_in": false
+      },
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "sqlite_vfs_not_builtin_unix"
+      }
+    }
+  ],
+  "path_cases": [
+    {
+      "id": "accept-direct-child",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "projection.sqlite3",
+      "stable_parent": true,
+      "expected": {
+        "decision": "accept",
+        "sqlite_path": "/srv/cubikan/projection.sqlite3"
+      }
+    },
+    {
+      "id": "accept-file-colon-literal-child",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "file:projection.sqlite3?mode=memory",
+      "stable_parent": true,
+      "expected": {
+        "decision": "accept",
+        "sqlite_path": "/srv/cubikan/file:projection.sqlite3?mode=memory",
+        "sqlite_open_uri": false
+      }
+    },
+    {
+      "id": "reject-relative-directory",
+      "canonical_directory": "srv/cubikan",
+      "basename": "projection.sqlite3",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "directory_not_canonical_absolute"
+      }
+    },
+    {
+      "id": "reject-unresolved-directory",
+      "canonical_directory": null,
+      "basename": "projection.sqlite3",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "directory_canonicalization_failed"
+      }
+    },
+    {
+      "id": "reject-unstable-parent",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "projection.sqlite3",
+      "stable_parent": false,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "stable_parent_mismatch"
+      }
+    },
+    {
+      "id": "reject-empty-basename",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "basename_not_direct_child"
+      }
+    },
+    {
+      "id": "reject-dot-basename",
+      "canonical_directory": "/srv/cubikan",
+      "basename": ".",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "basename_not_direct_child"
+      }
+    },
+    {
+      "id": "reject-dotdot-basename",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "..",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "basename_not_direct_child"
+      }
+    },
+    {
+      "id": "reject-parent-traversal",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "../projection.sqlite3",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "basename_not_direct_child"
+      }
+    },
+    {
+      "id": "reject-child-separator",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "nested/projection.sqlite3",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "basename_not_direct_child"
+      }
+    },
+    {
+      "id": "reject-absolute-basename",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "/tmp/projection.sqlite3",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "basename_not_direct_child"
+      }
+    },
+    {
+      "id": "reject-nul-basename",
+      "canonical_directory": "/srv/cubikan",
+      "basename": "projection\u0000.sqlite3",
+      "stable_parent": true,
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "basename_not_direct_child"
+      }
+    }
+  ],
+  "inode_cases": [
+    {
+      "id": "accept-owner-only-directory",
+      "subject": "directory",
+      "file_type": "directory",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0700",
+      "expected": {
+        "decision": "accept"
+      }
+    },
+    {
+      "id": "accept-existing-main",
+      "subject": "main",
+      "file_type": "regular",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0600",
+      "expected": {
+        "decision": "accept"
+      }
+    },
+    {
+      "id": "accept-absent-create-target",
+      "subject": "main",
+      "file_type": "absent",
+      "symlink": false,
+      "owner_relation": null,
+      "mode": null,
+      "operation": "exclusive_create",
+      "expected": {
+        "decision": "accept"
+      }
+    },
+    {
+      "id": "reject-preexisting-create-target",
+      "subject": "main",
+      "file_type": "regular",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0600",
+      "operation": "exclusive_create",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "preexisting_target"
+      }
+    },
+    {
+      "id": "reject-main-symlink",
+      "subject": "main",
+      "file_type": "regular",
+      "symlink": true,
+      "owner_relation": "current_effective_uid",
+      "mode": "0600",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "symlink"
+      }
+    },
+    {
+      "id": "reject-main-directory",
+      "subject": "main",
+      "file_type": "directory",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0700",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "nonregular"
+      }
+    },
+    {
+      "id": "reject-main-fifo",
+      "subject": "main",
+      "file_type": "fifo",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0600",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "nonregular"
+      }
+    },
+    {
+      "id": "reject-main-socket",
+      "subject": "main",
+      "file_type": "socket",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0600",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "nonregular"
+      }
+    },
+    {
+      "id": "reject-main-character-device",
+      "subject": "main",
+      "file_type": "character_device",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0600",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "nonregular"
+      }
+    },
+    {
+      "id": "reject-main-block-device",
+      "subject": "main",
+      "file_type": "block_device",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0600",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "nonregular"
+      }
+    },
+    {
+      "id": "reject-main-other-owner",
+      "subject": "main",
+      "file_type": "regular",
+      "symlink": false,
+      "owner_relation": "different_uid",
+      "mode": "0600",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "owner_mismatch"
+      }
+    },
+    {
+      "id": "reject-main-group-readable",
+      "subject": "main",
+      "file_type": "regular",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0640",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "group_or_other_bits"
+      }
+    },
+    {
+      "id": "reject-main-other-readable",
+      "subject": "main",
+      "file_type": "regular",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0604",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "group_or_other_bits"
+      }
+    },
+    {
+      "id": "reject-main-group-writable",
+      "subject": "main",
+      "file_type": "regular",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0620",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "group_or_other_bits"
+      }
+    },
+    {
+      "id": "reject-directory-symlink",
+      "subject": "directory",
+      "file_type": "directory",
+      "symlink": true,
+      "owner_relation": "current_effective_uid",
+      "mode": "0700",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "symlink"
+      }
+    },
+    {
+      "id": "reject-directory-other-owner",
+      "subject": "directory",
+      "file_type": "directory",
+      "symlink": false,
+      "owner_relation": "different_uid",
+      "mode": "0700",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "owner_mismatch"
+      }
+    },
+    {
+      "id": "reject-directory-group-searchable",
+      "subject": "directory",
+      "file_type": "directory",
+      "symlink": false,
+      "owner_relation": "current_effective_uid",
+      "mode": "0710",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "group_or_other_bits"
+      }
+    }
+  ],
+  "sidecar_cases": [
+    {
+      "id": "accept-all-sidecars-absent",
+      "journal": "absent",
+      "wal": "absent",
+      "shm": "absent",
+      "expected": {
+        "decision": "accept"
+      }
+    },
+    {
+      "id": "reject-regular-journal",
+      "journal": "regular_owner_0600",
+      "wal": "absent",
+      "shm": "absent",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "unexpected_journal"
+      }
+    },
+    {
+      "id": "reject-symlink-journal",
+      "journal": "symlink",
+      "wal": "absent",
+      "shm": "absent",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "sidecar_symlink_or_nonregular"
+      }
+    },
+    {
+      "id": "reject-regular-wal",
+      "journal": "absent",
+      "wal": "regular_owner_0600",
+      "shm": "absent",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "unexpected_wal"
+      }
+    },
+    {
+      "id": "reject-symlink-wal",
+      "journal": "absent",
+      "wal": "symlink",
+      "shm": "absent",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "sidecar_symlink_or_nonregular"
+      }
+    },
+    {
+      "id": "reject-regular-shm",
+      "journal": "absent",
+      "wal": "absent",
+      "shm": "regular_owner_0600",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "unexpected_shm"
+      }
+    },
+    {
+      "id": "reject-nonregular-shm",
+      "journal": "absent",
+      "wal": "absent",
+      "shm": "fifo",
+      "expected": {
+        "decision": "reject_before_access",
+        "reason": "sidecar_symlink_or_nonregular"
+      }
+    }
+  ],
+  "explicit_nonclaims": [
+    "hard_link_defense",
+    "hostile_parent_replacement_after_validation",
+    "custom_vfs_correctness",
+    "continuous_post_open_toctou_protection",
+    "same_user_unresolved_journal_deletion",
+    "lying_storage_or_power_loss"
+  ]
+}

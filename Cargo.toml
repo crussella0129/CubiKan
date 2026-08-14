@@ -14,9 +14,11 @@ license = "MIT"
 repository = "https://github.com/crussella0129/CubiKan"
 
 [workspace.dependencies]
-rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled"] }
+rusqlite = { version = "=0.40.2", default-features = false, features = ["bundled", "limits", "modern_sqlite", "hooks", "load_extension"] }
+rustix = { version = "=1.1.4", default-features = false, features = ["fs", "process", "std"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+sha2 = { version = "=0.10.9", default-features = false, features = ["std"] }
 uuid = { version = "1.24", features = ["serde", "v4"] }
 
 [patch.crates-io]

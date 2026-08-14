@@ -9,8 +9,12 @@ publish = false
 [dependencies]
 cubikan-core = { path = "../cubikan-core" }
 rusqlite.workspace = true
+rustix.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+
+[dev-dependencies]
+sha2.workspace = true
 
 [lints]
 workspace = true

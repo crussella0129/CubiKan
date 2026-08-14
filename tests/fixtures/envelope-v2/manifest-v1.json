@@ -1,0 +1,344 @@
+{
+  "fixture_format": "cubikan-envelope-v2-manifest-v1",
+  "fixture_version": 1,
+  "authority": "independently_authored_locked_plan_oracle",
+  "payload_reconstruction": {
+    "wrapper_format": "cubikan-envelope-v2-case-v1",
+    "encoding": "utf8-concatenate-json-string-segments",
+    "operation": "concatenate payload_utf8_segments in listed order, encode the resulting Unicode scalar sequence as UTF-8, and add no prefix, suffix, whitespace, or LF",
+    "payload_hash_algorithm": "SHA-256",
+    "wrapper_file_hash_algorithm": "SHA-256",
+    "wrapper_file_hash_covers": "the exact repository file bytes including its final LF"
+  },
+  "canonical_envelope_v2_contract": {
+    "top_level_member_order": [
+      "representation_version",
+      "id",
+      "origin",
+      "species",
+      "workflow",
+      "phase",
+      "status",
+      "revision",
+      "history"
+    ],
+    "representation_version": 2,
+    "sqlite_envelope_version": 2,
+    "trailing_lf": false,
+    "insignificant_whitespace": false,
+    "duplicate_members": "reject at every depth",
+    "unknown_members": "reject at every depth",
+    "required_members": "all listed members at every selected variant depth",
+    "explicit_null": "forbidden",
+    "status": [
+      "active",
+      "completed"
+    ],
+    "history_variants": [
+      {
+        "type": "transition",
+        "member_order": [
+          "type",
+          "sequence",
+          "from",
+          "to"
+        ]
+      },
+      {
+        "type": "completion",
+        "member_order": [
+          "type",
+          "sequence",
+          "phase"
+        ]
+      }
+    ],
+    "lifecycle_record_maximum": 256,
+    "envelope_byte_ceiling": 2097152,
+    "u64_encoding": "canonical unsigned-decimal JSON string",
+    "string_escaping": "quote/backslash and short controls use exact short escapes; other U+0000..U+001F use lowercase \\\\u00xx; slash stays literal; non-ASCII stays UTF-8"
+  },
+  "inventory_counts": {
+    "case_files": 18,
+    "accept": 4,
+    "reject": 14,
+    "formula_files": 1
+  },
+  "required_case_classes": [
+    "minimal_positive",
+    "completion_positive",
+    "canonical_escaping_positive",
+    "all_text_and_graph_bounds_plus_256_history_positive",
+    "lifecycle_record_257",
+    "malformed_json",
+    "duplicate_top_level",
+    "duplicate_nested",
+    "unknown_top_level",
+    "unknown_nested",
+    "explicit_null",
+    "envelope_v1",
+    "mixed_sqlite_and_payload_versions_both_directions",
+    "revision_replay_disagreement",
+    "phase_replay_disagreement",
+    "status_replay_disagreement",
+    "byte_ceiling_plus_one"
+  ],
+  "formula_evidence": {
+    "file": "formula-evidence-v1.json",
+    "file_bytes": 3998,
+    "file_sha256": "52b1e45bfebf84b3d41da1d2429aa94e0f71c5e7570b1bdbd3d87dffc54091bc"
+  },
+  "cases": [
+    {
+      "case_id": "valid-minimal",
+      "file": "valid-minimal.case.json",
+      "file_bytes": 838,
+      "file_sha256": "50980bd1b7bc3ef6caea5052ee22bad2d5ac6360cc85a040fa799269cb976ae7",
+      "payload_bytes": 331,
+      "payload_sha256": "c4564d4a6eb67d2787d473e283d60a47fbbe02907c71103867058211d338e870",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "accept"
+      }
+    },
+    {
+      "case_id": "valid-completed",
+      "file": "valid-completed.case.json",
+      "file_bytes": 959,
+      "file_sha256": "23107d122497904ba7eebe458d10aaa971c62874464ef14ed29943e72bbb8917",
+      "payload_bytes": 386,
+      "payload_sha256": "5cfdcc3b1f354f909920da7c222c450a398a2b1f7247640e00d5b0b7dec38f55",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "accept"
+      }
+    },
+    {
+      "case_id": "valid-escaping",
+      "file": "valid-escaping.case.json",
+      "file_bytes": 1556,
+      "file_sha256": "36322267ee1a7416523502fa5ea7d013328135f618d0ba6d38e531f5471eede9",
+      "payload_bytes": 765,
+      "payload_sha256": "25b28689449464e87b12e7e8cb353aaf1ed83b6eda64e3207c4e17bf686404c6",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "accept"
+      }
+    },
+    {
+      "case_id": "valid-maximal-256",
+      "file": "valid-maximal-256.case.json",
+      "file_bytes": 1525803,
+      "file_sha256": "763e560d5fa5c12cab1f3b692e3783453de60fc85f71f441ab41117da3c0132e",
+      "payload_bytes": 1304742,
+      "payload_sha256": "be60b9b3d7663640ecd5b2cef3da65055b66d8f902b40c8418e90b05f4227f33",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "accept"
+      }
+    },
+    {
+      "case_id": "reject-lifecycle-257",
+      "file": "reject-lifecycle-257.case.json",
+      "file_bytes": 21689,
+      "file_sha256": "1c5a3bdefe041e17e68c60016562540076768f0e879ddcd9a4cbb1cc640f76ee",
+      "payload_bytes": 16948,
+      "payload_sha256": "cdfa3d6d0d032e26f224764842c771f7d75e2032b295c058e15c7ad8eacbaa54",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "closed_envelope_validation",
+        "error": "lifecycle_history_capacity_exceeded"
+      }
+    },
+    {
+      "case_id": "reject-malformed-truncated",
+      "file": "reject-malformed-truncated.case.json",
+      "file_bytes": 881,
+      "file_sha256": "1baa7dba5f7181d2c055fbd6542a8c250ee2641b1ec2041a7f981de0373eae50",
+      "payload_bytes": 330,
+      "payload_sha256": "5042a97db9e1aeaa16472b76404fb6b0ce98aaebe4be90d6f2cc8934691cd747",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "json_syntax",
+        "error": "malformed_json"
+      }
+    },
+    {
+      "case_id": "reject-duplicate-top-level",
+      "file": "reject-duplicate-top-level.case.json",
+      "file_bytes": 974,
+      "file_sha256": "b7ec18f343d097695195dcad8ea959e10fe41b75f8116501a8086c4475defa50",
+      "payload_bytes": 358,
+      "payload_sha256": "43643b9c180d9adbfb8bc4ae7b95f8d6c426c10c1dc95430ab097d0650b05cc3",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "closed_object_decode",
+        "error": "duplicate_member"
+      }
+    },
+    {
+      "case_id": "reject-duplicate-origin-member",
+      "file": "reject-duplicate-origin-member.case.json",
+      "file_bytes": 969,
+      "file_sha256": "afd8fe7ff067e36a01569e0a5252df0b05796db38470cb4895673dfd202097ef",
+      "payload_bytes": 353,
+      "payload_sha256": "4a9d0df18307ddaa72ccc06df9ce55cb6eee632600194be3e70cde615c4f7101",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "closed_object_decode",
+        "error": "duplicate_member"
+      }
+    },
+    {
+      "case_id": "reject-unknown-top-level",
+      "file": "reject-unknown-top-level.case.json",
+      "file_bytes": 938,
+      "file_sha256": "c25878978337265206a23d01f41c0eb122cb3a8ee396eb327360d3dbb890e228",
+      "payload_bytes": 345,
+      "payload_sha256": "996a81d69a1f9b9d2e355c88b96fc218c0d8517ad8e045d34106d7dbaca46062",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "closed_object_decode",
+        "error": "unknown_member"
+      }
+    },
+    {
+      "case_id": "reject-unknown-history-member",
+      "file": "reject-unknown-history-member.case.json",
+      "file_bytes": 1021,
+      "file_sha256": "6addcbd73b1da805b2e43b813ae32fbc5db0d319eceddaa1e4d3698588094aeb",
+      "payload_bytes": 400,
+      "payload_sha256": "2f349d3eafce06e4563d150bff6fda8bb12924d7e6d8550d4817dce8a8a3805c",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "closed_object_decode",
+        "error": "unknown_member"
+      }
+    },
+    {
+      "case_id": "reject-null-required",
+      "file": "reject-null-required.case.json",
+      "file_bytes": 862,
+      "file_sha256": "42b363731f27de62f70cad65f2b428952de802a1e283e48f785edf8c14cd60b3",
+      "payload_bytes": 280,
+      "payload_sha256": "725133d622288ba7f8b7db2d095838d954363f0300d517fda867b15665da47c1",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "closed_object_decode",
+        "error": "explicit_null_forbidden"
+      }
+    },
+    {
+      "case_id": "reject-envelope-v1",
+      "file": "reject-envelope-v1.case.json",
+      "file_bytes": 935,
+      "file_sha256": "7520549f1bad815d7e347690f3d24c089042d086dc8c40b59c5af771baebba35",
+      "payload_bytes": 331,
+      "payload_sha256": "2ff39bea20bc749df0927723b684540f03e34e7a1981a8575d54482ad1a1a59f",
+      "sqlite_envelope_version": 1,
+      "expectation": {
+        "result": "reject",
+        "stage": "generation_gate",
+        "error": "unsupported_envelope_version"
+      }
+    },
+    {
+      "case_id": "reject-mixed-row-v1-payload-v2",
+      "file": "reject-mixed-row-v1-payload-v2.case.json",
+      "file_bytes": 942,
+      "file_sha256": "09455b10554cd34c495eff37d4a59e699051f961a27f93afbfa810d3ade554fc",
+      "payload_bytes": 331,
+      "payload_sha256": "c4564d4a6eb67d2787d473e283d60a47fbbe02907c71103867058211d338e870",
+      "sqlite_envelope_version": 1,
+      "expectation": {
+        "result": "reject",
+        "stage": "generation_gate",
+        "error": "mixed_envelope_versions"
+      }
+    },
+    {
+      "case_id": "reject-mixed-row-v2-payload-v1",
+      "file": "reject-mixed-row-v2-payload-v1.case.json",
+      "file_bytes": 942,
+      "file_sha256": "46c05d594e5e494121211f887b3c035db8512639526329c2edb3d59cc2301768",
+      "payload_bytes": 331,
+      "payload_sha256": "2ff39bea20bc749df0927723b684540f03e34e7a1981a8575d54482ad1a1a59f",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "generation_gate",
+        "error": "mixed_envelope_versions"
+      }
+    },
+    {
+      "case_id": "reject-revision-history-disagreement",
+      "file": "reject-revision-history-disagreement.case.json",
+      "file_bytes": 961,
+      "file_sha256": "645966bb275db07f6d4f62163762f336515f396868fcf6923638ef232ea5a2ad",
+      "payload_bytes": 331,
+      "payload_sha256": "d498543cd1d6d05be9999bd79aac59cabc14e357158398e342e2bfa7fd8e156d",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "lifecycle_replay",
+        "error": "revision_history_disagreement"
+      }
+    },
+    {
+      "case_id": "reject-phase-history-disagreement",
+      "file": "reject-phase-history-disagreement.case.json",
+      "file_bytes": 1078,
+      "file_sha256": "47c013ea0b39a6fecbe74251ebd7cbc17514752a7ea86e95ec82612871024be2",
+      "payload_bytes": 428,
+      "payload_sha256": "c409a5faecd9cfe77ad84b31a21f8e00207b03d8fabbc55c67560b3717eab377",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "lifecycle_replay",
+        "error": "phase_history_disagreement"
+      }
+    },
+    {
+      "case_id": "reject-status-history-disagreement",
+      "file": "reject-status-history-disagreement.case.json",
+      "file_bytes": 966,
+      "file_sha256": "af27241bd162531c9ad28261cb1080a0d380b9a23e52e1ed513b755b0c89a025",
+      "payload_bytes": 334,
+      "payload_sha256": "59950b18b91e1c17fd2b29ca7441e43434b3e61756192c805a79b603a50c9185",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "lifecycle_replay",
+        "error": "status_history_disagreement"
+      }
+    },
+    {
+      "case_id": "reject-over-ceiling",
+      "file": "reject-over-ceiling.case.json",
+      "file_bytes": 2098762,
+      "file_sha256": "3f20e29cf0fdd9efb5e808401ff72541dc988b39af8d56979ced214bd9742873",
+      "payload_bytes": 2097153,
+      "payload_sha256": "3d26133ca3c650f4176630078013c681ac9502b752fee0fefc0bb56c49c5d61e",
+      "sqlite_envelope_version": 2,
+      "expectation": {
+        "result": "reject",
+        "stage": "byte_length_before_json",
+        "error": "envelope_byte_ceiling_exceeded"
+      }
+    }
+  ],
+  "oracle_policy": {
+    "production_serializer_may_consume": true,
+    "production_serializer_may_regenerate_or_refresh": false,
+    "implementation_trace_or_output_may_modify": false,
+    "accepted_payload_comparison": "exact bytes and SHA-256 after independent typed replay",
+    "rejected_payload_observation": "exact earliest stage and stable error from the wrapper expectation"
+  }
+}
