@@ -1,0 +1,36 @@
+{
+  "format": "cubikan-submission-journal-crash-points-v1",
+  "global_invariants": {
+    "journal_visibility": "only_absent_old_or_new_complete_checksummed_record",
+    "temporary_visibility": "at_most_one_fixed_derived_owner_0600_regular_torn_or_complete_temp_removed_under_lock_then_parent_fsync",
+    "restart_rule": "no_send_before_safe_republication_or_exact_hash_reconciliation",
+    "orphan_limit": 1,
+    "durability_scope": "supported_linux_local_filesystem_process_crash",
+    "excluded": "lying_hardware_power_loss"
+  },
+  "points": [
+    {"id": "before_prepared_temp_create", "phase": "prepared_publication", "admissible_journal": ["absent"], "admissible_temp": ["absent"], "delivery_possible": false},
+    {"id": "after_prepared_temp_create", "phase": "prepared_publication", "admissible_journal": ["absent"], "admissible_temp": ["owner_0600_regular_torn"], "delivery_possible": false},
+    {"id": "after_prepared_partial_write", "phase": "prepared_publication", "admissible_journal": ["absent"], "admissible_temp": ["owner_0600_regular_torn"], "delivery_possible": false},
+    {"id": "after_prepared_complete_write_and_checksum", "phase": "prepared_publication", "admissible_journal": ["absent"], "admissible_temp": ["owner_0600_regular_complete"], "delivery_possible": false},
+    {"id": "before_prepared_temp_fsync", "phase": "prepared_publication", "admissible_journal": ["absent"], "admissible_temp": ["owner_0600_regular_torn", "owner_0600_regular_complete"], "delivery_possible": false},
+    {"id": "after_prepared_temp_fsync", "phase": "prepared_publication", "admissible_journal": ["absent"], "admissible_temp": ["owner_0600_regular_complete"], "delivery_possible": false},
+    {"id": "before_prepared_rename", "phase": "prepared_publication", "admissible_journal": ["absent"], "admissible_temp": ["owner_0600_regular_complete"], "delivery_possible": false},
+    {"id": "after_prepared_rename_before_parent_fsync", "phase": "prepared_publication", "admissible_journal": ["absent", "prepared"], "admissible_temp": ["absent", "owner_0600_regular_complete"], "delivery_possible": false},
+    {"id": "after_prepared_parent_fsync_before_send", "phase": "prepared_durable", "admissible_journal": ["prepared"], "admissible_temp": ["absent"], "delivery_possible": false},
+    {"id": "before_submit_and_watch", "phase": "send", "admissible_journal": ["prepared"], "admissible_temp": ["absent"], "delivery_possible": false},
+    {"id": "after_submit_and_watch_begins", "phase": "send", "admissible_journal": ["prepared"], "admissible_temp": ["absent"], "delivery_possible": true},
+    {"id": "watcher_loss", "phase": "watch", "admissible_journal": ["prepared"], "admissible_temp": ["absent"], "delivery_possible": true},
+    {"id": "response_loss", "phase": "response", "admissible_journal": ["prepared", "same_terminal"], "admissible_temp": ["absent"], "delivery_possible": true},
+    {"id": "before_resolution_temp_create", "phase": "resolution_publication", "admissible_journal": ["prepared"], "admissible_temp": ["absent"], "delivery_possible": true},
+    {"id": "after_resolution_temp_create", "phase": "resolution_publication", "admissible_journal": ["prepared"], "admissible_temp": ["owner_0600_regular_torn"], "delivery_possible": true},
+    {"id": "after_resolution_partial_write", "phase": "resolution_publication", "admissible_journal": ["prepared"], "admissible_temp": ["owner_0600_regular_torn"], "delivery_possible": true},
+    {"id": "after_resolution_complete_write_and_checksum", "phase": "resolution_publication", "admissible_journal": ["prepared"], "admissible_temp": ["owner_0600_regular_complete"], "delivery_possible": true},
+    {"id": "after_resolution_temp_fsync", "phase": "resolution_publication", "admissible_journal": ["prepared"], "admissible_temp": ["owner_0600_regular_complete"], "delivery_possible": true},
+    {"id": "after_resolution_rename_before_parent_fsync", "phase": "resolution_publication", "admissible_journal": ["prepared", "same_terminal"], "admissible_temp": ["absent", "owner_0600_regular_complete"], "delivery_possible": true},
+    {"id": "after_resolution_parent_fsync", "phase": "resolution_durable", "admissible_journal": ["same_terminal"], "admissible_temp": ["absent"], "delivery_possible": true},
+    {"id": "after_terminal_response_before_remove", "phase": "removal", "admissible_journal": ["same_terminal"], "admissible_temp": ["absent"], "delivery_possible": true},
+    {"id": "after_remove_before_parent_fsync", "phase": "removal", "admissible_journal": ["same_terminal", "absent"], "admissible_temp": ["absent"], "delivery_possible": true},
+    {"id": "after_remove_parent_fsync", "phase": "clean", "admissible_journal": ["absent"], "admissible_temp": ["absent"], "delivery_possible": true}
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "format": "cubikan-submission-signed-extrinsic-v1",
+  "authority": {
+    "purpose": "independent_offline_signature_and_scale_codec_oracle",
+    "signer_authorized_by_local_runtime": false,
+    "signer_name": "Alice",
+    "production_submitters": ["Charlie", "Dave"],
+    "nonclaim": "This vector proves bytes and cryptography only; it is not a successful authorized dispatch fixture."
+  },
+  "runtime": {
+    "metadata_path": "chain/metadata/cubikan-runtime-v1.scale",
+    "metadata_size": 63327,
+    "metadata_sha256": "171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302",
+    "genesis_hash": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+    "spec_version": 1,
+    "transaction_version": 1,
+    "extrinsic_version": 4
+  },
+  "call": {
+    "pallet_name": "Cubikan",
+    "pallet_index": 50,
+    "call_name": "complete_unit",
+    "call_index": 2,
+    "command_schema_version": 1,
+    "intent_unit_id": "00112233445566778899aabbccddeeff",
+    "expected_revision": "72623859790382856",
+    "path": "raw/signing/call.scale.hex",
+    "decoded_size": 28,
+    "decoded_sha256": "c03c29f74432b39e5647e0003bb5f03b8e526fb8c309ec7e3929ca1d4e27fe70"
+  },
+  "parameters": {
+    "account_id": "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+    "signature_scheme": "sr25519",
+    "signature_context_ascii": "substrate",
+    "nonce": "66051",
+    "period": 64,
+    "phase": 3,
+    "era_scale_hex": "3500",
+    "signing_finalized_number": "131",
+    "signing_finalized_hash": "838281807f7e7d7c7b7a797877767574737271706f6e6d6c6b6a696867666564",
+    "inclusive_birth": "131",
+    "inclusive_death": "194",
+    "tip": "0"
+  },
+  "signer_payload": {
+    "path": "raw/signing/signer-payload.scale.hex",
+    "decoded_size": 107,
+    "decoded_sha256": "d008bdf5721d1c6c8871e4d286346034e65d658cdfb0cf9ffc57f48f3baa42b7",
+    "ordered_components": ["call", "era", "compact_nonce", "compact_zero_tip", "spec_version_le", "transaction_version_le", "genesis_hash", "signing_finalized_hash"],
+    "additional_block_hash_is_encoded_in_extrinsic": false
+  },
+  "signature": {
+    "path": "raw/signing/signature.scale.hex",
+    "decoded_size": 64,
+    "decoded_sha256": "5eea7e2f1e8f13becda311296a15f1958362f617d4e0807c01b493f88329596a",
+    "schnorrkel_marker_bit_set": true,
+    "verification": "sr25519_verify_context_substrate"
+  },
+  "signed_extrinsic": {
+    "path": "raw/signing/signed-extrinsic.scale.hex",
+    "decoded_size": 136,
+    "decoded_sha256": "e8b72ddef2a52a81f623c56fca2cde55e0da1913728a4adf5ef0052fec94ee45",
+    "blake2_256": "8dc2048ba261737a5d52bb1320df571e2aa3028c22783fc60a0dd021649cb5ca",
+    "outer_compact_length": 134,
+    "signed_version_byte": 132,
+    "address_variant": 0,
+    "signature_variant": 1,
+    "compact_nonce_hex": "0e080400",
+    "compact_tip_hex": "00"
+  }
+}

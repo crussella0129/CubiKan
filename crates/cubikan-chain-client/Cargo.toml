@@ -9,6 +9,8 @@ publish = false
 [dependencies]
 cubikan-core = { path = "../cubikan-core" }
 parity-scale-codec.workspace = true
+rustix.workspace = true
+scale-info.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 subxt.workspace = true

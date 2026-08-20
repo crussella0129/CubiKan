@@ -1,0 +1,75 @@
+{
+  "format": "cubikan-submission-lane-path-vectors-v1",
+  "domain_hex": "437562694b616e207369676e6572206c616e6520763100",
+  "accepted": [
+    {
+      "id": "primary-asymmetric",
+      "path_hex": "2f7372762f637562696b616e2f70726f6a656374696f6e",
+      "path_length": 23,
+      "deployment_id": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+      "signer": "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+      "digest": "836e5130efe3d8344be0e68fa70e435fb473805c660ce012fa52f61a808e887d",
+      "basenames": {
+        "lock": "cubikan-submission-836e5130efe3d8344be0e68fa70e435fb473805c660ce012fa52f61a808e887d.lock",
+        "journal": "cubikan-submission-836e5130efe3d8344be0e68fa70e435fb473805c660ce012fa52f61a808e887d.journal",
+        "temporary": "cubikan-submission-836e5130efe3d8344be0e68fa70e435fb473805c660ce012fa52f61a808e887d.tmp"
+      }
+    },
+    {
+      "id": "last-path-byte-differs",
+      "path_hex": "2f7372762f637562696b616e2f70726f6a656374696f6d",
+      "path_length": 23,
+      "deployment_id": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+      "signer": "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+      "digest": "46607ff9b9ef412ec0c686d606e1f7ab2ea9bc1bff591c1bb2942457324773ce",
+      "basenames": {
+        "lock": "cubikan-submission-46607ff9b9ef412ec0c686d606e1f7ab2ea9bc1bff591c1bb2942457324773ce.lock",
+        "journal": "cubikan-submission-46607ff9b9ef412ec0c686d606e1f7ab2ea9bc1bff591c1bb2942457324773ce.journal",
+        "temporary": "cubikan-submission-46607ff9b9ef412ec0c686d606e1f7ab2ea9bc1bff591c1bb2942457324773ce.tmp"
+      }
+    },
+    {
+      "id": "raw-non-utf8-path",
+      "path_hex": "2f7372762f637562696b616e2f8070726f6a656374696f6e",
+      "path_length": 24,
+      "deployment_id": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+      "signer": "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+      "digest": "5874b5b0dd6406e7f92bc88668ee379248dd814f9a869d38c8dab8a1aa5ec6bc",
+      "basenames": {
+        "lock": "cubikan-submission-5874b5b0dd6406e7f92bc88668ee379248dd814f9a869d38c8dab8a1aa5ec6bc.lock",
+        "journal": "cubikan-submission-5874b5b0dd6406e7f92bc88668ee379248dd814f9a869d38c8dab8a1aa5ec6bc.journal",
+        "temporary": "cubikan-submission-5874b5b0dd6406e7f92bc88668ee379248dd814f9a869d38c8dab8a1aa5ec6bc.tmp"
+      }
+    },
+    {
+      "id": "deployment-signer-order-sentinel",
+      "path_hex": "2f7372762f637562696b616e2f70726f6a656374696f6e",
+      "path_length": 23,
+      "deployment_id": "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+      "signer": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+      "digest": "a5dbb9d1e2d1137ef5a1ae27a7e2bcc3edfc80550bccd1ceb53ed015e10f9532",
+      "basenames": {
+        "lock": "cubikan-submission-a5dbb9d1e2d1137ef5a1ae27a7e2bcc3edfc80550bccd1ceb53ed015e10f9532.lock",
+        "journal": "cubikan-submission-a5dbb9d1e2d1137ef5a1ae27a7e2bcc3edfc80550bccd1ceb53ed015e10f9532.journal",
+        "temporary": "cubikan-submission-a5dbb9d1e2d1137ef5a1ae27a7e2bcc3edfc80550bccd1ceb53ed015e10f9532.tmp"
+      }
+    }
+  ],
+  "rejected_paths": [
+    {"id": "empty", "path_hex": "", "reason": "empty"},
+    {"id": "relative", "path_hex": "7372762f637562696b616e", "reason": "not_absolute"},
+    {"id": "embedded_nul", "path_hex": "2f7372762f63756269006b616e", "reason": "nul"},
+    {"id": "dot_component", "path_hex": "2f7372762f2e2f637562696b616e", "reason": "noncanonical_component"},
+    {"id": "dotdot_component", "path_hex": "2f7372762f2e2e2f637562696b616e", "reason": "noncanonical_component"},
+    {"id": "duplicate_separator", "path_hex": "2f7372762f2f637562696b616e", "reason": "noncanonical_component"},
+    {"id": "trailing_separator", "path_hex": "2f7372762f637562696b616e2f", "reason": "noncanonical_component"},
+    {"id": "u32_length_overflow", "virtual_length": 4294967296, "reason": "length_overflow"}
+  ],
+  "rejected_basenames": [
+    {"id": "uppercase_digest", "kind": "lock", "value": "cubikan-submission-836E5130EFE3D8344BE0E68FA70E435FB473805C660CE012FA52F61A808E887D.lock"},
+    {"id": "wrong_prefix", "kind": "journal", "value": "submission-836e5130efe3d8344be0e68fa70e435fb473805c660ce012fa52f61a808e887d.journal"},
+    {"id": "wrong_digest", "kind": "temporary", "value": "cubikan-submission-036e5130efe3d8344be0e68fa70e435fb473805c660ce012fa52f61a808e887d.tmp"},
+    {"id": "traversal_shaped", "kind": "journal", "value": "../cubikan-submission-836e5130efe3d8344be0e68fa70e435fb473805c660ce012fa52f61a808e887d.journal"},
+    {"id": "wrong_suffix", "kind": "lock", "value": "cubikan-submission-836e5130efe3d8344be0e68fa70e435fb473805c660ce012fa52f61a808e887d.tmp"}
+  ]
+}

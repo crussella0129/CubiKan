@@ -9,6 +9,8 @@
 
 mod identity;
 mod rpc;
+mod submission;
+mod submission_journal;
 
 use cubikan_core::{
     AssociationSubject, ExternalReference, IntentSpecies, IntentUnit, IntentUnitId, PhaseId,
@@ -23,6 +25,11 @@ pub use identity::{
     StrictLoopbackWsUrl,
 };
 pub use rpc::{ArchiveError, FinalizedBlock, FinalizedHead, VerifiedArchiveClient};
+pub use submission::{
+    AcceptedCoordinate, AcceptedEffect, DevSigner, FinalizedExtrinsic, MortalEra, Mutation,
+    MutationOperation, SubmissionError, SubmissionErrorKind, SubmissionFailureCode,
+    SubmissionOutcome, SubmissionOutcomeKind, SubmissionResult, submit_finalized,
+};
 
 /// Exact maximum for one accepted event's SCALE domain payload.
 pub const MAX_ACCEPTED_PAYLOAD_BYTES: usize = 1_048_576;

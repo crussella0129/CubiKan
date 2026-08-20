@@ -1,0 +1,102 @@
+{
+  "format": "cubikan-submission-journal-inventory-v1",
+  "entry_count": 16,
+  "entries": [
+    {
+      "path": "crash-points-v1.json",
+      "size": 4769,
+      "sha256": "edb5cec4065892440b32279bdc6b7a3b9ac98575d99fcf007a6ff808d0c7ed4b",
+      "role": "case-registry"
+    },
+    {
+      "path": "journal-vectors-v1.json",
+      "size": 4395,
+      "sha256": "4b9275f79335875bd48f3086715e86224e1b744d3d2b9621acc92479d5ad54dd",
+      "role": "oracle-vector"
+    },
+    {
+      "path": "lane-path-vectors-v1.json",
+      "size": 4779,
+      "sha256": "9902716e5817c4971edf0fb37ed9ab15bd720a0cceb2db7414246382bec751ab",
+      "role": "oracle-vector"
+    },
+    {
+      "path": "raw/journal/expired-not-included.hex",
+      "size": 513,
+      "sha256": "efcbd204911a6c79b1de2e41cae2e24f86107dc9e80d878ede9419f015a96f07",
+      "role": "raw-journal-record"
+    },
+    {
+      "path": "raw/journal/finalized-accepted.hex",
+      "size": 513,
+      "sha256": "f16831122d88301075a254cd3678085708cf353c039ba110616a0771b280723e",
+      "role": "raw-journal-record"
+    },
+    {
+      "path": "raw/journal/finalized-dispatch-rejected.hex",
+      "size": 513,
+      "sha256": "acd1417920b39e595a7cd943e13341c32ea3f3b5abd5f05e05498c78f0c8f34f",
+      "role": "raw-journal-record"
+    },
+    {
+      "path": "raw/journal/finalized-invariant-failed.hex",
+      "size": 513,
+      "sha256": "6bb3628dd6e56937125f955aa2a4ad5e6dfaed71e0c4c8e072ed41642c8555fa",
+      "role": "raw-journal-record"
+    },
+    {
+      "path": "raw/journal/prepared.hex",
+      "size": 513,
+      "sha256": "a91b7e9faf58187824d460b34c24135f5cc2dca826c83c73263b78852949f090",
+      "role": "raw-journal-record"
+    },
+    {
+      "path": "raw/signing/call.scale.hex",
+      "size": 57,
+      "sha256": "62f628db9af9b44544f34a8c7256324b8d9dee736879fe8ce9bbd566a9a2e7d3",
+      "role": "raw-signing-vector"
+    },
+    {
+      "path": "raw/signing/signature.scale.hex",
+      "size": 129,
+      "sha256": "36a1ab65b5ffae087ddb3bc1c8cbe276885403bb98016078bc09874502df86df",
+      "role": "raw-signing-vector"
+    },
+    {
+      "path": "raw/signing/signed-extrinsic.scale.hex",
+      "size": 273,
+      "sha256": "91d70df74ff9690b3a63696200c826c6adfa5b7c36b9998eae7b8411f4f4290b",
+      "role": "raw-signing-vector"
+    },
+    {
+      "path": "raw/signing/signer-payload.scale.hex",
+      "size": 215,
+      "sha256": "a3594897ffe0f05f3dd3b4fcbc53dd48b5a50ed0b1eba3b10ff48295ca9f6fee",
+      "role": "raw-signing-vector"
+    },
+    {
+      "path": "reconciliation-cases-v1.json",
+      "size": 8212,
+      "sha256": "ce80a3a1e7d5cbba87095be96e09ed4a641d0a6d1c4e79371abcc56c252ecedf",
+      "role": "case-registry"
+    },
+    {
+      "path": "rejection-cases-v1.json",
+      "size": 9563,
+      "sha256": "fddff1bf8953c2aee3d0d6cbaa14e22b4336514a502a127ceb92188c6540fef4",
+      "role": "case-registry"
+    },
+    {
+      "path": "signed-extrinsic-v1.json",
+      "size": 2834,
+      "sha256": "ed971f3032334f8d99de5d0a41000191f8985aea28c3c5b8277d1e0d195385b1",
+      "role": "oracle-vector"
+    },
+    {
+      "path": "transitions-v1.json",
+      "size": 1796,
+      "sha256": "6ee41515c2a7af580465938dbc5d88e0b3adf04ce4f6eead7644865bc777a7a5",
+      "role": "case-registry"
+    }
+  ]
+}

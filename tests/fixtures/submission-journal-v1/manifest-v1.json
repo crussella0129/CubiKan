@@ -1,0 +1,65 @@
+{
+  "format": "cubikan-submission-journal-manifest-v1",
+  "fixture_root": "tests/fixtures/submission-journal-v1",
+  "authority": {
+    "independent_oracle": true,
+    "production_may_regenerate": false,
+    "synthetic_only": true,
+    "alice_authorized_submitter": false,
+    "authorized_production_submitters": [
+      "Charlie",
+      "Dave"
+    ]
+  },
+  "inventory": {
+    "path": "inventory-v1.json",
+    "size": 3245,
+    "sha256": "590d2e4b414f11bfa2c4a6355a60bfefb4a339256fff25469a86fe19f6671e21",
+    "entry_count": 16
+  },
+  "control_documents": {
+    "scale_reasoning": {
+      "path": "SCALE-REASONING.md",
+      "size": 4469,
+      "sha256": "80494596503e241bee1235b5932451406db03fc150a610784238059857461ff4"
+    },
+    "verifier": {
+      "path": "verify_fixtures.py",
+      "size": 63035,
+      "sha256": "a39a121c51f902df02b7a317df25a69e57f7f6965f4709f4c3ddb707ebedfce7"
+    }
+  },
+  "external_artifacts": {
+    "deployment_anchor": {
+      "path": "chain/artifacts/local-deployment-anchor-v1.json",
+      "size": 5868,
+      "sha256": "38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7"
+    },
+    "metadata": {
+      "path": "chain/metadata/cubikan-runtime-v1.scale",
+      "size": 63327,
+      "sha256": "171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302"
+    },
+    "runtime_wasm": {
+      "path": "chain/artifacts/cubikan-runtime-v1.compact.compressed.wasm",
+      "size": 637930,
+      "sha256": "640cc616674fe7393fc93928904f0fd92d77571209c8200f08b8da6290c6a275"
+    }
+  },
+  "summary": {
+    "lane_vector_count": 4,
+    "journal_state_count": 5,
+    "journal_record_size": 256,
+    "operation_tag_count": 8,
+    "rejection_case_count": 39,
+    "transition_cell_count": 36,
+    "crash_point_count": 23,
+    "reconciliation_case_count": 38,
+    "signed_extrinsic_size": 136
+  },
+  "verifier": {
+    "path": "verify_fixtures.py",
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 tests/fixtures/submission-journal-v1/verify_fixtures.py",
+    "requires": "Python 3.10+ standard library only"
+  }
+}

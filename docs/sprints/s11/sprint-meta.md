@@ -151,3 +151,13 @@
   statement scopes, with database `main` and no accessor. The immutable
   empty-table authorizer oracle stays unchanged, and unlisted tables, columns,
   accessors, statement scopes, and all public query authority remain denied.
+
+- **2026-08-20 — T-1111 private submission-test placement resolved:** The
+  deterministic E2, E4, and E5 behavioral matrices require a scripted chain
+  source, but exposing that source to integration tests would add a callable
+  raw RPC/finality authority seam. Their exact named tests therefore live in
+  `crates/cubikan-chain-client/src/submission.rs` behind `cfg(test)`, where the
+  fake remains crate-private. `tests/submission.rs` independently seals the
+  public API and consumes the frozen signing oracle, while the real-process E1,
+  E3, and E6 filesystem tests remain in `tests/submission_journal.rs`. This
+  placement changes no production authority or locked behavior.

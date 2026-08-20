@@ -716,6 +716,8 @@ version = "0.1.0"
 dependencies = [
  "cubikan-core",
  "parity-scale-codec",
+ "rustix",
+ "scale-info",
  "serde_json",
  "sha2 0.10.9",
  "subxt",

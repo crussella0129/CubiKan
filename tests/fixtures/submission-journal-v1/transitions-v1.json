@@ -1,0 +1,29 @@
+{
+  "format": "cubikan-submission-journal-transitions-v1",
+  "state_order": ["absent", "prepared", "finalized_accepted", "finalized_dispatch_rejected", "finalized_invariant_failed", "expired_not_included"],
+  "allowed_matrix": {
+    "absent": [false, true, false, false, false, false],
+    "prepared": [false, false, true, true, true, true],
+    "finalized_accepted": [true, false, false, false, false, false],
+    "finalized_dispatch_rejected": [true, false, false, false, false, false],
+    "finalized_invariant_failed": [true, false, false, false, false, false],
+    "expired_not_included": [true, false, false, false, false, false]
+  },
+  "allowed": [
+    {"from": "absent", "to": "prepared", "boundary": "prepared_parent_fsync_before_send"},
+    {"from": "prepared", "to": "finalized_accepted", "boundary": "resolution_parent_fsync"},
+    {"from": "prepared", "to": "finalized_dispatch_rejected", "boundary": "resolution_parent_fsync"},
+    {"from": "prepared", "to": "finalized_invariant_failed", "boundary": "resolution_parent_fsync"},
+    {"from": "prepared", "to": "expired_not_included", "boundary": "resolution_parent_fsync_after_complete_absence_scan"},
+    {"from": "finalized_accepted", "to": "absent", "boundary": "response_then_remove_parent_fsync"},
+    {"from": "finalized_dispatch_rejected", "to": "absent", "boundary": "response_then_remove_parent_fsync"},
+    {"from": "finalized_invariant_failed", "to": "absent", "boundary": "response_then_remove_parent_fsync"},
+    {"from": "expired_not_included", "to": "absent", "boundary": "response_then_remove_parent_fsync"}
+  ],
+  "forbidden_invariants": [
+    "prepared_to_absent_without_proven_resolution",
+    "resolved_to_resolved",
+    "resolved_to_prepared",
+    "incoming_operation_may_not_replace_persisted_operation"
+  ]
+}

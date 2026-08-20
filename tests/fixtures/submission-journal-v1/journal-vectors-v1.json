@@ -1,0 +1,61 @@
+{
+  "format": "cubikan-submission-journal-vectors-v1",
+  "record_size": 256,
+  "checksum_domain_hex": "437562694b616e207375626d697373696f6e2d6a6f75726e616c2d763100",
+  "layout": [
+    {"name": "magic", "start": 0, "end": 8, "encoding": "ascii:CUBKJNL1"},
+    {"name": "format_version", "start": 8, "end": 10, "encoding": "u16_be"},
+    {"name": "state", "start": 10, "end": 11, "encoding": "u8_tag"},
+    {"name": "flags", "start": 11, "end": 12, "encoding": "zero"},
+    {"name": "total_length", "start": 12, "end": 14, "encoding": "u16_be"},
+    {"name": "reserved_header", "start": 14, "end": 16, "encoding": "zero"},
+    {"name": "deployment_id", "start": 16, "end": 48, "encoding": "bytes32"},
+    {"name": "signer", "start": 48, "end": 80, "encoding": "account_id32"},
+    {"name": "nonce", "start": 80, "end": 88, "encoding": "u64_be"},
+    {"name": "extrinsic_hash", "start": 88, "end": 120, "encoding": "bytes32"},
+    {"name": "signing_finalized_number", "start": 120, "end": 128, "encoding": "u64_be"},
+    {"name": "signing_finalized_hash", "start": 128, "end": 160, "encoding": "bytes32"},
+    {"name": "birth", "start": 160, "end": 168, "encoding": "u64_be"},
+    {"name": "death", "start": 168, "end": 176, "encoding": "u64_be"},
+    {"name": "resolution_number", "start": 176, "end": 184, "encoding": "u64_be"},
+    {"name": "resolution_hash", "start": 184, "end": 216, "encoding": "bytes32"},
+    {"name": "mutation_operation", "start": 216, "end": 217, "encoding": "u8_tag"},
+    {"name": "reserved_body", "start": 217, "end": 224, "encoding": "zero"},
+    {"name": "checksum", "start": 224, "end": 256, "encoding": "sha256_domain_plus_0_224"}
+  ],
+  "states": [
+    {"tag": 0, "name": "prepared"},
+    {"tag": 1, "name": "finalized_accepted"},
+    {"tag": 2, "name": "finalized_dispatch_rejected"},
+    {"tag": 3, "name": "finalized_invariant_failed"},
+    {"tag": 4, "name": "expired_not_included"}
+  ],
+  "operations": [
+    {"tag": 0, "name": "create_unit"},
+    {"tag": 1, "name": "transition_unit"},
+    {"tag": 2, "name": "complete_unit"},
+    {"tag": 3, "name": "create_relationship_definition"},
+    {"tag": 4, "name": "create_relationship"},
+    {"tag": 5, "name": "delete_relationship"},
+    {"tag": 6, "name": "record_association"},
+    {"tag": 7, "name": "revoke_association"}
+  ],
+  "common": {
+    "deployment_id": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+    "signer": "d43593c715fdd31c61141abd04a99fd6822c8558854ccde39a5684e7a56da27d",
+    "nonce": "66051",
+    "extrinsic_hash": "8dc2048ba261737a5d52bb1320df571e2aa3028c22783fc60a0dd021649cb5ca",
+    "signing_finalized_number": "131",
+    "signing_finalized_hash": "838281807f7e7d7c7b7a797877767574737271706f6e6d6c6b6a696867666564",
+    "birth": "131",
+    "death": "194",
+    "mutation_operation": "complete_unit"
+  },
+  "records": [
+    {"state": "prepared", "path": "raw/journal/prepared.hex", "decoded_size": 256, "decoded_sha256": "0c89cb12fce2b96a94c8eb028ab53922c975e0a2e207c6b85c7840e99552a7d5", "resolution_number": "0", "resolution_hash": "0000000000000000000000000000000000000000000000000000000000000000"},
+    {"state": "finalized_accepted", "path": "raw/journal/finalized-accepted.hex", "decoded_size": 256, "decoded_sha256": "50c24c11f66f095d2b430cf0564f0d39dc77748621dc493eab5fa0c9236deacd", "resolution_number": "137", "resolution_hash": "898887868584838281807f7e7d7c7b7a797877767574737271706f6e6d6c6b6a"},
+    {"state": "finalized_dispatch_rejected", "path": "raw/journal/finalized-dispatch-rejected.hex", "decoded_size": 256, "decoded_sha256": "b831f847e8c92bb1a37671542c5b695d34b6b91d166d2c4848a747db6fa704f7", "resolution_number": "138", "resolution_hash": "8a898887868584838281807f7e7d7c7b7a797877767574737271706f6e6d6c6b"},
+    {"state": "finalized_invariant_failed", "path": "raw/journal/finalized-invariant-failed.hex", "decoded_size": 256, "decoded_sha256": "71a7176c1dfacaec8fc36434fa3acf33c72d1da89d5de1033983b4d1b959fc3f", "resolution_number": "139", "resolution_hash": "8b8a898887868584838281807f7e7d7c7b7a797877767574737271706f6e6d6c"},
+    {"state": "expired_not_included", "path": "raw/journal/expired-not-included.hex", "decoded_size": 256, "decoded_sha256": "a41e6e3fd09699656d6f20047e4fb0846244ed1ccb6cadec76b1a0246769bab8", "resolution_number": "195", "resolution_hash": "c3c2c1c0bfbebdbcbbbab9b8b7b6b5b4b3b2b1b0afaeadacabaaa9a8a7a6a5a4"}
+  ]
+}
