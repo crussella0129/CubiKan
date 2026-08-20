@@ -555,4 +555,4 @@
 - **Files modified:** `crates/cubikan-backend/src/{lib.rs,model.rs,query.rs,relationship.rs,provenance.rs,verified_read.rs}`, `crates/cubikan-backend/tests/{read_boundary.rs,relationship_model.rs}`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
 - **Scope repair:** T-1108's broad storage-authority regression test prohibited the private `rusqlite` implementation T-1109 assigns to `relationship.rs`; Sprint 11 meta records the narrow test-only exemption while retaining every public raw-connection, path, open, and unchanged-module prohibition.
 - **Verification:** Exact E1–E4 named tests and the complete private query matrix passed on a fresh owner-only approved-ext4 root, including pinned-C refresh, the 5,000-ms Busy path, full-key cursors, decoded lookahead, and corruption rejection. Full warnings-denied workspace tests, warnings-denied Clippy, doctests, rustfmt, diff checks, the Book-v2 validator, and an independent final acceptance audit also passed.
-- **Commit:** PENDING
+- **Commit:** `4a9d7264d85ebc9172e604d1246ca087eae9d102`
