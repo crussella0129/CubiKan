@@ -101,3 +101,16 @@
   only core simulation in `cubikan` and continuing to reject database, RPC,
   signing, durable-write, and synthetic-origin authority there. No production
   path or protocol surface is added outside T-1112's locked Touches.
+
+- **2026-08-20 — T-1108 approved-filesystem execution blockage resolved:** A
+  fresh owner-only test directory on the approved ext4 filesystem was made
+  available through `CUBIKAN_TEST_SUPPORTED_ROOT`. The first real execution
+  correctly exposed that schema-qualified configuration PRAGMAs produced
+  `database_name=Some("main")` while the independent closed authorizer oracle
+  requires `None`. Production now emits only the oracle's exact unqualified
+  PRAGMAs, retains the deny for every schema-qualified/unlisted tuple, and uses
+  non-rowid columns for empty-table probes so SQLite's special empty-column
+  callback remains denied. The complete backend all-target/all-feature suite,
+  including creation, read-only preflight, sidecar/path rejection, exact schema,
+  page-budget rollback, and the 5,000-ms Busy path, passed on that filesystem;
+  the ephemeral directory was removed by the test harness.

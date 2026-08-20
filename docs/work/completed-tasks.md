@@ -537,3 +537,13 @@
 - **Oracle evidence:** Independently authored schema SHA-256 `309697fe6e718c78ef8802861d60a660500a985c05b5a94aaba35a28fb2cb4a3`, 96-case manifest SHA-256 `46eab998ec22d8c806c7f8ac347aa89efb4f69578c7a34f6ee4737fc24e97c75`, and four-case I/O oracle SHA-256 `32ed09ae7ec55005229e1a7fa1b5edc02ae1867c55bbbd6279b88048b0dd14f4` passed the isolated locked verifier before and after implementation.
 - **Verification:** Exact E1–E3 named tests, all CLI targets, the full warnings-denied workspace test suite, warnings-denied Clippy, doctests, rustfmt, diff checks, the Book-v2 validator, and an independent implementation acceptance audit passed.
 - **Commit:** `01de61203c04a04046df660865db735bae7bd59e`
+
+## T-1108 (sprint 11)
+- **Description:** Build the exact hardened SQLite v3/envelope v2 projection store
+- **Intent:** [INT-0008](../intents/INT-0008-traceable-intent-instantiation.md), [INT-0014](../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
+- **Completed:** 2026-08-20T04:07:02Z
+- **Files modified:** `Cargo.toml`, `Cargo.lock`, `chain/pins.toml`, `chain/tools/verify-pins.sh`, `patches/rusqlite-0.40.2-commit-authorizer.patch`, `vendor/rusqlite-0.40.2-cubikan/src/version.rs`, `crates/cubikan-backend/Cargo.toml`, `crates/cubikan-backend/src/{error.rs,lib.rs,projection_store.rs,schema.rs,sqlite.rs,stored.rs}`, `crates/cubikan-backend/src/{projection_store,schema}/tests.rs`, `crates/cubikan-backend/tests/{legacy_generation.rs,relationship_model.rs,security.rs}`, `tests/fixtures/filesystem-boundary-v1.json`, `tests/fixtures/sqlite-authorizer-v1.json`, `tests/fixtures/envelope-v2/**`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Scope repair:** Exact safe SQLite compile-option/VFS inspection required the pinned vendored rusqlite wrapper and reconstruction-pin updates; exhaustive error handling required minimal existing backend regression-test updates. Sprint 11 meta records both repairs.
+- **Integrated implementation checkpoint:** `3239085b006884cb6c5c5452cc38b26e974635fb`
+- **Verification:** All four real owner-only approved-ext4 branches passed under `CUBIKAN_TEST_SUPPORTED_ROOT`; exact E1–E6 tests, all backend targets, full warnings-denied workspace tests, warnings-denied Clippy, doctests, rustfmt, diff checks, the Book-v2 validator, and independent authorizer/acceptance audits passed.
+- **Commit:** PENDING

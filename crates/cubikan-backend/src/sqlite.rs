@@ -250,7 +250,7 @@ impl ProjectionReaderConnection {
             &self.authorization,
             ConnectionRole::PublicReader,
             ConfigurationStatement::DataVersionRead,
-            "PRAGMA main.data_version",
+            "PRAGMA data_version",
         )
     }
 
@@ -769,19 +769,19 @@ fn configure_sql_connection(
     for (identity, statement) in [
         (
             ConfigurationStatement::ForeignKeysSetOn,
-            "PRAGMA main.foreign_keys=ON",
+            "PRAGMA foreign_keys=ON",
         ),
         (
             ConfigurationStatement::TrustedSchemaSetOff,
-            "PRAGMA main.trusted_schema=OFF",
+            "PRAGMA trusted_schema=OFF",
         ),
         (
             ConfigurationStatement::CellSizeCheckSetOn,
-            "PRAGMA main.cell_size_check=ON",
+            "PRAGMA cell_size_check=ON",
         ),
         (
             ConfigurationStatement::MmapSizeSetZero,
-            "PRAGMA main.mmap_size=0",
+            "PRAGMA mmap_size=0",
         ),
         (
             ConfigurationStatement::TempStoreSetMemory,
@@ -799,27 +799,27 @@ fn configure_sql_connection(
             for (identity, statement) in [
                 (
                     ConfigurationStatement::EncodingSetUtf8,
-                    "PRAGMA main.encoding='UTF-8'",
+                    "PRAGMA encoding='UTF-8'",
                 ),
                 (
                     ConfigurationStatement::PageSizeSet4096,
-                    "PRAGMA main.page_size=4096",
+                    "PRAGMA page_size=4096",
                 ),
                 (
                     ConfigurationStatement::JournalModeSetDelete,
-                    "PRAGMA main.journal_mode=DELETE",
+                    "PRAGMA journal_mode=DELETE",
                 ),
                 (
                     ConfigurationStatement::SynchronousSetExtra,
-                    "PRAGMA main.synchronous=EXTRA",
+                    "PRAGMA synchronous=EXTRA",
                 ),
                 (
                     ConfigurationStatement::QueryOnlySetOff,
-                    "PRAGMA main.query_only=OFF",
+                    "PRAGMA query_only=OFF",
                 ),
                 (
                     ConfigurationStatement::MaxPageCountSet262144,
-                    "PRAGMA main.max_page_count=262144",
+                    "PRAGMA max_page_count=262144",
                 ),
             ] {
                 execute_configuration(connection, authorization, role, identity, statement)?;
@@ -829,19 +829,19 @@ fn configure_sql_connection(
             for (identity, statement) in [
                 (
                     ConfigurationStatement::JournalModeSetDelete,
-                    "PRAGMA main.journal_mode=DELETE",
+                    "PRAGMA journal_mode=DELETE",
                 ),
                 (
                     ConfigurationStatement::SynchronousSetExtra,
-                    "PRAGMA main.synchronous=EXTRA",
+                    "PRAGMA synchronous=EXTRA",
                 ),
                 (
                     ConfigurationStatement::QueryOnlySetOff,
-                    "PRAGMA main.query_only=OFF",
+                    "PRAGMA query_only=OFF",
                 ),
                 (
                     ConfigurationStatement::MaxPageCountSet262144,
-                    "PRAGMA main.max_page_count=262144",
+                    "PRAGMA max_page_count=262144",
                 ),
             ] {
                 execute_configuration(connection, authorization, role, identity, statement)?;
@@ -853,7 +853,7 @@ fn configure_sql_connection(
                 authorization,
                 role,
                 ConfigurationStatement::QueryOnlySetOn,
-                "PRAGMA main.query_only=ON",
+                "PRAGMA query_only=ON",
             )?;
         }
     }
@@ -870,7 +870,7 @@ fn validate_common_settings(
         authorization,
         role,
         ConfigurationStatement::ForeignKeysRead,
-        "PRAGMA main.foreign_keys",
+        "PRAGMA foreign_keys",
         1,
     )?;
     expect_configuration_i64(
@@ -878,7 +878,7 @@ fn validate_common_settings(
         authorization,
         role,
         ConfigurationStatement::TrustedSchemaRead,
-        "PRAGMA main.trusted_schema",
+        "PRAGMA trusted_schema",
         0,
     )?;
     expect_configuration_i64(
@@ -886,7 +886,7 @@ fn validate_common_settings(
         authorization,
         role,
         ConfigurationStatement::CellSizeCheckRead,
-        "PRAGMA main.cell_size_check",
+        "PRAGMA cell_size_check",
         1,
     )?;
     expect_configuration_i64(
@@ -894,7 +894,7 @@ fn validate_common_settings(
         authorization,
         role,
         ConfigurationStatement::MmapSizeRead,
-        "PRAGMA main.mmap_size",
+        "PRAGMA mmap_size",
         0,
     )?;
     expect_configuration_i64(
@@ -920,7 +920,7 @@ fn validate_common_settings(
                 authorization,
                 role,
                 ConfigurationStatement::QueryOnlyRead,
-                "PRAGMA main.query_only",
+                "PRAGMA query_only",
                 0,
             )?;
             expect_configuration_i64(
@@ -928,7 +928,7 @@ fn validate_common_settings(
                 authorization,
                 role,
                 ConfigurationStatement::MaxPageCountRead,
-                "PRAGMA main.max_page_count",
+                "PRAGMA max_page_count",
                 MAX_DATABASE_PAGES,
             )?;
             expect_configuration_i64(
@@ -936,7 +936,7 @@ fn validate_common_settings(
                 authorization,
                 role,
                 ConfigurationStatement::SynchronousRead,
-                "PRAGMA main.synchronous",
+                "PRAGMA synchronous",
                 3,
             )?;
             expect_configuration_text(
@@ -944,7 +944,7 @@ fn validate_common_settings(
                 authorization,
                 role,
                 ConfigurationStatement::JournalModeRead,
-                "PRAGMA main.journal_mode",
+                "PRAGMA journal_mode",
                 "delete",
             )?;
         }
@@ -954,7 +954,7 @@ fn validate_common_settings(
                 authorization,
                 role,
                 ConfigurationStatement::QueryOnlyRead,
-                "PRAGMA main.query_only",
+                "PRAGMA query_only",
                 1,
             )?;
             let _ = query_configuration_i64(
@@ -962,7 +962,7 @@ fn validate_common_settings(
                 authorization,
                 role,
                 ConfigurationStatement::MaxPageCountRead,
-                "PRAGMA main.max_page_count",
+                "PRAGMA max_page_count",
             )?;
         }
     }
@@ -980,7 +980,7 @@ fn validate_existing_connection(
         authorization,
         role,
         ConfigurationStatement::EncodingRead,
-        "PRAGMA main.encoding",
+        "PRAGMA encoding",
     )?;
     if encoding != "UTF-8" {
         return Err(BackendError::CorruptSchema);
@@ -990,7 +990,7 @@ fn validate_existing_connection(
         authorization,
         role,
         ConfigurationStatement::PageSizeRead,
-        "PRAGMA main.page_size",
+        "PRAGMA page_size",
         DATABASE_PAGE_SIZE,
     )?;
     expect_configuration_text(
@@ -998,7 +998,7 @@ fn validate_existing_connection(
         authorization,
         role,
         ConfigurationStatement::JournalModeRead,
-        "PRAGMA main.journal_mode",
+        "PRAGMA journal_mode",
         "delete",
     )?;
     if matches!(
@@ -1010,7 +1010,7 @@ fn validate_existing_connection(
             authorization,
             role,
             ConfigurationStatement::SynchronousRead,
-            "PRAGMA main.synchronous",
+            "PRAGMA synchronous",
             2,
         )?;
     }
@@ -1019,7 +1019,7 @@ fn validate_existing_connection(
         authorization,
         role,
         ConfigurationStatement::PageCountRead,
-        "PRAGMA main.page_count",
+        "PRAGMA page_count",
     )?;
     if !(1..=MAX_DATABASE_PAGES).contains(&page_count)
         || page_count.checked_mul(DATABASE_PAGE_SIZE) != Some(file_size)
@@ -2830,10 +2830,10 @@ mod tests {
                 VerifiedQueryStatement::FullProjectionCompare,
                 |connection| {
                     for statement in [
-                        "SELECT singleton FROM projection_anchor LIMIT 1",
+                        "SELECT namespace FROM projection_anchor LIMIT 1",
                         "SELECT block_number FROM projected_blocks LIMIT 1",
                         "SELECT global_sequence FROM projected_events LIMIT 1",
-                        "SELECT singleton FROM projection_checkpoint LIMIT 1",
+                        "SELECT block_number FROM projection_checkpoint LIMIT 1",
                         "SELECT id FROM intent_units LIMIT 1",
                         "SELECT definition_id FROM relationship_definitions LIMIT 1",
                         "SELECT definition_id FROM intent_unit_relationships LIMIT 1",
@@ -3198,7 +3198,7 @@ mod tests {
             &writer.authorization,
             ConnectionRole::ProjectorWriter,
             ConfigurationStatement::MaxPageCountRead,
-            "PRAGMA main.max_page_count",
+            "PRAGMA max_page_count",
             MAX_DATABASE_PAGES,
         )
         .expect("production max_page_count readback");
@@ -3207,7 +3207,7 @@ mod tests {
             &writer.authorization,
             ConnectionRole::ProjectorWriter,
             ConfigurationStatement::MaxPageCountSet128,
-            "PRAGMA main.max_page_count=128",
+            "PRAGMA max_page_count=128",
         )
         .expect("set test-only lower page ceiling through exact configuration path");
         expect_configuration_i64(
@@ -3215,7 +3215,7 @@ mod tests {
             &writer.authorization,
             ConnectionRole::ProjectorWriter,
             ConfigurationStatement::MaxPageCountRead,
-            "PRAGMA main.max_page_count",
+            "PRAGMA max_page_count",
             128,
         )
         .expect("test page ceiling readback");

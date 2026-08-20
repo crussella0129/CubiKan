@@ -842,7 +842,7 @@ const INDEX_SPECS: &[IndexSpec] = &[
 
 pub(crate) fn user_version(connection: &Connection) -> Result<i64, BackendError> {
     connection
-        .pragma_query_value(Some("main"), "user_version", |row| row.get(0))
+        .pragma_query_value(None, "user_version", |row| row.get(0))
         .map_err(classify_validation_error)
 }
 
@@ -873,7 +873,7 @@ pub(crate) fn initialize_v3_scoped(
     }
     before(SchemaStatement::SetUserVersion)?;
     connection
-        .pragma_update(Some("main"), "user_version", SCHEMA_VERSION)
+        .pragma_update(None, "user_version", SCHEMA_VERSION)
         .map_err(crate::sqlite::classify_runtime_error)?;
     validate_v3_with_callback(connection, &mut before)
 }

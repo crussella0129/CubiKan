@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-1108 (sprint 11) [intent: INT-0008, INT-0014]: Build the exact hardened SQLite v3/envelope v2 projection store — touches: root/backend manifests, schema/store/security code/tests, filesystem/authorizer/envelope fixtures
 - [ ] T-1109 (sprint 11) [intent: INT-0008, INT-0012, INT-0014]: Implement capability-gated v3 queries — touches: backend model/query/relationship/provenance/verified-read APIs and tests
 - [ ] T-1110 (sprint 11) [intent: INT-0008, INT-0014]: Project and attest the complete finalized archive-RPC event stream — touches: chain-client RPC/identity, backend projector/attestation, finalized-event fixtures/tests
 - [ ] T-1111 (sprint 11) [intent: INT-0014]: Submit finalized Subxt mutations through a crash-recoverable signer lane — touches: chain-client submission/journal code, manifests/lock, fixtures/tests
