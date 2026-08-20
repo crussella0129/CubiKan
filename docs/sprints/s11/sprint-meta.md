@@ -114,3 +114,14 @@
   including creation, read-only preflight, sidecar/path rejection, exact schema,
   page-budget rollback, and the 5,000-ms Busy path, passed on that filesystem;
   the ephemeral directory was removed by the test harness.
+
+- **2026-08-20 — T-1109 relationship-query regression scope omission
+  resolved:** T-1109's locked Touches require the private verified relationship
+  implementation to live in `crates/cubikan-backend/src/relationship.rs`, but a
+  T-1108 regression test broadly prohibited the literal `rusqlite` token in
+  that file as well as in the unchanged public projection/module boundaries.
+  The minimal test-only repair permits SQLite solely inside the private
+  `VerifiedReadSnapshot` implementation, retains the prohibition for
+  `projection.rs` and `lib.rs`, and explicitly rejects public raw connection or
+  open entry points. It adds no path-, connection-, row-, or caller-minted
+  capability surface.

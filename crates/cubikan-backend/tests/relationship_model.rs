@@ -532,9 +532,14 @@ fn test_relationship_model_does_not_expose_storage_or_execution_authority() {
     let relationship_source = include_str!("../src/relationship.rs");
     let projection_source = include_str!("../src/projection.rs");
     let library_source = include_str!("../src/lib.rs");
+    for source in [projection_source, library_source] {
+        assert!(
+            !source.contains("rusqlite"),
+            "public projection/module boundary must not expose raw SQLite authority"
+        );
+    }
     for source in [relationship_source, projection_source, library_source] {
         for forbidden in [
-            "rusqlite",
             "StoredRow",
             "Board",
             "StoredBoard",
@@ -561,6 +566,9 @@ fn test_relationship_model_does_not_expose_storage_or_execution_authority() {
     assert!(library_source.contains("pub use projection::"));
     assert!(!library_source.contains("pub mod relationship;"));
     assert!(!library_source.contains("pub mod projection;"));
+    assert!(relationship_source.contains("impl VerifiedReadSnapshot"));
+    assert!(!relationship_source.contains("pub fn connection"));
+    assert!(!relationship_source.contains("pub fn open"));
     assert!(!relationship_source.contains("impl fmt::Display for RelationshipCursor"));
     assert!(!relationship_source.contains("impl FromStr for RelationshipCursor"));
 }

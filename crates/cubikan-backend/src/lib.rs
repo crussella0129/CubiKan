@@ -11,26 +11,35 @@ mod migration;
 mod model;
 mod projection;
 mod projection_store;
+mod provenance;
 mod query;
 mod relationship;
 mod relationship_store;
 mod schema;
 mod sqlite;
 mod stored;
+mod verified_read;
 
 pub use error::{BackendError, ListCursorError, PageLimitError, StorageFailure};
 pub use model::{
     CompleteIntentUnit, CreateIntentUnit, GetIntentUnit, IntentUnitPage, IntentUnitSummary,
-    IntentUnitView, ListCursor, ListFilters, ListIntentUnits, MutationResult, PageLimit,
-    TransitionIntentUnit,
+    IntentUnitView, LedgerCoordinate, ListCursor, ListFilters, ListIntentUnits, MutationResult,
+    PageLimit, ProjectedProjectionPage, ProjectedUnit, ProjectedUnitPage, ProjectedUnitResult,
+    ProjectedUnitSummary, TransitionIntentUnit,
 };
 pub use projection::{DirectRelationshipPredicate, ProjectionPage, ProjectionQueryV1};
+pub use provenance::{
+    AssociationDirection, AssociationPage, AssociationQueryError, ListAssociationsByReference,
+    ListAssociationsByUnit, ProjectedAssociation,
+};
 pub use relationship::{
     BackendSchemaVersion, CreateRelationship, CreateRelationshipDefinition, DeleteRelationship,
-    ListRelationships, MigrationError, RelationshipCursor, RelationshipDefinitionId,
+    ListRelationships, MigrationError, ProjectedDefinition, ProjectedDefinitionResult,
+    ProjectedRelationship, ProjectedRelationshipPage, RelationshipCursor, RelationshipDefinitionId,
     RelationshipDefinitionIdError, RelationshipDefinitionKey, RelationshipDefinitionVersion,
     RelationshipDefinitionVersionError, RelationshipDefinitionView, RelationshipDirection,
     RelationshipEndpoint, RelationshipError, RelationshipIdentity, RelationshipPage,
     RelationshipPolicy, RelationshipQueryError, RelationshipView,
 };
 pub use sqlite::SqliteBackend;
+pub use verified_read::{ProjectionCheckpoint, ReadError, VerifiedReadSnapshot};

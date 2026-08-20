@@ -547,3 +547,12 @@
 - **Integrated implementation checkpoint:** `3239085b006884cb6c5c5452cc38b26e974635fb`
 - **Verification:** All four real owner-only approved-ext4 branches passed under `CUBIKAN_TEST_SUPPORTED_ROOT`; exact E1–E6 tests, all backend targets, full warnings-denied workspace tests, warnings-denied Clippy, doctests, rustfmt, diff checks, the Book-v2 validator, and independent authorizer/acceptance audits passed.
 - **Commit:** `da903ecb10b9e6d6169613821c88606159e17676`
+
+## T-1109 (sprint 11)
+- **Description:** Implement capability-gated v3 queries
+- **Intent:** [INT-0008](../intents/INT-0008-traceable-intent-instantiation.md), [INT-0012](../intents/INT-0012-intent-unit-relationships-and-board-projections.md), [INT-0014](../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
+- **Completed:** 2026-08-20T04:55:25Z
+- **Files modified:** `crates/cubikan-backend/src/{lib.rs,model.rs,query.rs,relationship.rs,provenance.rs,verified_read.rs}`, `crates/cubikan-backend/tests/{read_boundary.rs,relationship_model.rs}`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Scope repair:** T-1108's broad storage-authority regression test prohibited the private `rusqlite` implementation T-1109 assigns to `relationship.rs`; Sprint 11 meta records the narrow test-only exemption while retaining every public raw-connection, path, open, and unchanged-module prohibition.
+- **Verification:** Exact E1–E4 named tests and the complete private query matrix passed on a fresh owner-only approved-ext4 root, including pinned-C refresh, the 5,000-ms Busy path, full-key cursors, decoded lookahead, and corruption rejection. Full warnings-denied workspace tests, warnings-denied Clippy, doctests, rustfmt, diff checks, the Book-v2 validator, and an independent final acceptance audit also passed.
+- **Commit:** PENDING

@@ -1,11 +1,11 @@
-use std::{fmt, str::FromStr};
+use std::{fmt, num::NonZeroU64, str::FromStr};
 
 use cubikan_core::{
     ExternalReference, IntentSpecies, IntentUnit, IntentUnitId, IntentUnitRevision,
     IntentUnitStatus, LifecycleRecord, PhaseId, Workflow, WorkflowId,
 };
 
-use crate::{ListCursorError, PageLimitError};
+use crate::{ListCursorError, PageLimitError, ProjectionCheckpoint, ProjectionQueryV1};
 
 /// Input for creating one new revision-zero Intent Unit.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -294,6 +294,117 @@ pub struct IntentUnitView {
     history: Vec<LifecycleRecord>,
 }
 
+/// Stable coordinate of one accepted event in the canonical finalized ledger.
+///
+/// The block hash is obtained from the immutable block row joined by block
+/// number; it is never accepted as a denormalized event-row value.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub struct LedgerCoordinate {
+    parachain_genesis_hash: [u8; 32],
+    deployment_id: [u8; 32],
+    block_number: u64,
+    block_hash: [u8; 32],
+    extrinsic_index: u32,
+    extrinsic_hash: [u8; 32],
+    system_event_index: u32,
+    global_sequence: NonZeroU64,
+}
+
+pub(crate) struct LedgerCoordinateParts {
+    pub(crate) parachain_genesis_hash: [u8; 32],
+    pub(crate) deployment_id: [u8; 32],
+    pub(crate) block_number: u64,
+    pub(crate) block_hash: [u8; 32],
+    pub(crate) extrinsic_index: u32,
+    pub(crate) extrinsic_hash: [u8; 32],
+    pub(crate) system_event_index: u32,
+    pub(crate) global_sequence: NonZeroU64,
+}
+
+impl LedgerCoordinate {
+    pub(crate) const fn from_parts(parts: LedgerCoordinateParts) -> Self {
+        Self {
+            parachain_genesis_hash: parts.parachain_genesis_hash,
+            deployment_id: parts.deployment_id,
+            block_number: parts.block_number,
+            block_hash: parts.block_hash,
+            extrinsic_index: parts.extrinsic_index,
+            extrinsic_hash: parts.extrinsic_hash,
+            system_event_index: parts.system_event_index,
+            global_sequence: parts.global_sequence,
+        }
+    }
+
+    #[must_use]
+    pub const fn parachain_genesis_hash(&self) -> &[u8; 32] {
+        &self.parachain_genesis_hash
+    }
+
+    #[must_use]
+    pub const fn deployment_id(&self) -> &[u8; 32] {
+        &self.deployment_id
+    }
+
+    #[must_use]
+    pub const fn block_number(&self) -> u64 {
+        self.block_number
+    }
+
+    #[must_use]
+    pub const fn block_hash(&self) -> &[u8; 32] {
+        &self.block_hash
+    }
+
+    #[must_use]
+    pub const fn extrinsic_index(&self) -> u32 {
+        self.extrinsic_index
+    }
+
+    #[must_use]
+    pub const fn extrinsic_hash(&self) -> &[u8; 32] {
+        &self.extrinsic_hash
+    }
+
+    #[must_use]
+    pub const fn system_event_index(&self) -> u32 {
+        self.system_event_index
+    }
+
+    #[must_use]
+    pub const fn global_sequence(&self) -> NonZeroU64 {
+        self.global_sequence
+    }
+}
+
+/// One replayed Intent Unit paired with its latest accepted ledger event.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProjectedUnit {
+    intent_unit: IntentUnitView,
+    last_coordinate: LedgerCoordinate,
+}
+
+impl ProjectedUnit {
+    pub(crate) const fn new(
+        intent_unit: IntentUnitView,
+        last_coordinate: LedgerCoordinate,
+    ) -> Self {
+        Self {
+            intent_unit,
+            last_coordinate,
+        }
+    }
+
+    #[must_use]
+    pub const fn intent_unit(&self) -> &IntentUnitView {
+        &self.intent_unit
+    }
+
+    #[must_use]
+    pub const fn last_coordinate(&self) -> &LedgerCoordinate {
+        &self.last_coordinate
+    }
+}
+
 impl IntentUnitView {
     #[must_use]
     pub fn from_intent_unit(unit: &IntentUnit) -> Self {
@@ -437,6 +548,183 @@ impl IntentUnitPage {
     #[must_use]
     pub const fn next_cursor(&self) -> Option<ListCursor> {
         self.next_cursor
+    }
+}
+
+/// One replayed unit result and the exact checkpoint that was pinned for it.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProjectedUnitResult {
+    intent_unit: ProjectedUnit,
+    checkpoint: ProjectionCheckpoint,
+}
+
+impl ProjectedUnitResult {
+    pub(crate) const fn new(intent_unit: ProjectedUnit, checkpoint: ProjectionCheckpoint) -> Self {
+        Self {
+            intent_unit,
+            checkpoint,
+        }
+    }
+
+    #[must_use]
+    pub const fn intent_unit(&self) -> &ProjectedUnit {
+        &self.intent_unit
+    }
+
+    #[must_use]
+    pub const fn checkpoint(&self) -> &ProjectionCheckpoint {
+        &self.checkpoint
+    }
+}
+
+/// Coordinate-bearing summary returned only from a verified projection read.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProjectedUnitSummary {
+    id: IntentUnitId,
+    origin: ExternalReference,
+    species: IntentSpecies,
+    workflow_id: WorkflowId,
+    phase: PhaseId,
+    status: IntentUnitStatus,
+    revision: IntentUnitRevision,
+    last_coordinate: LedgerCoordinate,
+}
+
+impl ProjectedUnitSummary {
+    pub(crate) fn from_projected_unit(unit: &ProjectedUnit) -> Self {
+        let view = unit.intent_unit();
+        Self {
+            id: view.id(),
+            origin: view.origin().clone(),
+            species: view.species().clone(),
+            workflow_id: view.workflow_id().clone(),
+            phase: view.phase().clone(),
+            status: view.status(),
+            revision: view.revision(),
+            last_coordinate: *unit.last_coordinate(),
+        }
+    }
+
+    #[must_use]
+    pub const fn id(&self) -> IntentUnitId {
+        self.id
+    }
+
+    #[must_use]
+    pub const fn origin(&self) -> &ExternalReference {
+        &self.origin
+    }
+
+    #[must_use]
+    pub const fn species(&self) -> &IntentSpecies {
+        &self.species
+    }
+
+    #[must_use]
+    pub const fn workflow_id(&self) -> &WorkflowId {
+        &self.workflow_id
+    }
+
+    #[must_use]
+    pub const fn phase(&self) -> &PhaseId {
+        &self.phase
+    }
+
+    #[must_use]
+    pub const fn status(&self) -> IntentUnitStatus {
+        self.status
+    }
+
+    #[must_use]
+    pub const fn revision(&self) -> IntentUnitRevision {
+        self.revision
+    }
+
+    #[must_use]
+    pub const fn last_coordinate(&self) -> &LedgerCoordinate {
+        &self.last_coordinate
+    }
+}
+
+/// One bounded page returned from a single verified, pinned snapshot.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProjectedUnitPage {
+    items: Vec<ProjectedUnitSummary>,
+    next_cursor: Option<ListCursor>,
+    checkpoint: ProjectionCheckpoint,
+}
+
+impl ProjectedUnitPage {
+    pub(crate) const fn new(
+        items: Vec<ProjectedUnitSummary>,
+        next_cursor: Option<ListCursor>,
+        checkpoint: ProjectionCheckpoint,
+    ) -> Self {
+        Self {
+            items,
+            next_cursor,
+            checkpoint,
+        }
+    }
+
+    #[must_use]
+    pub fn items(&self) -> &[ProjectedUnitSummary] {
+        &self.items
+    }
+
+    #[must_use]
+    pub const fn next_cursor(&self) -> Option<ListCursor> {
+        self.next_cursor
+    }
+
+    #[must_use]
+    pub const fn checkpoint(&self) -> &ProjectionCheckpoint {
+        &self.checkpoint
+    }
+}
+
+/// Ephemeral projection-v1 page returned from one verified snapshot.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ProjectedProjectionPage {
+    query: ProjectionQueryV1,
+    items: Vec<ProjectedUnitSummary>,
+    next_cursor: Option<ListCursor>,
+    checkpoint: ProjectionCheckpoint,
+}
+
+impl ProjectedProjectionPage {
+    pub(crate) const fn new(
+        query: ProjectionQueryV1,
+        items: Vec<ProjectedUnitSummary>,
+        next_cursor: Option<ListCursor>,
+        checkpoint: ProjectionCheckpoint,
+    ) -> Self {
+        Self {
+            query,
+            items,
+            next_cursor,
+            checkpoint,
+        }
+    }
+
+    #[must_use]
+    pub const fn query(&self) -> &ProjectionQueryV1 {
+        &self.query
+    }
+
+    #[must_use]
+    pub fn items(&self) -> &[ProjectedUnitSummary] {
+        &self.items
+    }
+
+    #[must_use]
+    pub const fn next_cursor(&self) -> Option<ListCursor> {
+        self.next_cursor
+    }
+
+    #[must_use]
+    pub const fn checkpoint(&self) -> &ProjectionCheckpoint {
+        &self.checkpoint
     }
 }
 
