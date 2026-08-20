@@ -1,0 +1,210 @@
+{
+  "format": "cubikan-finalized-event-stream-v1",
+  "system_events_storage_key": "26aa394eea5630e07c48ae0c9558cef780d41e5e16056765bc8461851072c9d7",
+  "accepted_event": {
+    "pallet_index": 50,
+    "event_index": 0,
+    "deployment_id": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+    "event_schema_version": 1
+  },
+  "blocks": [
+    {
+      "block_number": "0",
+      "block_hash": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+      "parent_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "finalized": true,
+      "runtime_spec_version": 1,
+      "runtime_code_hash": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00",
+      "body": "raw/bodies/block-0-body.json",
+      "system_events": "raw/events/block-0-system-events.scale.hex",
+      "system_event_record_count": 0,
+      "cubikan_event_count": 0,
+      "first_global_sequence": null,
+      "last_global_sequence": null,
+      "checkpoint_after": null,
+      "events": []
+    },
+    {
+      "block_number": "1",
+      "block_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "parent_hash": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+      "finalized": true,
+      "runtime_spec_version": 1,
+      "runtime_code_hash": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00",
+      "body": "raw/bodies/block-1-body.json",
+      "system_events": "raw/events/block-1-system-events.scale.hex",
+      "system_event_record_count": 0,
+      "cubikan_event_count": 0,
+      "first_global_sequence": null,
+      "last_global_sequence": null,
+      "checkpoint_after": null,
+      "events": []
+    },
+    {
+      "block_number": "2",
+      "block_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "parent_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "finalized": true,
+      "runtime_spec_version": 1,
+      "runtime_code_hash": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00",
+      "body": "raw/bodies/block-2-body.json",
+      "system_events": "raw/events/block-2-system-events.scale.hex",
+      "system_event_record_count": 4,
+      "cubikan_event_count": 3,
+      "first_global_sequence": "1",
+      "last_global_sequence": "3",
+      "checkpoint_after": "3",
+      "events": [
+        {
+          "extrinsic_index": 1,
+          "system_event_index": 1,
+          "global_sequence": "1",
+          "kind": "unit_created",
+          "signer": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "extrinsic_hash": "3d0f009d13db16e549d5015feb9abfa46a29059a016351dcdb0c2e4c413ef62a",
+          "payload": "raw/payloads/0001-unit-created-a.scale.hex"
+        },
+        {
+          "extrinsic_index": 2,
+          "system_event_index": 2,
+          "global_sequence": "2",
+          "kind": "unit_created",
+          "signer": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+          "extrinsic_hash": "24386ead0dc2522402e30e92d570d2aeb8a7182568438a8874a59b995271882e",
+          "payload": "raw/payloads/0002-unit-created-b.scale.hex"
+        },
+        {
+          "extrinsic_index": 3,
+          "system_event_index": 3,
+          "global_sequence": "3",
+          "kind": "relationship_definition_created",
+          "signer": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "extrinsic_hash": "5bd409c24d964e2132381053f436fe5d105897d4633badb542cdb886fad19eb3",
+          "payload": "raw/payloads/0003-relationship-definition-created.scale.hex"
+        }
+      ]
+    },
+    {
+      "block_number": "3",
+      "block_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+      "parent_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+      "finalized": true,
+      "runtime_spec_version": 1,
+      "runtime_code_hash": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00",
+      "body": "raw/bodies/block-3-body.json",
+      "system_events": "raw/events/block-3-system-events.scale.hex",
+      "system_event_record_count": 4,
+      "cubikan_event_count": 3,
+      "first_global_sequence": "4",
+      "last_global_sequence": "6",
+      "checkpoint_after": "6",
+      "events": [
+        {
+          "extrinsic_index": 0,
+          "system_event_index": 0,
+          "global_sequence": "4",
+          "kind": "relationship_created",
+          "signer": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+          "extrinsic_hash": "a3b4293ccb469b18630a09e173cd4129f30c9680ed52d32fb80b28a1518dbef7",
+          "payload": "raw/payloads/0004-relationship-created.scale.hex"
+        },
+        {
+          "extrinsic_index": 2,
+          "system_event_index": 2,
+          "global_sequence": "5",
+          "kind": "association_recorded",
+          "signer": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "extrinsic_hash": "741e5cea0606a99594c18925918c4576d81f401f12bc3f61ebd426abe597e5f9",
+          "payload": "raw/payloads/0005-association-recorded-a.scale.hex"
+        },
+        {
+          "extrinsic_index": 3,
+          "system_event_index": 3,
+          "global_sequence": "6",
+          "kind": "unit_transitioned",
+          "signer": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "extrinsic_hash": "bfda5b7f535811d1d1dbbe872fc46556f63ef1c29c5ecfc36c724d44c4d9cf5a",
+          "payload": "raw/payloads/0006-unit-transitioned-a.scale.hex"
+        }
+      ]
+    },
+    {
+      "block_number": "4",
+      "block_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+      "parent_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+      "finalized": true,
+      "runtime_spec_version": 1,
+      "runtime_code_hash": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00",
+      "body": "raw/bodies/block-4-body.json",
+      "system_events": "raw/events/block-4-system-events.scale.hex",
+      "system_event_record_count": 5,
+      "cubikan_event_count": 5,
+      "first_global_sequence": "7",
+      "last_global_sequence": "11",
+      "checkpoint_after": "11",
+      "events": [
+        {
+          "extrinsic_index": 0,
+          "system_event_index": 0,
+          "global_sequence": "7",
+          "kind": "unit_completed",
+          "signer": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "extrinsic_hash": "bb2ff4a6c11d7d24dcc0b92fa18770eb160d0b9ee91caf74ed1894b8ce267fd6",
+          "payload": "raw/payloads/0007-unit-completed-a.scale.hex"
+        },
+        {
+          "extrinsic_index": 1,
+          "system_event_index": 1,
+          "global_sequence": "8",
+          "kind": "relationship_deleted",
+          "signer": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+          "extrinsic_hash": "06cd04712e962d5c3a9c84ae55698f4631fe0471adf4d9a06880bbee315778bf",
+          "payload": "raw/payloads/0008-relationship-deleted.scale.hex"
+        },
+        {
+          "extrinsic_index": 2,
+          "system_event_index": 2,
+          "global_sequence": "9",
+          "kind": "association_revoked",
+          "signer": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "extrinsic_hash": "82a00ce1e19e244c234ce8010aca48fb2e824183e483657b7b789fbe549a35b3",
+          "payload": "raw/payloads/0009-association-revoked-a.scale.hex"
+        },
+        {
+          "extrinsic_index": 3,
+          "system_event_index": 3,
+          "global_sequence": "10",
+          "kind": "association_recorded",
+          "signer": "b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2b2",
+          "extrinsic_hash": "dd8e9a3cbe85577d67c4f16d7877a4d85a8b0e8c405a77fa3e8dd6f1a252db6f",
+          "payload": "raw/payloads/0010-association-recorded-b.scale.hex"
+        },
+        {
+          "extrinsic_index": 4,
+          "system_event_index": 4,
+          "global_sequence": "11",
+          "kind": "relationship_created",
+          "signer": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "extrinsic_hash": "6403ca2433e6e09e48a9aea44a2164ff9efab9a54632fa74d66f0cec678420e2",
+          "payload": "raw/payloads/0011-relationship-recreated.scale.hex"
+        }
+      ]
+    },
+    {
+      "block_number": "5",
+      "block_hash": "5555555555555555555555555555555555555555555555555555555555555555",
+      "parent_hash": "4444444444444444444444444444444444444444444444444444444444444444",
+      "finalized": true,
+      "runtime_spec_version": 1,
+      "runtime_code_hash": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00",
+      "body": "raw/bodies/block-5-body.json",
+      "system_events": "raw/events/block-5-system-events.scale.hex",
+      "system_event_record_count": 1,
+      "cubikan_event_count": 0,
+      "first_global_sequence": null,
+      "last_global_sequence": null,
+      "checkpoint_after": "11",
+      "events": []
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 [package]
-name = "cubikan-backend"
+name = "cubikan-chain-client"
 version = "0.1.0"
 edition.workspace = true
 license.workspace = true
@@ -7,15 +7,15 @@ repository.workspace = true
 publish = false
 
 [dependencies]
-cubikan-chain-client = { path = "../cubikan-chain-client" }
 cubikan-core = { path = "../cubikan-core" }
-rusqlite.workspace = true
-rustix.workspace = true
-serde.workspace = true
+parity-scale-codec.workspace = true
 serde_json.workspace = true
-
-[dev-dependencies]
 sha2.workspace = true
+subxt.workspace = true
+subxt-signer.workspace = true
+tokio.workspace = true
+url.workspace = true
+uuid.workspace = true
 
 [lints]
 workspace = true

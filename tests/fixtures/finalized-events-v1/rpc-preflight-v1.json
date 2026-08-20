@@ -1,0 +1,215 @@
+{
+  "format": "cubikan-finalized-rpc-preflight-v1",
+  "trust_boundary": {
+    "assertion": "configured-local-node-finalized-rpc",
+    "grandpa_proof_verified": false,
+    "perpetual_archive_retention_claimed": false,
+    "shared_security_claimed": false
+  },
+  "connection": {
+    "accepted_url": "ws://127.0.0.1:9988/",
+    "required_node_argv_pairs": [
+      ["--blocks-pruning", "archive"],
+      ["--state-pruning", "archive"]
+    ],
+    "normalized_flag_display": [
+      "--blocks-pruning=archive",
+      "--state-pruning=archive"
+    ],
+    "rejected_raw_argv_tokens": [
+      "--blocks-pruning=archive",
+      "--state-pruning=archive"
+    ],
+    "url_cases": [
+      { "input": "ws://127.0.0.1:9988/", "accepted": true },
+      { "input": "ws://127.0.0.2:9989/", "accepted": true },
+      { "input": "ws://127.255.255.255:65535/", "accepted": true },
+      { "input": "ws://[::1]:9988/", "accepted": true },
+      { "input": "ws://127.0.0.1", "accepted": false },
+      { "input": "ws://127.0.0.1:9988", "accepted": false },
+      { "input": "ws://localhost:9988/", "accepted": false },
+      { "input": "wss://127.0.0.1:9988/", "accepted": false },
+      { "input": "WS://127.0.0.1:9988/", "accepted": false },
+      { "input": "http://127.0.0.1:9988/", "accepted": false },
+      { "input": "ws://0.0.0.0:9988/", "accepted": false },
+      { "input": "ws://126.255.255.255:9988/", "accepted": false },
+      { "input": "ws://128.0.0.0:9988/", "accepted": false },
+      { "input": "ws://127.00.0.1:9988/", "accepted": false },
+      { "input": "ws://127.1:9988/", "accepted": false },
+      { "input": "ws://2130706433:9988/", "accepted": false },
+      { "input": "ws://0177.0.0.1:9988/", "accepted": false },
+      { "input": "ws://0x7f.0.0.1:9988/", "accepted": false },
+      { "input": "ws://127%2e0%2e0%2e1:9988/", "accepted": false },
+      { "input": "ws://127.0.0.1:0/", "accepted": false },
+      { "input": "ws://127.0.0.1:80/", "accepted": false },
+      { "input": "ws://127.0.0.1:65536/", "accepted": false },
+      { "input": "ws://user@127.0.0.1:9988/", "accepted": false },
+      { "input": "ws://127.0.0.1:9988/path", "accepted": false },
+      { "input": "ws://127.0.0.1:9988/?query", "accepted": false },
+      { "input": "ws://127.0.0.1:9988/#fragment", "accepted": false }
+    ]
+  },
+  "pinned_artifacts": {
+    "deployment_anchor": {
+      "path": "chain/artifacts/local-deployment-anchor-v1.json",
+      "size": 5868,
+      "sha256": "38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7"
+    },
+    "metadata": {
+      "path": "chain/metadata/cubikan-runtime-v1.scale",
+      "size": 63327,
+      "sha256": "171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302"
+    },
+    "runtime_wasm": {
+      "path": "chain/artifacts/cubikan-runtime-v1.compact.compressed.wasm",
+      "size": 637930,
+      "sha256": "640cc616674fe7393fc93928904f0fd92d77571209c8200f08b8da6290c6a275",
+      "blake2_256": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00"
+    }
+  },
+  "identity": {
+    "namespace": "polkadot-sdk-parachain",
+    "relay_genesis_hash": "eb2ada687ce553d3b9d695afd5d9d0a9c44a0b82e1f6eb823ac87e81638200f0",
+    "parachain_genesis_hash": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+    "para_id": 1000,
+    "deployment_id": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",
+    "pallet_storage_version": 1,
+    "event_schema_version": 1,
+    "runtime": {
+      "spec_name": "cubikan-runtime",
+      "impl_name": "cubikan-runtime",
+      "authoring_version": 1,
+      "spec_version": 1,
+      "impl_version": 0,
+      "apis": [
+        { "id": "ab3c0572291feb8b", "version": 2 },
+        { "id": "ea93e3f16f3d6962", "version": 3 },
+        { "id": "37e397fc7c91f5e4", "version": 2 },
+        { "id": "37c8bb1350a9a2a8", "version": 4 },
+        { "id": "bc9d89904f5b923f", "version": 1 },
+        { "id": "df6acb689907609b", "version": 5 },
+        { "id": "d7bdd8a272ca0d65", "version": 2 },
+        { "id": "075f8cd374350e84", "version": 1 },
+        { "id": "d2bc9897eed08f15", "version": 3 },
+        { "id": "fbc577b9d747efd6", "version": 1 },
+        { "id": "f78b278be53f454c", "version": 2 },
+        { "id": "a2ddb6a58477bf63", "version": 1 },
+        { "id": "dd718d5cc53262d4", "version": 1 },
+        { "id": "04e70521a0d3d2f8", "version": 2 },
+        { "id": "40fe3ad401f8959a", "version": 6 },
+        { "id": "ccd9de6396c899ca", "version": 1 },
+        { "id": "f3ff14d5ab527059", "version": 3 }
+      ],
+      "transaction_version": 1,
+      "state_version": 1,
+      "system_version": 1,
+      "code_hash": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00"
+    }
+  },
+  "genesis_probes": [
+    {
+      "role": "relay",
+      "rpc_url": "ws://127.0.0.1:9944/",
+      "method": "chain_getBlockHash",
+      "params": [0],
+      "expected_hash": "eb2ada687ce553d3b9d695afd5d9d0a9c44a0b82e1f6eb823ac87e81638200f0"
+    },
+    {
+      "role": "parachain",
+      "rpc_url": "ws://127.0.0.1:9988/",
+      "method": "chain_getBlockHash",
+      "params": [0],
+      "expected_hash": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17"
+    }
+  ],
+  "metadata_probe": {
+    "method": "state_getMetadata",
+    "params": ["627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17"],
+    "expected_size": 63327,
+    "expected_sha256": "171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302"
+  },
+  "runtime_version_probe": {
+    "method": "state_getRuntimeVersion",
+    "params": ["627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17"],
+    "expected_identity": "identity.runtime"
+  },
+  "storage_probes": [
+    {
+      "label": "deployment_id",
+      "method": "state_getStorage",
+      "key": "2609aef1a1450f1b658394d12c417d249cc1dff5d6cf049a569219f2724d2e09",
+      "at": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+      "expected_scale_hex": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42"
+    },
+    {
+      "label": "event_schema_version",
+      "method": "state_getStorage",
+      "key": "2609aef1a1450f1b658394d12c417d24be4eb7443b9de1b5f041137c841f02ac",
+      "at": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+      "expected_scale_hex": "0100"
+    },
+    {
+      "label": "pallet_storage_version",
+      "method": "state_getStorage",
+      "key": "2609aef1a1450f1b658394d12c417d241601562ebcdff856cb2f34e65f3b2659",
+      "at": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+      "expected_scale_hex": "0100"
+    },
+    {
+      "label": "para_id",
+      "method": "state_getStorage",
+      "key": "0d715f2646c8f85767b5d2764bb2782604a74d81251e398fd8a0a4d55023bb3f",
+      "at": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+      "expected_scale_hex": "e8030000"
+    },
+    {
+      "label": "runtime_code",
+      "method": "state_getStorage",
+      "key": "3a636f6465",
+      "at": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+      "expected_blake2_256": "e95e40bb618591b98b315b7901f3586ee5899f8bf26bda01401601c4f86b8a00"
+    }
+  ],
+  "historical_probes": [
+    {
+      "role": "genesis",
+      "block_number": "0",
+      "block_hash": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
+      "required_methods": ["chain_getBlockHash", "chain_getHeader", "chain_getBlock", "state_getStorage(System::Events)", "state_getStorage(:code)"]
+    },
+    {
+      "role": "early",
+      "block_number": "1",
+      "block_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "required_methods": ["chain_getBlockHash", "chain_getHeader", "chain_getBlock", "state_getStorage(System::Events)", "state_getStorage(:code)"]
+    },
+    {
+      "role": "mid",
+      "block_number": "3",
+      "block_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+      "required_methods": ["chain_getBlockHash", "chain_getHeader", "chain_getBlock", "state_getStorage(System::Events)", "state_getStorage(:code)"]
+    },
+    {
+      "role": "current",
+      "block_number": "5",
+      "block_hash": "5555555555555555555555555555555555555555555555555555555555555555",
+      "required_methods": ["chain_getBlockHash", "chain_getHeader", "chain_getBlock", "state_getStorage(System::Events)", "state_getStorage(:code)"]
+    }
+  ],
+  "probe_order": [
+    "parse_literal_loopback_ws_url",
+    "authenticate_deployment_anchor_file",
+    "authenticate_metadata_file",
+    "authenticate_runtime_wasm_file",
+    "verify_exact_archive_flags",
+    "read_finalized_head",
+    "verify_genesis_and_anchor_storage",
+    "verify_metadata_runtime_and_code_identity",
+    "probe_genesis_hash_header_body_events_code",
+    "probe_early_hash_header_body_events_code",
+    "probe_mid_hash_header_body_events_code",
+    "probe_current_hash_header_body_events_code",
+    "verify_parent_continuity",
+    "permit_decode_apply_or_attestation"
+  ]
+}

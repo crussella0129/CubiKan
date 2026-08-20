@@ -1,0 +1,11 @@
+{
+  "fixture_format": "cubikan-finalized-body-v1",
+  "block_number": "5",
+  "extrinsics": [
+    {
+      "index": 0,
+      "scale_hex": "0c040005",
+      "blake2_256": "a34855db98c918489fa2e793d47570648440e8b3a5df094a58d7140690dcbfde"
+    }
+  ]
+}

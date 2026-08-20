@@ -6,11 +6,13 @@
 
 #![forbid(unsafe_code)]
 
+mod attestation;
 mod error;
 mod migration;
 mod model;
 mod projection;
 mod projection_store;
+mod projector;
 mod provenance;
 mod query;
 mod relationship;
@@ -20,6 +22,7 @@ mod sqlite;
 mod stored;
 mod verified_read;
 
+pub use attestation::{AttestationError, attest_finalized_projection};
 pub use error::{BackendError, ListCursorError, PageLimitError, StorageFailure};
 pub use model::{
     CompleteIntentUnit, CreateIntentUnit, GetIntentUnit, IntentUnitPage, IntentUnitSummary,
@@ -28,6 +31,7 @@ pub use model::{
     ProjectedUnitSummary, TransitionIntentUnit,
 };
 pub use projection::{DirectRelationshipPredicate, ProjectionPage, ProjectionQueryV1};
+pub use projector::{FinalizedProjector, ProjectionError};
 pub use provenance::{
     AssociationDirection, AssociationPage, AssociationQueryError, ListAssociationsByReference,
     ListAssociationsByUnit, ProjectedAssociation,

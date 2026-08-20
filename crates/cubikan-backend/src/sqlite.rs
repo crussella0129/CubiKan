@@ -1691,19 +1691,17 @@ fn is_projection_statement_read(statement: ProjectionStatement, table: &str, col
         ProjectionStatement::InsertRelationshipDefinition => {
             table == "projected_events" && column == "global_sequence"
         }
-        ProjectionStatement::InsertRelationship => {
+        ProjectionStatement::InsertRelationship | ProjectionStatement::DeleteRelationship => {
             (table == "relationship_definitions"
                 && matches!(column, "definition_id" | "definition_version"))
                 || (table == "intent_units" && column == "id")
                 || (table == "projected_events" && column == "global_sequence")
         }
-        ProjectionStatement::InsertAssociation => {
+        ProjectionStatement::InsertAssociation | ProjectionStatement::DeleteAssociation => {
             (table == "intent_units" && column == "id")
                 || (table == "projected_events" && column == "global_sequence")
         }
-        ProjectionStatement::InsertAnchor
-        | ProjectionStatement::DeleteRelationship
-        | ProjectionStatement::DeleteAssociation => false,
+        ProjectionStatement::InsertAnchor => false,
     }
 }
 
@@ -3102,6 +3100,296 @@ mod tests {
         );
         assert_eq!(directory_names(directory.path()), names);
         assert_no_sidecars(directory.path(), basename);
+    }
+
+    #[test]
+    fn test_nonempty_projection_deletes_allow_only_exact_foreign_key_parent_reads() {
+        const DELETE_PARENT_COLUMNS: &[(ProjectionStatement, &str, &str)] = &[
+            (
+                ProjectionStatement::DeleteRelationship,
+                "intent_units",
+                "id",
+            ),
+            (
+                ProjectionStatement::DeleteRelationship,
+                "relationship_definitions",
+                "definition_id",
+            ),
+            (
+                ProjectionStatement::DeleteRelationship,
+                "relationship_definitions",
+                "definition_version",
+            ),
+            (
+                ProjectionStatement::DeleteRelationship,
+                "projected_events",
+                "global_sequence",
+            ),
+            (ProjectionStatement::DeleteAssociation, "intent_units", "id"),
+            (
+                ProjectionStatement::DeleteAssociation,
+                "projected_events",
+                "global_sequence",
+            ),
+        ];
+        for (statement, table_name, column_name) in DELETE_PARENT_COLUMNS {
+            assert_eq!(
+                authorize(
+                    AuthContext {
+                        action: AuthAction::Read {
+                            table_name,
+                            column_name,
+                        },
+                        database_name: Some("main"),
+                        accessor: None,
+                    },
+                    AuthorizationState {
+                        role: ConnectionRole::ProjectorWriter,
+                        scope: AuthorizationScope::Projection(*statement),
+                    },
+                ),
+                Authorization::Allow,
+                "delete foreign-key parent read {statement:?} {table_name}.{column_name}"
+            );
+        }
+        for (context, statement) in [
+            (
+                AuthContext {
+                    action: AuthAction::Read {
+                        table_name: "unexpected",
+                        column_name: "global_sequence",
+                    },
+                    database_name: Some("main"),
+                    accessor: None,
+                },
+                ProjectionStatement::DeleteRelationship,
+            ),
+            (
+                AuthContext {
+                    action: AuthAction::Read {
+                        table_name: "projected_events",
+                        column_name: "signer",
+                    },
+                    database_name: Some("main"),
+                    accessor: None,
+                },
+                ProjectionStatement::DeleteRelationship,
+            ),
+            (
+                AuthContext {
+                    action: AuthAction::Read {
+                        table_name: "projected_events",
+                        column_name: "global_sequence",
+                    },
+                    database_name: Some("main"),
+                    accessor: Some("unexpected_accessor"),
+                },
+                ProjectionStatement::DeleteAssociation,
+            ),
+        ] {
+            assert_eq!(
+                authorize(
+                    context,
+                    AuthorizationState {
+                        role: ConnectionRole::ProjectorWriter,
+                        scope: AuthorizationScope::Projection(statement),
+                    },
+                ),
+                Authorization::Deny
+            );
+        }
+
+        let unrelated_scope = authorize(
+            AuthContext {
+                action: AuthAction::Read {
+                    table_name: "projected_events",
+                    column_name: "global_sequence",
+                },
+                database_name: Some("main"),
+                accessor: None,
+            },
+            AuthorizationState {
+                role: ConnectionRole::ProjectorWriter,
+                scope: AuthorizationScope::Projection(ProjectionStatement::InsertAnchor),
+            },
+        );
+        assert_eq!(unrelated_scope, Authorization::Deny);
+
+        let Some(directory) = SupportedDirectory::new("nonempty-projection-delete") else {
+            return;
+        };
+        let basename = OsStr::new("projection.sqlite3");
+        let mut writer =
+            create_fresh_projection(directory.path(), basename).expect("create projection");
+        let zero_hash = [0_u8; 32];
+        let genesis_hash = [1_u8; 32];
+        let block_hash = [2_u8; 32];
+        let runtime_code_hash = [3_u8; 32];
+        let deployment_id = [4_u8; 32];
+        let payload = [5_u8];
+        writer.begin_projection().expect("begin seed transaction");
+        projection_store::insert_anchor(
+            &mut writer,
+            ProjectionAnchor {
+                relay_genesis_hash: &genesis_hash,
+                parachain_genesis_hash: &genesis_hash,
+                deployment_id: &deployment_id,
+                initial_runtime_spec_version: 1,
+                initial_runtime_code_hash: &runtime_code_hash,
+            },
+        )
+        .expect("insert anchor");
+        projection_store::insert_block(
+            &mut writer,
+            ProjectedBlock {
+                block_number: 0,
+                block_hash: &genesis_hash,
+                parent_hash: &zero_hash,
+                runtime_spec_version: 1,
+                runtime_code_hash: &runtime_code_hash,
+                event_count: 0,
+                first_global_sequence: None,
+                last_global_sequence: None,
+            },
+        )
+        .expect("insert genesis block");
+        projection_store::insert_block(
+            &mut writer,
+            ProjectedBlock {
+                block_number: 1,
+                block_hash: &block_hash,
+                parent_hash: &genesis_hash,
+                runtime_spec_version: 1,
+                runtime_code_hash: &runtime_code_hash,
+                event_count: 1,
+                first_global_sequence: Some(1),
+                last_global_sequence: Some(1),
+            },
+        )
+        .expect("insert eventful block");
+        projection_store::insert_event(
+            &mut writer,
+            ProjectedEvent {
+                block_number: 1,
+                extrinsic_index: 0,
+                system_event_index: 0,
+                global_sequence: 1,
+                deployment_id: &deployment_id,
+                kind: ProjectedEventKind::UnitCreated,
+                scale_payload: &payload,
+                signer: &deployment_id,
+                extrinsic_hash: &block_hash,
+            },
+        )
+        .expect("insert event");
+        projection_store::insert_checkpoint(
+            &mut writer,
+            projection_store::ProjectionCheckpoint {
+                block_number: 1,
+                block_hash: &block_hash,
+                last_global_sequence: Some(1),
+                runtime_spec_version: 1,
+                runtime_code_hash: &runtime_code_hash,
+            },
+        )
+        .expect("insert checkpoint");
+        writer.commit_projection().expect("commit seed transaction");
+        drop(writer);
+
+        let path = directory.path().join(basename);
+        let seed = Connection::open_with_flags_and_vfs(
+            &path,
+            OpenFlags::SQLITE_OPEN_READ_WRITE | OpenFlags::SQLITE_OPEN_NOFOLLOW,
+            SQLITE_VFS,
+        )
+        .expect("open test-owned nonempty delete fixture");
+        seed.execute_batch(
+            r#"
+            INSERT INTO intent_units VALUES(
+                '00000000-0000-4000-8000-000000000001',2,'{}','n','s','v','w','feature','queued','active',X'0000000000000000',X'0000000000000001'
+            );
+            INSERT INTO intent_units VALUES(
+                '00000000-0000-4000-8000-000000000002',2,'{}','n','s','v','w','feature','queued','active',X'0000000000000000',X'0000000000000001'
+            );
+            INSERT INTO relationship_definitions VALUES(
+                'depends_on',X'0000000000000001',1,NULL,NULL,'allow','allow',X'0000000000000001'
+            );
+            INSERT INTO intent_unit_relationships VALUES(
+                'depends_on',X'0000000000000001','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002',X'0000000000000001'
+            );
+            INSERT INTO recorded_associations VALUES(
+                '00000000-0000-4000-8000-000000000001','whole_unit',X'','n','s','v',X'0000000000000001'
+            )
+            "#,
+        )
+        .expect("seed related rows through the test-only raw connection");
+        drop(seed);
+
+        let mut writer = open_projection_writer(directory.path(), basename)
+            .expect("revalidate the nonempty delete fixture");
+        writer
+            .begin_projection()
+            .expect("begin exact delete transaction");
+        let definition_version = stored::encode_u64_blob(1);
+        assert_eq!(
+            writer
+                .execute(
+                    ProjectionStatement::DeleteRelationship,
+                    params![
+                        "depends_on",
+                        definition_version.as_slice(),
+                        "00000000-0000-4000-8000-000000000001",
+                        "00000000-0000-4000-8000-000000000002",
+                    ],
+                )
+                .expect("delete relationship with exact FK parent reads"),
+            1
+        );
+        assert_eq!(
+            writer
+                .execute(
+                    ProjectionStatement::DeleteAssociation,
+                    params![
+                        "00000000-0000-4000-8000-000000000001",
+                        "whole_unit",
+                        &[] as &[u8],
+                        "n",
+                        "s",
+                        "v",
+                    ],
+                )
+                .expect("delete association with exact FK parent reads"),
+            1
+        );
+        writer
+            .commit_projection()
+            .expect("commit exact delete transaction");
+        drop(writer);
+
+        let verify = Connection::open_with_flags_and_vfs(
+            path,
+            OpenFlags::SQLITE_OPEN_READ_ONLY | OpenFlags::SQLITE_OPEN_NOFOLLOW,
+            SQLITE_VFS,
+        )
+        .expect("open test-owned delete verification");
+        assert_eq!(
+            verify
+                .query_row(
+                    "SELECT count(*) FROM intent_unit_relationships",
+                    [],
+                    |row| { row.get::<_, i64>(0) }
+                )
+                .expect("relationship count"),
+            0
+        );
+        assert_eq!(
+            verify
+                .query_row("SELECT count(*) FROM recorded_associations", [], |row| {
+                    row.get::<_, i64>(0)
+                })
+                .expect("association count"),
+            0
+        );
     }
 
     #[test]

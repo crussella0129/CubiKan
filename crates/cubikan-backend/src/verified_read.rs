@@ -34,9 +34,8 @@ pub struct ProjectionCheckpoint {
 }
 
 impl ProjectionCheckpoint {
-    /// Constructs a checkpoint from already-validated finalized projection values.
     #[must_use]
-    pub const fn new(
+    pub(crate) const fn new(
         block_number: u64,
         block_hash: [u8; 32],
         last_global_sequence: Option<NonZeroU64>,
@@ -222,6 +221,23 @@ impl VerifiedReadSnapshot {
     }
 }
 
+/// Mints the single-use read capability after the attestor has completed one
+/// exact comparison while `reader` is pinned in its read transaction.
+///
+/// Keeping this constructor crate-private prevents paths, database contents,
+/// checkpoints, or caller-selected tokens from becoming capability authority.
+pub(crate) fn mint_attested_snapshot(
+    reader: ProjectionReaderConnection,
+    checkpoint: ProjectionCheckpoint,
+    data_version: i64,
+) -> VerifiedReadSnapshot {
+    VerifiedReadSnapshot {
+        reader,
+        checkpoint,
+        _data_version: data_version,
+    }
+}
+
 #[cfg(test)]
 pub(crate) fn issue_test_snapshot(
     directory: &Path,
@@ -247,11 +263,7 @@ pub(crate) fn issue_test_snapshot(
         return Err(ReadError::RefreshRequired);
     }
 
-    Ok(VerifiedReadSnapshot {
-        reader,
-        checkpoint,
-        _data_version: data_version,
-    })
+    Ok(mint_attested_snapshot(reader, checkpoint, data_version))
 }
 
 #[cfg(test)]

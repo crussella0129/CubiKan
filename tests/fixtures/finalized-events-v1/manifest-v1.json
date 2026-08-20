@@ -1,0 +1,84 @@
+{
+  "format": "cubikan-finalized-fixture-manifest-v1",
+  "fixture_root": "tests/fixtures/finalized-events-v1",
+  "authority": {
+    "independent_oracle": true,
+    "production_may_regenerate": false,
+    "trust_boundary": "configured-local-node-finalized-rpc-no-grandpa-proof"
+  },
+  "inventory": {
+    "path": "inventory-v1.json",
+    "entry_count": 29,
+    "size": 8101,
+    "sha256": "feea5b6a39c0204dfb2d4be9c7cd12dc73060c6e1ca3db78809663d140885a63"
+  },
+  "documents": {
+    "scale_reasoning": {
+      "path": "SCALE-REASONING.md",
+      "size": 3453,
+      "sha256": "8e5b54532a5f93d5408c9b7a2097b72eee6d6a07251ac42f2c744d0c2921ebc4"
+    },
+    "rpc_preflight": {
+      "path": "rpc-preflight-v1.json",
+      "size": 8985,
+      "sha256": "04a3d9e8dca2e10d435edf69be0b14626d184dd7c4acd11fb261dc388b12a8bb"
+    },
+    "valid_stream": {
+      "path": "valid-stream-v1.json",
+      "size": 9054,
+      "sha256": "0a414d49f6dce4bbfa6d5584fda112c3875bbc229cc195503675055999634dce"
+    },
+    "expected_projection": {
+      "path": "expected-projection-v1.json",
+      "size": 17579,
+      "sha256": "0ea41a2a4dd9477446d6491a00504b6ad7cfc6fa93e57b3b391af4519489aeef"
+    },
+    "fault_cases": {
+      "path": "fault-cases-v1.json",
+      "size": 31312,
+      "sha256": "fd11e2a6b55ea9aa948e62a74ba6871bae0d5fc6e980486643b3d1e390b01e29"
+    }
+  },
+  "external_artifacts": {
+    "deployment_anchor": {
+      "path": "chain/artifacts/local-deployment-anchor-v1.json",
+      "size": 5868,
+      "sha256": "38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7"
+    },
+    "metadata": {
+      "path": "chain/metadata/cubikan-runtime-v1.scale",
+      "size": 63327,
+      "sha256": "171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302"
+    },
+    "runtime_wasm": {
+      "path": "chain/artifacts/cubikan-runtime-v1.compact.compressed.wasm",
+      "size": 637930,
+      "sha256": "640cc616674fe7393fc93928904f0fd92d77571209c8200f08b8da6290c6a275"
+    }
+  },
+  "stream_summary": {
+    "first_block": "0",
+    "last_block": "5",
+    "block_count": 6,
+    "accepted_event_count": 11,
+    "first_global_sequence": "1",
+    "last_global_sequence": "11",
+    "final_checkpoint_block_hash": "5555555555555555555555555555555555555555555555555555555555555555",
+    "row_counts": {
+      "projection_anchor": 1,
+      "projected_blocks": 6,
+      "projected_events": 11,
+      "projection_checkpoint": 1,
+      "intent_units": 2,
+      "relationship_definitions": 1,
+      "intent_unit_relationships": 1,
+      "recorded_associations": 1
+    },
+    "fault_case_count": 75
+  },
+  "verifier": {
+    "path": "verify_fixtures.py",
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 tests/fixtures/finalized-events-v1/verify_fixtures.py",
+    "requires": "Python 3.10+ standard library only"
+  }
+}

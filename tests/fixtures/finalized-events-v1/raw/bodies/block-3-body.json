@@ -1,0 +1,26 @@
+{
+  "fixture_format": "cubikan-finalized-body-v1",
+  "block_number": "3",
+  "extrinsics": [
+    {
+      "index": 0,
+      "scale_hex": "1004320404",
+      "blake2_256": "a3b4293ccb469b18630a09e173cd4129f30c9680ed52d32fb80b28a1518dbef7"
+    },
+    {
+      "index": 1,
+      "scale_hex": "0c040005",
+      "blake2_256": "a34855db98c918489fa2e793d47570648440e8b3a5df094a58d7140690dcbfde"
+    },
+    {
+      "index": 2,
+      "scale_hex": "1004320605",
+      "blake2_256": "741e5cea0606a99594c18925918c4576d81f401f12bc3f61ebd426abe597e5f9"
+    },
+    {
+      "index": 3,
+      "scale_hex": "1004320106",
+      "blake2_256": "bfda5b7f535811d1d1dbbe872fc46556f63ef1c29c5ecfc36c724d44c4d9cf5a"
+    }
+  ]
+}

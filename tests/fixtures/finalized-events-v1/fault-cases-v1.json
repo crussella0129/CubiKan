@@ -1,0 +1,632 @@
+{
+  "format": "cubikan-finalized-fault-corpus-v1",
+  "base_stream": "valid-stream-v1.json",
+  "expected_projection": "expected-projection-v1.json",
+  "baselines": {
+    "schema_only": {
+      "row_counts": {
+        "projection_anchor": 0,
+        "projected_blocks": 0,
+        "projected_events": 0,
+        "projection_checkpoint": 0,
+        "intent_units": 0,
+        "relationship_definitions": 0,
+        "intent_unit_relationships": 0,
+        "recorded_associations": 0
+      },
+      "checkpoint": null
+    },
+    "through_block_3": {
+      "row_counts": {
+        "projection_anchor": 1,
+        "projected_blocks": 4,
+        "projected_events": 6,
+        "projection_checkpoint": 1,
+        "intent_units": 2,
+        "relationship_definitions": 1,
+        "intent_unit_relationships": 1,
+        "recorded_associations": 1
+      },
+      "checkpoint": {
+        "block_number": "3",
+        "block_hash": "3333333333333333333333333333333333333333333333333333333333333333",
+        "last_global_sequence": "6"
+      }
+    },
+    "full_valid": {
+      "row_counts": {
+        "projection_anchor": 1,
+        "projected_blocks": 6,
+        "projected_events": 11,
+        "projection_checkpoint": 1,
+        "intent_units": 2,
+        "relationship_definitions": 1,
+        "intent_unit_relationships": 1,
+        "recorded_associations": 1
+      },
+      "checkpoint": {
+        "block_number": "5",
+        "block_hash": "5555555555555555555555555555555555555555555555555555555555555555",
+        "last_global_sequence": "11"
+      }
+    }
+  },
+  "generated_values": {
+    "overbound_payload": {
+      "recipe": "repeat-byte",
+      "byte_hex": "00",
+      "decoded_size": 1048577,
+      "sha256": "2cb74edba754a81d121c9db6833704a8e7d417e5b13d1a19f4a52f007d644264"
+    }
+  },
+  "cases": [
+    {
+      "id": "archive_blocks_flag_missing",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "required_node_argv_pair": ["--blocks-pruning", "archive"], "operation": "remove" },
+      "expected": { "error": "archive_history_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "archive_state_flag_missing",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "required_node_argv_pair": ["--state-pruning", "archive"], "operation": "remove" },
+      "expected": { "error": "archive_history_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "archive_flag_value_drift",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "required_node_argv_pair": ["--state-pruning", "archive"], "replacement": ["--state-pruning", "256"] },
+      "expected": { "error": "archive_history_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "deployment_manifest_digest_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "artifact": "deployment_anchor", "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "deployment_mismatch", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "metadata_digest_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "artifact": "metadata", "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "runtime_mismatch", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "runtime_wasm_digest_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "artifact": "runtime_wasm", "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "runtime_mismatch", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "genesis_body_probe_unavailable",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "probe_role": "genesis", "method": "chain_getBlock", "fault": "rpc_source_interrupted" },
+      "expected": { "error": "archive_rpc_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "early_events_probe_unavailable",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "probe_role": "early", "method": "state_getStorage", "fault": "historical_state_missing" },
+      "expected": { "error": "archive_history_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "mid_code_probe_unavailable",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "probe_role": "mid", "method": "state_getStorage", "key": "3a636f6465", "fault": "historical_state_missing" },
+      "expected": { "error": "archive_history_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "current_header_probe_unavailable",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "probe_role": "current", "method": "chain_getHeader", "fault": "rpc_source_interrupted" },
+      "expected": { "error": "archive_rpc_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_parachain_genesis_hash_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "probe": "parachain_chain_getBlockHash_0", "replacement": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "deployment_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_relay_genesis_hash_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "probe": "relay_chain_getBlockHash_0", "replacement": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "deployment_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_para_id_storage_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "storage_probe": "para_id", "replacement_scale_hex": "e9030000", "decoded_value": 1001 },
+      "expected": { "error": "deployment_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_deployment_storage_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "storage_probe": "deployment_id", "replacement_scale_hex": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "deployment_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_pallet_storage_version_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "storage_probe": "pallet_storage_version", "replacement_scale_hex": "0200", "decoded_value": 2 },
+      "expected": { "error": "deployment_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_event_schema_storage_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "storage_probe": "event_schema_version", "replacement_scale_hex": "0200", "decoded_value": 2 },
+      "expected": { "error": "event_schema_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_metadata_bytes_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "probe": "state_getMetadata_at_genesis", "operation": "flip_one_bit_while_retaining_valid_scale_shape" },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_runtime_code_bytes_mismatch",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": { "storage_probe": "runtime_code", "operation": "replace_with_valid_wasm_different_blake2_256" },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "live_runtime_identity_mutations",
+      "stage": "rpc_preflight",
+      "baseline": "schema_only",
+      "mutation": {
+        "probe": "state_getRuntimeVersion_at_genesis",
+        "for_each_scalar_field": [
+          "spec_name",
+          "impl_name",
+          "authoring_version",
+          "spec_version",
+          "impl_version",
+          "transaction_version",
+          "state_version",
+          "system_version"
+        ],
+        "api_mutations": [
+          "remove_one",
+          "append_valid_looking",
+          "swap_order",
+          "replace_id",
+          "replace_version"
+        ]
+      },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "first_sync_statement_faults",
+      "stage": "bootstrap_transaction",
+      "baseline": "schema_only",
+      "mutation": {
+        "for_each_failure_point": [
+          "insert_projection_anchor",
+          "insert_projected_block_zero",
+          "insert_projection_checkpoint"
+        ],
+        "fault": "statement_error"
+      },
+      "expected": { "error": "backend", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "first_sync_commit_fault",
+      "stage": "bootstrap_transaction",
+      "baseline": "schema_only",
+      "mutation": { "failure_point": "commit", "fault": "sqlite_ioerr" },
+      "expected": { "error": "backend", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "best_only_block",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "field": "finalized", "replacement": false },
+      "expected": { "error": "non_finalized_block", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "displaced_finalized_block",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "field": "block_hash", "replacement": "4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f" },
+      "expected": { "error": "finalized_hash_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "identical_duplicate_complete_equality",
+      "stage": "block_acceptance",
+      "baseline": "full_valid",
+      "mutation": { "block_number": "4", "operation": "replay_identical_block_and_all_rows" },
+      "expected": { "error": null, "outcome": "exact_noop", "complete_row_and_envelope_equality_required": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "conflicting_duplicate_hash",
+      "stage": "block_acceptance",
+      "baseline": "full_valid",
+      "mutation": { "block_number": "4", "field": "block_hash", "replacement": "4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f" },
+      "expected": { "error": "conflicting_finalized_block", "fatal": true, "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "conflicting_duplicate_event_row",
+      "stage": "block_acceptance",
+      "baseline": "full_valid",
+      "mutation": { "block_number": "4", "global_sequence": "10", "field": "signer", "replacement": "a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1" },
+      "expected": { "error": "projection_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "skipped_block",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "operation": "remove_block", "block_number": "4", "next_block_number": "5" },
+      "expected": { "error": "block_gap", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "out_of_order_block",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "operation": "deliver_before", "block_number": "5", "before": "4" },
+      "expected": { "error": "block_out_of_order", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_parent_hash",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "field": "parent_hash", "replacement": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "parent_hash_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_block_zero_hash",
+      "stage": "bootstrap_transaction",
+      "baseline": "schema_only",
+      "mutation": { "block_number": "0", "field": "block_hash", "replacement": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "deployment_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_deployment_id",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "field": "deployment_id", "replacement": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "deployment_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_spec_version",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "field": "runtime_spec_version", "replacement": 2 },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_spec_name",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "runtime_field": "spec_name", "replacement": "cubikan-runtime-benchmark" },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_impl_name",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "runtime_field": "impl_name", "replacement": "cubikan-node" },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_authoring_version",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "runtime_field": "authoring_version", "replacement": 2 },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_impl_version",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "runtime_field": "impl_version", "replacement": 1 },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_transaction_version",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "runtime_field": "transaction_version", "replacement": 2 },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_state_version",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "runtime_field": "state_version", "replacement": 0 },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_system_version",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "runtime_field": "system_version", "replacement": 2 },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_api_version",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "runtime_api_id": "ab3c0572291feb8b", "field": "version", "replacement": 3 },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_api_order",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "operation": "swap_runtime_apis", "indices": [0, 1] },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_runtime_code_hash",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "field": "runtime_code_hash", "replacement": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "runtime_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_event_schema_version",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "field": "event_schema_version", "replacement": 2 },
+      "expected": { "error": "event_schema_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "wrong_cubikan_event_count",
+      "stage": "block_acceptance",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "field": "cubikan_event_count", "replacement": 4 },
+      "expected": { "error": "event_count_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "global_sequence_zero",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "replacement": "0" },
+      "expected": { "error": "global_sequence_invalid", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "global_sequence_gap",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "replacement": "8" },
+      "expected": { "error": "global_sequence_gap", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "global_sequence_duplicate",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "replacement": "6" },
+      "expected": { "error": "global_sequence_duplicate", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "system_event_order_reversed",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "operation": "swap_system_event_records", "indices": [0, 1] },
+      "expected": { "error": "event_order_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "accepted_event_initialization_phase",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "field": "phase", "replacement": "Initialization" },
+      "expected": { "error": "malformed_event_stream", "source_preserved": true, "exact_extrinsic_join_required": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "accepted_event_finalization_phase",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "field": "phase", "replacement": "Finalization" },
+      "expected": { "error": "malformed_event_stream", "source_preserved": true, "exact_extrinsic_join_required": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "system_events_trailing_bytes",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "system_events": "append_hex", "hex": "00" },
+      "expected": { "error": "malformed_event_stream", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "system_events_declared_count_too_small",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "system_events_compact_count": 4, "actual_record_count": 5 },
+      "expected": { "error": "malformed_event_stream", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "system_events_declared_count_too_large",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "system_events_compact_count": 6, "actual_record_count": 5 },
+      "expected": { "error": "malformed_event_stream", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "malformed_scale_compact_length",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "system_events": "replace_first_byte_with_ff" },
+      "expected": { "error": "malformed_event_stream", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "truncated_scale_payload",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "payload": "raw/payloads/0007-unit-completed-a.scale.hex", "operation": "remove_last_byte" },
+      "expected": { "error": "malformed_payload", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "trailing_scale_payload_bytes",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "payload": "raw/payloads/0007-unit-completed-a.scale.hex", "operation": "append_hex", "hex": "00" },
+      "expected": { "error": "malformed_payload", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "unknown_payload_variant",
+      "stage": "event_decode",
+      "baseline": "through_block_3",
+      "mutation": { "payload": "raw/payloads/0007-unit-completed-a.scale.hex", "offset": 0, "replacement_hex": "ff" },
+      "expected": { "error": "unsupported_payload", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "overbound_payload",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "global_sequence": "7", "payload_recipe": "overbound_payload" },
+      "expected": { "error": "payload_limit_exceeded", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "replay_invalid_transition",
+      "stage": "domain_replay",
+      "baseline": "through_block_3",
+      "mutation": { "payload": "raw/payloads/0007-unit-completed-a.scale.hex", "operation": "replace_with_unit_transitioned", "from": "doing", "to": "queued" },
+      "expected": { "error": "replay_invalid", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "extrinsic_index_out_of_body",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "field": "extrinsic_index", "replacement": 5 },
+      "expected": { "error": "extrinsic_index_invalid", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "extrinsic_hash_join_mismatch",
+      "stage": "event_validation",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "global_sequence": "7", "field": "extrinsic_hash", "replacement": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff" },
+      "expected": { "error": "extrinsic_hash_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "block_statement_faults",
+      "stage": "block_transaction",
+      "baseline": "through_block_3",
+      "mutation": {
+        "block_number": "4",
+        "for_each_failure_point": [
+          "insert_projected_block",
+          "insert_projected_event_7",
+          "update_intent_unit_a",
+          "insert_projected_event_8",
+          "delete_relationship",
+          "insert_projected_event_9",
+          "delete_association",
+          "insert_projected_event_10",
+          "insert_association",
+          "insert_projected_event_11",
+          "insert_relationship",
+          "update_projection_checkpoint"
+        ],
+        "fault": "statement_error"
+      },
+      "expected": { "error": "backend", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "block_commit_fault",
+      "stage": "block_transaction",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "failure_point": "commit", "fault": "sqlite_ioerr" },
+      "expected": { "error": "backend", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "block_space_fault",
+      "stage": "block_transaction",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "failure_point": "insert_projected_event_10", "fault": "sqlite_full" },
+      "expected": { "error": "sqlite_full", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "block_limit_fault",
+      "stage": "block_transaction",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "failure_point": "insert_association", "fault": "sqlite_limit" },
+      "expected": { "error": "backend", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "rpc_source_interruption_mid_block",
+      "stage": "block_fetch",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "failure_point": "fetch_system_events", "fault": "connection_closed" },
+      "expected": { "error": "archive_rpc_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "attestation_raw_event_forgery",
+      "stage": "attestation_compare",
+      "baseline": "full_valid",
+      "mutation": { "table": "projected_events", "global_sequence": "7", "column": "signer", "operation": "flip_one_bit" },
+      "expected": { "error": "projection_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "attestation_derived_row_forgery",
+      "stage": "attestation_compare",
+      "baseline": "full_valid",
+      "mutation": { "table": "intent_units", "id": "00112233-4455-4677-8899-aabbccddeeff", "column": "phase", "replacement": "queued" },
+      "expected": { "error": "projection_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "attestation_coherent_event_and_derived_forgery",
+      "stage": "attestation_compare",
+      "baseline": "full_valid",
+      "mutation": { "tables": ["projected_events", "intent_units"], "operation": "coherently_remove_completion_while_preserving_anchor_and_checkpoint" },
+      "expected": { "error": "projection_mismatch", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "checkpoint_advances_before_pin",
+      "stage": "attestation_pin",
+      "baseline": "full_valid",
+      "mutation": { "operation": "advance_checkpoint_between_rpc_replay_and_begin", "from_block": "5", "to_block": "6" },
+      "expected": { "error": "refresh_required", "source_preserved": false, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "attestation_rpc_interrupt",
+      "stage": "attestation_replay",
+      "baseline": "full_valid",
+      "mutation": { "block_number": "3", "failure_point": "fetch_body", "fault": "connection_closed" },
+      "expected": { "error": "archive_rpc_unavailable", "source_preserved": true, "state_equals_baseline": true, "capability_minted": false }
+    },
+    {
+      "id": "restart_after_block_fetch",
+      "stage": "restart",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "stop_after": "fetch_complete_before_begin" },
+      "expected": { "error": null, "after_restart": "full_valid", "double_application": false, "heuristic_rollback": false }
+    },
+    {
+      "id": "restart_before_block_commit",
+      "stage": "restart",
+      "baseline": "through_block_3",
+      "mutation": { "block_number": "4", "stop_after": "all_statements_before_commit" },
+      "expected": { "error": null, "after_restart": "full_valid", "double_application": false, "heuristic_rollback": false }
+    },
+    {
+      "id": "restart_after_block_commit",
+      "stage": "restart",
+      "baseline": "full_valid",
+      "mutation": { "block_number": "5", "stop_after": "commit_before_acknowledgement" },
+      "expected": { "error": null, "after_restart": "full_valid", "double_application": false, "heuristic_rollback": false }
+    },
+    {
+      "id": "two_projectors_contend",
+      "stage": "contention",
+      "baseline": "through_block_3",
+      "mutation": { "operation": "barrier_start_two_projectors", "range": ["4", "5"], "busy_timeout_ms": 5000, "outer_bound_ms": 7500 },
+      "expected": { "allowed_outcomes": ["one_busy_one_success", "serialized_both_success"], "after_completion": "full_valid", "double_application": false, "source_preserved_on_busy": true }
+    }
+  ]
+}

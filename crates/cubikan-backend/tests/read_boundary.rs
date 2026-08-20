@@ -70,14 +70,16 @@ fn test_public_reads_are_uncallable_without_verified_snapshot() {
 
 #[test]
 fn checkpoint_and_read_errors_are_typed_without_exposing_a_capability_token() {
-    let sequence = NonZeroU64::new(9).expect("fixture sequence is nonzero");
-    let checkpoint = ProjectionCheckpoint::new(7, [1; 32], Some(sequence), 11, [2; 32]);
-
-    assert_eq!(checkpoint.block_number(), 7);
-    assert_eq!(checkpoint.block_hash(), &[1; 32]);
-    assert_eq!(checkpoint.last_global_sequence(), Some(sequence));
-    assert_eq!(checkpoint.runtime_spec_version(), 11);
-    assert_eq!(checkpoint.runtime_code_hash(), &[2; 32]);
+    fn assert_checkpoint_traits<T: Clone + std::fmt::Debug + Eq + std::hash::Hash>() {}
+    assert_checkpoint_traits::<ProjectionCheckpoint>();
+    let _: fn(&ProjectionCheckpoint) -> u64 = ProjectionCheckpoint::block_number;
+    let _: fn(&ProjectionCheckpoint) -> &[u8; 32] = ProjectionCheckpoint::block_hash;
+    let _: fn(&ProjectionCheckpoint) -> Option<NonZeroU64> =
+        ProjectionCheckpoint::last_global_sequence;
+    let _: fn(&ProjectionCheckpoint) -> u32 = ProjectionCheckpoint::runtime_spec_version;
+    let _: fn(&ProjectionCheckpoint) -> &[u8; 32] = ProjectionCheckpoint::runtime_code_hash;
+    assert!(VERIFIED_READ_SOURCE.contains("pub(crate) const fn new("));
+    assert!(!VERIFIED_READ_SOURCE.contains("pub const fn new("));
     assert_eq!(
         ReadError::RefreshRequired.to_string(),
         "the projection advanced before the read snapshot was pinned"

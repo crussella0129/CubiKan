@@ -125,3 +125,29 @@
   `projection.rs` and `lib.rs`, and explicitly rejects public raw connection or
   open entry points. It adds no path-, connection-, row-, or caller-minted
   capability surface.
+
+- **2026-08-20 — T-1110 capability-mint scope omission resolved:** T-1110
+  exclusively owns production minting of an attested `VerifiedReadSnapshot`,
+  but its locked Touches omitted `crates/cubikan-backend/src/verified_read.rs`,
+  where the opaque fields must remain private. The minimal repair adds only one
+  crate-private constructor that accepts an already pinned hardened reader and
+  exact checkpoint after full-stream comparison; the existing test issuer is
+  routed through it, and the checkpoint value's formerly public constructor is
+  narrowed to crate-only so callers can only receive finalized coordinates.
+  No public path, connection, row, token, checkpoint-write, or caller-minting
+  surface is added.
+
+- **2026-08-20 — T-1108 nonempty projection-delete scope omission resolved:**
+  T-1110's first approved ext4 replay populated schema v3 and exposed a DML
+  path that T-1108's empty-table authorizer execution could not exercise:
+  SQLite's foreign-key enforcement adds parent-key reads while deleting a
+  relationship or association. Under `DeleteRelationship`, the observed
+  suffix is `intent_units.id` twice, then
+  `relationship_definitions.definition_id`,
+  `relationship_definitions.definition_version`, and
+  `projected_events.global_sequence`; under `DeleteAssociation` it is
+  `intent_units.id` then `projected_events.global_sequence`. The minimal repair
+  is confined to those exact parent columns in the two existing projection
+  statement scopes, with database `main` and no accessor. The immutable
+  empty-table authorizer oracle stays unchanged, and unlisted tables, columns,
+  accessors, statement scopes, and all public query authority remain denied.
