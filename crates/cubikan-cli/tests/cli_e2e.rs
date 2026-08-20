@@ -3,10 +3,22 @@ use std::{
     process::{Command, Output, Stdio},
 };
 
-use cubikan_cli::MAX_REQUEST_BYTES;
-use serde_json::{Value, json};
-
-const V1_FIXTURE: &[u8] = include_bytes!("fixtures/lifecycle-success-v1.json");
+const SUCCESS_REQUEST: &[u8] =
+    include_bytes!("../../../tests/fixtures/protocol-v2/cubikan/requests/success_completion.json");
+const SUCCESS_STDOUT: &[u8] =
+    include_bytes!("../../../tests/fixtures/protocol-v2/cubikan/stdout/success_completion.jsonl");
+const SETUP_ERROR_REQUEST: &[u8] = include_bytes!(
+    "../../../tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_missing.json"
+);
+const SETUP_ERROR_STDOUT: &[u8] = include_bytes!(
+    "../../../tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_missing.jsonl"
+);
+const OPERATION_ERROR_REQUEST: &[u8] = include_bytes!(
+    "../../../tests/fixtures/protocol-v2/cubikan/requests/error_transition_not_allowed.json"
+);
+const OPERATION_ERROR_STDOUT: &[u8] = include_bytes!(
+    "../../../tests/fixtures/protocol-v2/cubikan/stdout/error_transition_not_allowed.jsonl"
+);
 
 fn invoke(input: &[u8]) -> Output {
     let mut child = Command::new(env!("CARGO_BIN_EXE_cubikan"))
@@ -24,64 +36,22 @@ fn invoke(input: &[u8]) -> Output {
     child.wait_with_output().expect("process should finish")
 }
 
-fn response(output: &Output) -> Value {
+fn assert_invocation(input: &[u8], expected_stdout: &[u8], exit_code: i32) {
+    let output = invoke(input);
+    assert_eq!(output.status.code(), Some(exit_code));
+    assert_eq!(output.stdout, expected_stdout);
     assert!(output.stderr.is_empty());
-    assert_eq!(output.stdout.last(), Some(&b'\n'));
-    assert_eq!(
-        output.stdout.iter().filter(|byte| **byte == b'\n').count(),
-        1
-    );
-    serde_json::from_slice(&output.stdout).expect("stdout should contain one JSON value")
-}
-
-fn padded_fixture(length: usize) -> Vec<u8> {
-    let mut input = V1_FIXTURE.to_vec();
-    while input.last().is_some_and(u8::is_ascii_whitespace) {
-        input.pop();
-    }
-    assert_eq!(input.pop(), Some(b'}'));
-    assert!(input.len() < length);
-    input.resize(length - 1, b' ');
-    input.push(b'}');
-    input
 }
 
 #[test]
-fn protocol_v1_fixture_is_an_unsupported_only_bridge() {
-    let output = invoke(V1_FIXTURE);
-
-    assert_eq!(output.status.code(), Some(2));
-    assert_eq!(
-        response(&output),
-        json!({
-            "outcome": "error",
-            "protocol_version": 1,
-            "error": {
-                "code": "unsupported_protocol_version",
-                "message": "protocol version 1 is unsupported"
-            }
-        })
-    );
+fn binary_uses_the_locked_success_and_failure_exits() {
+    assert_invocation(SUCCESS_REQUEST, SUCCESS_STDOUT, 0);
+    assert_invocation(SETUP_ERROR_REQUEST, SETUP_ERROR_STDOUT, 2);
+    assert_invocation(OPERATION_ERROR_REQUEST, OPERATION_ERROR_STDOUT, 3);
 }
 
 #[test]
-fn binary_preserves_bounded_ingestion_and_request_precedence() {
-    let exact = invoke(&padded_fixture(MAX_REQUEST_BYTES));
-    assert_eq!(exact.status.code(), Some(2));
-    assert_eq!(
-        response(&exact)["error"]["code"],
-        "unsupported_protocol_version"
-    );
-
-    let oversized = invoke(&padded_fixture(MAX_REQUEST_BYTES + 1));
-    assert_eq!(oversized.status.code(), Some(2));
-    assert_eq!(response(&oversized)["error"]["code"], "request_too_large");
-}
-
-#[test]
-fn binary_keeps_malformed_json_as_a_request_rejection() {
-    let output = invoke(b"{");
-
-    assert_eq!(output.status.code(), Some(2));
-    assert_eq!(response(&output)["error"]["code"], "invalid_json");
+fn separate_processes_share_no_lifecycle_state() {
+    assert_invocation(SUCCESS_REQUEST, SUCCESS_STDOUT, 0);
+    assert_invocation(SUCCESS_REQUEST, SUCCESS_STDOUT, 0);
 }

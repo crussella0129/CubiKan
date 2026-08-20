@@ -61,10 +61,12 @@ fn test_root_consumers_reject_v1_before_removed_authority() {
         .parent()
         .expect("local crate should have a crates parent")
         .join("cubikan-cli");
-    let sources = [
+    let local_sources = [
         fs::read_to_string(local_root.join("src/execution.rs")).expect("read local execution"),
         fs::read_to_string(local_root.join("src/protocol.rs")).expect("read local protocol"),
         fs::read_to_string(local_root.join("src/runner.rs")).expect("read local runner"),
+    ];
+    let cli_sources = [
         fs::read_to_string(cli_root.join("src/execution.rs")).expect("read CLI execution"),
         fs::read_to_string(cli_root.join("src/protocol.rs")).expect("read CLI protocol"),
         fs::read_to_string(cli_root.join("src/runner.rs")).expect("read CLI runner"),
@@ -77,8 +79,28 @@ fn test_root_consumers_reject_v1_before_removed_authority() {
         "synthetic_origin",
     ] {
         assert!(
-            sources.iter().all(|source| !source.contains(forbidden)),
-            "retired root consumer authority remains: {forbidden}"
+            local_sources
+                .iter()
+                .all(|source| !source.contains(forbidden)),
+            "retired local root-consumer authority remains: {forbidden}"
+        );
+    }
+
+    // T-1112 deliberately gives `cubikan` an in-memory core simulator while
+    // preserving the T-1107 prohibition on durable, RPC, or synthetic-origin
+    // authority. `cubikan-local` remains the unsupported-only bridge here.
+    for forbidden in [
+        "SqliteBackend",
+        "rusqlite",
+        "Connection::open",
+        "subxt",
+        "OnlineClient",
+        "CreateIntentUnit",
+        "synthetic_origin",
+    ] {
+        assert!(
+            cli_sources.iter().all(|source| !source.contains(forbidden)),
+            "stateless CLI gained external authority: {forbidden}"
         );
     }
 }

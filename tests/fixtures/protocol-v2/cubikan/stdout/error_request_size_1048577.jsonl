@@ -1,0 +1,1 @@
+{"protocol_version":2,"authority":"simulation_only","outcome":"error","error":{"code":"request_too_large","message":"request exceeds the 1048576-byte limit"}}

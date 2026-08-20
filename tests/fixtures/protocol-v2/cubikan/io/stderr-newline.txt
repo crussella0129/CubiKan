@@ -1,0 +1,1 @@
+cubikan: failed to write response newline: fixture newline failure

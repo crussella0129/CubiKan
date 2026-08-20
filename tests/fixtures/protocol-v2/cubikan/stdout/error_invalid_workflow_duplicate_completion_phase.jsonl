@@ -1,0 +1,1 @@
+{"protocol_version":2,"authority":"simulation_only","outcome":"error","error":{"code":"invalid_workflow","message":"workflow topology is invalid","field":"/workflow/completion_phases/1"}}

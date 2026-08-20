@@ -1,0 +1,1358 @@
+{
+  "fixture_schema_version": 1,
+  "hash_algorithm": "sha256",
+  "schema": {
+    "path": "protocol/v2/cubikan.schema.json",
+    "bytes": 11263,
+    "sha256": "309697fe6e718c78ef8802861d60a660500a985c05b5a94aaba35a28fb2cb4a3"
+  },
+  "cases": [
+    {
+      "id": "success_explicit_id_zero_operations",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_explicit_id_zero_operations.json",
+        "bytes": 424,
+        "sha256": "e0be445c0770af45ed4c2244b06bde2ad7f7b1b85e6d1135cfc5ef7307177bf8"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_explicit_id_zero_operations.jsonl",
+        "bytes": 553,
+        "sha256": "c00677a9ee37912268a04190ef5c3e9995d1ffe8d275711f818520464d7aa964"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_omitted_id_uses_manifest_uuid",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_omitted_id_uses_manifest_uuid.json",
+        "bytes": 380,
+        "sha256": "ad76de81f5c40f14455557e905d605ec52937e7bb6fef4d9e723243b5dd323cf"
+      },
+      "context": {
+        "generated_uuid": "123e4567-e89b-42d3-a456-426614174000"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_omitted_id_uses_manifest_uuid.jsonl",
+        "bytes": 553,
+        "sha256": "bfa15d7515914b40d50baaccf53e27154eb8881aaccc5c0a46bdf36f13c9f951"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_canonical_nil_uuid",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_canonical_nil_uuid.json",
+        "bytes": 424,
+        "sha256": "67e875c4f22bc88390305cdae6de91ea4e4e59c3f0c03fd73ecb61f7d3246241"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_canonical_nil_uuid.jsonl",
+        "bytes": 553,
+        "sha256": "b6230d137fa4e3f7af932f0e80d1d6f6537e9a5c6a57e434ae1988c45d8f7712"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_transition",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_transition.json",
+        "bytes": 462,
+        "sha256": "547009230cabd3149ab891845e3b17bd0c3532658f999bedbd7bd26ce313b1cc"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_transition.jsonl",
+        "bytes": 617,
+        "sha256": "4adf452afe376792b7dcdfe0c2254f3deb5d23224391f905cdd340db9f6a9ccf"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_completion",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_completion.json",
+        "bytes": 520,
+        "sha256": "6983487f77c8262163ff0ff884d18a2708328408e7865e744325fa27437e4ca6"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_completion.jsonl",
+        "bytes": 735,
+        "sha256": "4120ce97be3d814ba99169d47068bacedb165fa1c9d6f2ce340a0bf80fee9c2e"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_canonical_escaping_and_utf8",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_canonical_escaping_and_utf8.json",
+        "bytes": 511,
+        "sha256": "4c8b9c9cb0ba9b1439645ed85055b4e9621c01e8c979bed1dc07268c87b3f717"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_canonical_escaping_and_utf8.jsonl",
+        "bytes": 720,
+        "sha256": "d9066bc5e68d7814b7afc7ff477e92eb5855799cf53d570224218614e2ed980d"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_scalar_minima_and_zero_completion_phases",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_scalar_minima_and_zero_completion_phases.json",
+        "bytes": 254,
+        "sha256": "eb5119e06a20c9025d9528fd9ae14dc38a092af2d1ebbbd668c68fc9249f1e80"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_scalar_minima_and_zero_completion_phases.jsonl",
+        "bytes": 378,
+        "sha256": "f803e544830f82f1da1c71a517bc5cfcc4ad9c6ce47541d0ade4d2ebb8d063a3"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_scalar_maxima",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_scalar_maxima.json",
+        "bytes": 2105,
+        "sha256": "4ceac46b6843f665892a00c395c882fe87178fd592210c1e12426d440d7041d9"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_scalar_maxima.jsonl",
+        "bytes": 2484,
+        "sha256": "edf75604cc1a3019e5cc7c6bad6f15bc9f361602b4d5b4291264b61b8bb1ef68"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_workflow_collection_maxima",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_workflow_collection_maxima.json",
+        "bytes": 4014,
+        "sha256": "7cf765ef10e2c79de9d6973140ab3a5e6a34592fab36c5b0c033445e3c0ce427"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_workflow_collection_maxima.jsonl",
+        "bytes": 4140,
+        "sha256": "b0c1737f81abba32a96bc0b040d13be49fe449507a62024185b275a221a60467"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_256_operations_and_history_records",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_256_operations_and_history_records.json",
+        "bytes": 9319,
+        "sha256": "26780d2dd9709c87c1a7cc00bf524b8e46f33178eff19a39af795756bbb7bb09"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_256_operations_and_history_records.jsonl",
+        "bytes": 15481,
+        "sha256": "f7d73894d5dae66995dc3f76b550f2c6cf9e71bc091a7e95ece718fcd715810f"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "error_transition_unknown_target",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_transition_unknown_target.json",
+        "bytes": 464,
+        "sha256": "aaaa4db63dd3301090ede4fe5efa77f3ca10d6603675a9f94cb0bec1ddba2e48"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_transition_unknown_target.jsonl",
+        "bytes": 648,
+        "sha256": "0097ede20dd59ecd65a70121a471d620cbd35d8037354448477f46140b4abb27"
+      },
+      "exit_code": 3
+    },
+    {
+      "id": "error_transition_not_allowed",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_transition_not_allowed.json",
+        "bytes": 461,
+        "sha256": "3d90c49bcd077ef0d2354bc714e5d004c8deab5158fa4798a9222bb4fe60153b"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_transition_not_allowed.jsonl",
+        "bytes": 635,
+        "sha256": "67edea3b0a255f56349efb2f18eee5eea85084e8bb2af8654aa81daa9fc1c5bf"
+      },
+      "exit_code": 3
+    },
+    {
+      "id": "error_completion_phase_not_eligible",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_completion_phase_not_eligible.json",
+        "bytes": 443,
+        "sha256": "b3f1f75ace4fe2dccf11849b88109ade9b4924b041577fd93bc399edc2418a78"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_completion_phase_not_eligible.jsonl",
+        "bytes": 647,
+        "sha256": "82cd74428d1260388ab033dc39c81d01b42b2aa38649bc96999aff357d7f1727"
+      },
+      "exit_code": 3
+    },
+    {
+      "id": "error_transition_already_completed",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_transition_already_completed.json",
+        "bytes": 559,
+        "sha256": "3e4f2055f3d66da69ca05d79a25b283b462cc090e41887097042468b98f12882"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_transition_already_completed.jsonl",
+        "bytes": 825,
+        "sha256": "256861f50d7d95f19a6a19130afcc6552336cad51a8a9fdf8df339d39166d1e6"
+      },
+      "exit_code": 3
+    },
+    {
+      "id": "error_completion_already_completed",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_completion_already_completed.json",
+        "bytes": 540,
+        "sha256": "fbb20320c2fc33c1dbbbe97971ee04908803297d8337c089a906b65eaca072a1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_completion_already_completed.jsonl",
+        "bytes": 832,
+        "sha256": "adae959389a2ebf373414f674b547a3c2423c99502eedd30325ae1384deb59de"
+      },
+      "exit_code": 3
+    },
+    {
+      "id": "error_operation_number_255",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_operation_number_255.json",
+        "bytes": 9325,
+        "sha256": "e4b7cbf59995113770382679fabeb9efe3dd96ce3c5b33790c7138ebfd39d5d2"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_operation_number_255.jsonl",
+        "bytes": 15519,
+        "sha256": "576837a3c5cfe23627984491a8d3baeaa7f5a5ddcabcffc77ab9888e8c31510d"
+      },
+      "exit_code": 3
+    },
+    {
+      "id": "error_malformed_truncated",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_malformed_truncated.json",
+        "bytes": 21,
+        "sha256": "fe86f50fbe7455da026cde152118bdb7efb6cd9674aedd4ee43705d449fc7642"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_malformed_truncated.jsonl",
+        "bytes": 152,
+        "sha256": "37bbf3e6ffc48aaea07dd95ddbde963e63963462d5e8ae6294f173f8b7edaf0b"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_malformed_multiple_values",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_malformed_multiple_values.json",
+        "bytes": 4,
+        "sha256": "b51f08b698d88d8027a935d9db649774949f5fb41a0c559bfee6a9a13225c72d"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_malformed_multiple_values.jsonl",
+        "bytes": 152,
+        "sha256": "37bbf3e6ffc48aaea07dd95ddbde963e63963462d5e8ae6294f173f8b7edaf0b"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_malformed_invalid_utf8",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_malformed_invalid_utf8.json",
+        "bytes": 32,
+        "sha256": "23e7002bed4b12fb86818e573f992d2531bc7f6b852e3d2dd7c547a7899b1e0a"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_malformed_invalid_utf8.jsonl",
+        "bytes": 152,
+        "sha256": "37bbf3e6ffc48aaea07dd95ddbde963e63963462d5e8ae6294f173f8b7edaf0b"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_malformed_nan",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_malformed_nan.json",
+        "bytes": 24,
+        "sha256": "efef88d623d37a9f0a072d7c65eca89b5986ea177b9f46b435305a2e77a45ab1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_malformed_nan.jsonl",
+        "bytes": 152,
+        "sha256": "37bbf3e6ffc48aaea07dd95ddbde963e63963462d5e8ae6294f173f8b7edaf0b"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_malformed_positive_infinity",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_malformed_positive_infinity.json",
+        "bytes": 29,
+        "sha256": "e462d39a6248a385ed724b85eb66e54006aac51d4ab71005da68419bcd7953f9"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_malformed_positive_infinity.jsonl",
+        "bytes": 152,
+        "sha256": "37bbf3e6ffc48aaea07dd95ddbde963e63963462d5e8ae6294f173f8b7edaf0b"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_malformed_negative_infinity",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_malformed_negative_infinity.json",
+        "bytes": 30,
+        "sha256": "2954021d5d8dbc9a04814eba3aca718c0d5bd85cc595818146eba106b193f29d"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_malformed_negative_infinity.jsonl",
+        "bytes": 152,
+        "sha256": "37bbf3e6ffc48aaea07dd95ddbde963e63963462d5e8ae6294f173f8b7edaf0b"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_unsupported_protocol_v1",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_unsupported_protocol_v1.json",
+        "bytes": 69,
+        "sha256": "f2440fa18b210e3e1ab6c4b00f0427b2a844b22fed609956feccd990ceede27d"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_unsupported_protocol_v1.jsonl",
+        "bytes": 186,
+        "sha256": "cb23947baa3d55668b2856b3e3c9b4a620e24d346578f8e053843b422db93161"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_unsupported_protocol_future",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_unsupported_protocol_future.json",
+        "bytes": 424,
+        "sha256": "b5708dd3cf1061a608398176489a715f05e028c972c3384e76de051dd11a23cd"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_unsupported_protocol_future.jsonl",
+        "bytes": 186,
+        "sha256": "cb23947baa3d55668b2856b3e3c9b4a620e24d346578f8e053843b422db93161"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_top_level_array",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_top_level_array.json",
+        "bytes": 2,
+        "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_top_level_array.jsonl",
+        "bytes": 185,
+        "sha256": "0975f4af9a88c79fd5f887c8ee916e8dfc67a64cc78dc471928f36b07d4dff09"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_missing_protocol_version",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_missing_protocol_version.json",
+        "bytes": 403,
+        "sha256": "878abcdee635a8fe8f9aa5fc1465b966b61c10ac71f9c40a1df2ff63e33854cf"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_missing_protocol_version.jsonl",
+        "bytes": 202,
+        "sha256": "086c2b9e447a5a20c468c9bced19564b5558d61b82291c3a20c99ac918c40eae"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_fractional_protocol_version",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_fractional_protocol_version.json",
+        "bytes": 426,
+        "sha256": "8b924867193720709df3c1d47eda216aa55d7d426a669795f84bbf42c2bd2e24"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_fractional_protocol_version.jsonl",
+        "bytes": 202,
+        "sha256": "086c2b9e447a5a20c468c9bced19564b5558d61b82291c3a20c99ac918c40eae"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_missing_operations",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_missing_operations.json",
+        "bytes": 408,
+        "sha256": "b7c3ea3b0c511d6688f127d6dbfaad4e36e33ccd2d4ad75eac82d977a857c0d5"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_missing_operations.jsonl",
+        "bytes": 196,
+        "sha256": "c61e688ecd57b7621ccf39aaf612a723094ac4c4953a953d7215cd829d02c8da"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_null_operations",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_null_operations.json",
+        "bytes": 426,
+        "sha256": "bab8b38d3656fd120c9e40c34b32173269f52cd1224c182505b1cdbb663834fc"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_null_operations.jsonl",
+        "bytes": 196,
+        "sha256": "c61e688ecd57b7621ccf39aaf612a723094ac4c4953a953d7215cd829d02c8da"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_null_workflow",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_null_workflow.json",
+        "bytes": 218,
+        "sha256": "08e1d0897e198087b3a67f99b108f26feca62cf69054e7c98da474d4d8ddd677"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_null_workflow.jsonl",
+        "bytes": 194,
+        "sha256": "6447815d6cb94280214793cd7b0b269b34fbf88b14e009d8887d29521f9f8cec"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_null_intent_unit",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_null_intent_unit.json",
+        "bytes": 279,
+        "sha256": "bb809b56958159c711f14deec2401f3a96cdf14a79db39d730eded15441c88d0"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_null_intent_unit.jsonl",
+        "bytes": 197,
+        "sha256": "36c73a42f9a82e401d80b49bf1552461d9e5b08d26976047921be0bf2e4d21c7"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_unknown_top_level",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_unknown_top_level.json",
+        "bytes": 442,
+        "sha256": "3bcfea406022a24318916202ae9ceca8b90da7080c3a0a369ddcab147700b1e5"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_unknown_top_level.jsonl",
+        "bytes": 196,
+        "sha256": "275373bcfacc2d4bca5a86c2196a4d312b8492f7ea9520d5436ba98170a4ba6a"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_duplicate_top_level",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_duplicate_top_level.json",
+        "bytes": 445,
+        "sha256": "f20f8cab3999958b7c550aa6c966a2d321a986f4df5e58091de0243a2f913be6"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_duplicate_top_level.jsonl",
+        "bytes": 202,
+        "sha256": "086c2b9e447a5a20c468c9bced19564b5558d61b82291c3a20c99ac918c40eae"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_unknown_workflow_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_unknown_workflow_member.json",
+        "bytes": 442,
+        "sha256": "20b1110efe17ef155312115b97e00e3a074f7d084e9e6853a8dd2d69db822a78"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_unknown_workflow_member.jsonl",
+        "bytes": 205,
+        "sha256": "4c9c811550e960a642c602e4b75f2a17ddf3fe2425aaedc4d8803cbc8eb813c0"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_duplicate_workflow_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_duplicate_workflow_member.json",
+        "bytes": 443,
+        "sha256": "c8892515ce23061ee243859adbd383c9ef970e34db103e20b37e65459ce53196"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_duplicate_workflow_member.jsonl",
+        "bytes": 197,
+        "sha256": "de2fd25b2f7054a35cde576bc9cb32e331c0e03217b877e180a130ea22932018"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_unknown_edge_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_unknown_edge_member.json",
+        "bytes": 442,
+        "sha256": "d48fd3cf3ed97ffe39cb2e4b5c4e109958edf168f1ce8b16297ade7e20e86bcf"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_unknown_edge_member.jsonl",
+        "bytes": 213,
+        "sha256": "d109132e28ea8be22a6db1b4c81ca8623f4808db000bd1361d6aed14c41cf985"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_duplicate_edge_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_duplicate_edge_member.json",
+        "bytes": 440,
+        "sha256": "9a773edb8b9d27ef1b511bc069b70cc875b7a1a274859d97c47213e12dd62b61"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_duplicate_edge_member.jsonl",
+        "bytes": 207,
+        "sha256": "25ae19f97d48ff55e12f365dc467de2a5602d4771b4d0c4719c7db6e4682c430"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_unknown_intent_unit_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_unknown_intent_unit_member.json",
+        "bytes": 442,
+        "sha256": "16c7bc9cf967230d05723945667d9c7c92d7695114288107d6893d1df69305b7"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_unknown_intent_unit_member.jsonl",
+        "bytes": 208,
+        "sha256": "fd6d3cbbddd50b57d5d8f73bd6a9d5690f7b38326a4ab1a1fd8e6cc006df98f1"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_duplicate_intent_unit_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_duplicate_intent_unit_member.json",
+        "bytes": 446,
+        "sha256": "baeba44ec8f160d75a805f84383c07282ab7b57f04ada53d05cd46da9d2acaa0"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_duplicate_intent_unit_member.jsonl",
+        "bytes": 205,
+        "sha256": "6b10ef5b002713ebbddbf88c8589f2fa3e77052d8f4ff0e3a8199dbcc12bb544"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_unknown_origin_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_unknown_origin_member.json",
+        "bytes": 442,
+        "sha256": "5d9c0fc1122df0a1433a70fcb177394bfcec339e4c13e4644ce0f618d74d3000"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_unknown_origin_member.jsonl",
+        "bytes": 215,
+        "sha256": "41e347189fd4450e3b8533c99091d079d46b195101bee94d2b7b167f477c4896"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_duplicate_origin_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_duplicate_origin_member.json",
+        "bytes": 443,
+        "sha256": "e655bda3add98aab8317b4e4fae927e4b0c4c4ec1ee129fa4e4146c63c3e7a24"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_duplicate_origin_member.jsonl",
+        "bytes": 210,
+        "sha256": "e6c1f39ecbf4d4e4c5b80389db2b4ff6ca89a4053ffe46c3f18f8e2d76691a5b"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_unknown_transition_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_unknown_transition_member.json",
+        "bytes": 480,
+        "sha256": "af3280feb5e6ac4cc304f01ba79d026131e8fbb69d2f679e2ef9204d616def69"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_unknown_transition_member.jsonl",
+        "bytes": 209,
+        "sha256": "75e13c3a4bb10b2b5fa6f308742e951232f0ad4f037331e507c73bbbd9e4b8be"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_duplicate_transition_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_duplicate_transition_member.json",
+        "bytes": 479,
+        "sha256": "376db3569339daedddf3572c54c6f7d92109748f882345888cde42b4183ed7e2"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_duplicate_transition_member.jsonl",
+        "bytes": 205,
+        "sha256": "be4313f20e796e6e96c4d69ea19e0c9b7ae1e4593cbc794e353eee29cc48df72"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_unknown_complete_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_unknown_complete_member.json",
+        "bytes": 461,
+        "sha256": "96fb63a8bd63b40c24b6c9c5bf0df71b9618c478da7a75945d7a361c4076bb4d"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_unknown_complete_member.jsonl",
+        "bytes": 209,
+        "sha256": "75e13c3a4bb10b2b5fa6f308742e951232f0ad4f037331e507c73bbbd9e4b8be"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_duplicate_complete_member",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_duplicate_complete_member.json",
+        "bytes": 461,
+        "sha256": "d47b5a260cf2c30ab7e49c2b8d910ccf28f149f046d880737f9dab63caaa6ce2"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_duplicate_complete_member.jsonl",
+        "bytes": 203,
+        "sha256": "381aae663d8d32ca4ff2e65014626b29db207fe8dd165e87040f4052b5b2f283"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_unknown_operation_type",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_unknown_operation_type.json",
+        "bytes": 441,
+        "sha256": "b528cfaa6e03f3faa542f9ee513f31deccf72bea8bd4268985a4e0c9170eea20"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_unknown_operation_type.jsonl",
+        "bytes": 203,
+        "sha256": "381aae663d8d32ca4ff2e65014626b29db207fe8dd165e87040f4052b5b2f283"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_operation_wrong_type",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_operation_wrong_type.json",
+        "bytes": 434,
+        "sha256": "ca2ac59820508c7bed571260a07f7087afed1912582f9579736275b3975efcb3"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_operation_wrong_type.jsonl",
+        "bytes": 198,
+        "sha256": "c1b113bdc505710c2985ab45b14d5256048ff6a865eccc9c7c72257f8ad9f86f"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_request_257_operations",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_request_257_operations.json",
+        "bytes": 9354,
+        "sha256": "07ac53eb5a0b24b6c98b2bf2a659b9fe626a0a95ede664df1a1311aa3d663dbe"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_request_257_operations.jsonl",
+        "bytes": 196,
+        "sha256": "c61e688ecd57b7621ccf39aaf612a723094ac4c4953a953d7215cd829d02c8da"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_intent_unit_id_null",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_intent_unit_id_null.json",
+        "bytes": 390,
+        "sha256": "e927d2c2a873b3e7707368ee71ec63f5063924e49ea1338d9ffbdc67e76a3a48"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_intent_unit_id_null.jsonl",
+        "bytes": 211,
+        "sha256": "cb57686086bd2d81d7e454250b30855aa9a46b9df9c24156fbdb669c164937b3"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_intent_unit_id_uppercase",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_intent_unit_id_uppercase.json",
+        "bytes": 424,
+        "sha256": "1e075e690dccaa571c6dd9602b851f5acc0d83a11444551a36bc9552d755ea97"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_intent_unit_id_uppercase.jsonl",
+        "bytes": 211,
+        "sha256": "cb57686086bd2d81d7e454250b30855aa9a46b9df9c24156fbdb669c164937b3"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_intent_unit_id_nonhyphenated",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_intent_unit_id_nonhyphenated.json",
+        "bytes": 420,
+        "sha256": "6ae445bb26b11395fe8b7fa3bb3e225b3338651e5dea291c7c9db4c744d83933"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_intent_unit_id_nonhyphenated.jsonl",
+        "bytes": 211,
+        "sha256": "cb57686086bd2d81d7e454250b30855aa9a46b9df9c24156fbdb669c164937b3"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_intent_unit_id_wrong_type",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_intent_unit_id_wrong_type.json",
+        "bytes": 387,
+        "sha256": "ed4ee306dc2d7607547f5bd676b1e43530ac407c7945d03121e855ec2e668941"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_intent_unit_id_wrong_type.jsonl",
+        "bytes": 211,
+        "sha256": "cb57686086bd2d81d7e454250b30855aa9a46b9df9c24156fbdb669c164937b3"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_missing",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_missing.json",
+        "bytes": 342,
+        "sha256": "f8ae9f442b10bc5af58655dcaec17f1e4d93b667a9cb7c5a4fb89299f360a033"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_missing.jsonl",
+        "bytes": 210,
+        "sha256": "c09cb4454fad7c2bd9887f30d4d4533199a205b6fc65783d9ab204086b2258a9"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_null",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_null.json",
+        "bytes": 356,
+        "sha256": "d60b063076b2ffec977a106a322c534826d9167c111d17527a2de4380d1d7e7e"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_null.jsonl",
+        "bytes": 210,
+        "sha256": "c09cb4454fad7c2bd9887f30d4d4533199a205b6fc65783d9ab204086b2258a9"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_namespace_empty",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_namespace_empty.json",
+        "bytes": 413,
+        "sha256": "aa793409274b403039b0fed3ce14b7f3bfc86b2a82bf534382228738a3e1a06c"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_namespace_empty.jsonl",
+        "bytes": 220,
+        "sha256": "91421a83fd1bdc7c4630e08412d270f49231dfc45b11b75d96d4a26839cba4df"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_namespace_uppercase",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_namespace_uppercase.json",
+        "bytes": 424,
+        "sha256": "fa6d90b2ddf3e1fca966de4e6135bf1ca097cc2f1b5420a88fd72ceb3e121603"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_namespace_uppercase.jsonl",
+        "bytes": 220,
+        "sha256": "91421a83fd1bdc7c4630e08412d270f49231dfc45b11b75d96d4a26839cba4df"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_namespace_too_long",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_namespace_too_long.json",
+        "bytes": 478,
+        "sha256": "6299c6ee8e69c21f92b8a93c13de821358780d21f40df86e9c7ef6708ef2ea5e"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_namespace_too_long.jsonl",
+        "bytes": 220,
+        "sha256": "91421a83fd1bdc7c4630e08412d270f49231dfc45b11b75d96d4a26839cba4df"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_namespace_bad_punctuation",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_namespace_bad_punctuation.json",
+        "bytes": 424,
+        "sha256": "3084c4730d7ae145c7c8781c09c8438d85b7ae889a2f23c4e114e18b44d415ff"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_namespace_bad_punctuation.jsonl",
+        "bytes": 220,
+        "sha256": "91421a83fd1bdc7c4630e08412d270f49231dfc45b11b75d96d4a26839cba4df"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_scope_empty",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_scope_empty.json",
+        "bytes": 416,
+        "sha256": "d3f9ebce96239ce298dca8b4885e6997712d5fafbc40c0b7cb4cb2546421346b"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_scope_empty.jsonl",
+        "bytes": 216,
+        "sha256": "9769363d9ce3f7ad386c0423f0ac441c60480096702aa66c93182127730f790a"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_scope_blank",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_scope_blank.json",
+        "bytes": 419,
+        "sha256": "eb0c462a3224f2a1c6cd5e16efcb5beeacfcb8441a8361d9b8efde332a5362e5"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_scope_blank.jsonl",
+        "bytes": 216,
+        "sha256": "9769363d9ce3f7ad386c0423f0ac441c60480096702aa66c93182127730f790a"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_scope_nul",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_scope_nul.json",
+        "bytes": 431,
+        "sha256": "711a21d428c281bf3fbb4fbf07baf2d9d7cc4077cbc0521c924b8c640dc91eb6"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_scope_nul.jsonl",
+        "bytes": 216,
+        "sha256": "9769363d9ce3f7ad386c0423f0ac441c60480096702aa66c93182127730f790a"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_scope_257_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_scope_257_bytes.json",
+        "bytes": 673,
+        "sha256": "cfab4108329d87a2c29b863192d9ac80c1f143058ff62a84c8b67b633dc65ecd"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_scope_257_bytes.jsonl",
+        "bytes": 216,
+        "sha256": "9769363d9ce3f7ad386c0423f0ac441c60480096702aa66c93182127730f790a"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_scope_multibyte_258_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_scope_multibyte_258_bytes.json",
+        "bytes": 674,
+        "sha256": "d048d7da5ed8ec0d4ca78cd3d3ff11a463bd890479689961b8fc7d61505be69f"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_scope_multibyte_258_bytes.jsonl",
+        "bytes": 216,
+        "sha256": "9769363d9ce3f7ad386c0423f0ac441c60480096702aa66c93182127730f790a"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_value_blank",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_value_blank.json",
+        "bytes": 412,
+        "sha256": "41bb7212949c0fa6c7e813c9988cef35bae5928229f4f9c3e3630c6a5fbdeb77"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_value_blank.jsonl",
+        "bytes": 216,
+        "sha256": "36f5315fb93002cf6f1c690a97a99911176ad8e802440e980cf42baac2c7917e"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_value_nul",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_value_nul.json",
+        "bytes": 424,
+        "sha256": "17f488a39a2c6e1aebabdf9839a4f00a8e08ee325f29142ebac63769ef686a26"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_value_nul.jsonl",
+        "bytes": 216,
+        "sha256": "36f5315fb93002cf6f1c690a97a99911176ad8e802440e980cf42baac2c7917e"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_external_reference_value_257_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_external_reference_value_257_bytes.json",
+        "bytes": 666,
+        "sha256": "52436040c81a1d1065b643dbbc3f132602562c1aab7268c5a7f26dc48a232180"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_external_reference_value_257_bytes.jsonl",
+        "bytes": 216,
+        "sha256": "36f5315fb93002cf6f1c690a97a99911176ad8e802440e980cf42baac2c7917e"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_species_empty",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_species_empty.json",
+        "bytes": 415,
+        "sha256": "bc585ada268c6f36e0fda0263d347283db33b98f99199bc3ebcb6866a051645b"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_species_empty.jsonl",
+        "bytes": 222,
+        "sha256": "527a6db9f363eefe008a35ae4b224e0c3b1c090d7fd2290330c64882c87415e5"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_species_blank",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_species_blank.json",
+        "bytes": 418,
+        "sha256": "46b7010dbe13fafc15b84bf03b757f01f8991f2d0f6b537b7298304a5e46304b"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_species_blank.jsonl",
+        "bytes": 222,
+        "sha256": "527a6db9f363eefe008a35ae4b224e0c3b1c090d7fd2290330c64882c87415e5"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_species_nul",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_species_nul.json",
+        "bytes": 432,
+        "sha256": "76ff1c40dfeb716f7f320cfc5680248e4f5e68cc37365fc5bd6be34691d35f88"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_species_nul.jsonl",
+        "bytes": 222,
+        "sha256": "527a6db9f363eefe008a35ae4b224e0c3b1c090d7fd2290330c64882c87415e5"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_species_257_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_species_257_bytes.json",
+        "bytes": 672,
+        "sha256": "ac320026aafc34cd4ef958f756656d3f0a074648a25ffc62d020797530be2fda"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_species_257_bytes.jsonl",
+        "bytes": 222,
+        "sha256": "527a6db9f363eefe008a35ae4b224e0c3b1c090d7fd2290330c64882c87415e5"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_species_multibyte_258_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_species_multibyte_258_bytes.json",
+        "bytes": 673,
+        "sha256": "6bee5d287f027c672fb951b273cb924fc2bd31daacdb6d002bb3d4052bac4774"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_species_multibyte_258_bytes.jsonl",
+        "bytes": 222,
+        "sha256": "527a6db9f363eefe008a35ae4b224e0c3b1c090d7fd2290330c64882c87415e5"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_id_empty",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_id_empty.json",
+        "bytes": 413,
+        "sha256": "2bdd7aa8a8c974268dac04c0f8f05a42d306e3715d0a7e4e04bcd0b95d6e71bf"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_id_empty.jsonl",
+        "bytes": 210,
+        "sha256": "3d5c7fb8f70e36cdf950631718cdf2135ea2e37b1f6121799c27851c1ef15f4f"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_id_blank",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_id_blank.json",
+        "bytes": 415,
+        "sha256": "e7364e0d33d3d928876528ec013b124b606a8a93c761f8af6de398d570772a77"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_id_blank.jsonl",
+        "bytes": 210,
+        "sha256": "3d5c7fb8f70e36cdf950631718cdf2135ea2e37b1f6121799c27851c1ef15f4f"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_id_nul",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_id_nul.json",
+        "bytes": 431,
+        "sha256": "3085ca5d42f6781114caf7a4cd95eb41944847b267ff04ce6c51513d713ed2a1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_id_nul.jsonl",
+        "bytes": 210,
+        "sha256": "3d5c7fb8f70e36cdf950631718cdf2135ea2e37b1f6121799c27851c1ef15f4f"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_id_257_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_id_257_bytes.json",
+        "bytes": 670,
+        "sha256": "2f5d1af0325944d800592885605c1dec4100828e57cb57a57f731876abf9a9c3"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_id_257_bytes.jsonl",
+        "bytes": 210,
+        "sha256": "3d5c7fb8f70e36cdf950631718cdf2135ea2e37b1f6121799c27851c1ef15f4f"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_id_multibyte_258_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_id_multibyte_258_bytes.json",
+        "bytes": 671,
+        "sha256": "90835f2838e4a58b52ede9d4acad2953f5a90b813ad530842c55beffb7693830"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_id_multibyte_258_bytes.jsonl",
+        "bytes": 210,
+        "sha256": "3d5c7fb8f70e36cdf950631718cdf2135ea2e37b1f6121799c27851c1ef15f4f"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_phase_id_phase_empty",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_phase_id_phase_empty.json",
+        "bytes": 418,
+        "sha256": "70eeda59f2a511df638b1f9ad0a1659d00d1e8e4b416f813f3fb97600565caf0"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_phase_id_phase_empty.jsonl",
+        "bytes": 218,
+        "sha256": "113dda41e608f4e6b948edded92b443daeda1c55985943b99dd082088db58bab"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_phase_id_phase_blank",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_phase_id_phase_blank.json",
+        "bytes": 419,
+        "sha256": "ccc0eb9565e21d2b18f71e2809445fa0066b1f4177df8663c838eb6903a33c4b"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_phase_id_phase_blank.jsonl",
+        "bytes": 218,
+        "sha256": "113dda41e608f4e6b948edded92b443daeda1c55985943b99dd082088db58bab"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_phase_id_initial_nul",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_phase_id_initial_nul.json",
+        "bytes": 436,
+        "sha256": "f17998dbf3aeffc59b1811edce7aab642297df4915f2d5b64346585b3a371c66"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_phase_id_initial_nul.jsonl",
+        "bytes": 223,
+        "sha256": "07f80612eceff3222ede2d578ddc06d6193f598a7a4521aee0fd7add382dcaa9"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_phase_id_edge_257_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_phase_id_edge_257_bytes.json",
+        "bytes": 675,
+        "sha256": "e0589087b202b0d5ac879a4ef2a4ff30e490407abc2e38054f68d5f76f27facd"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_phase_id_edge_257_bytes.jsonl",
+        "bytes": 222,
+        "sha256": "8e2d839cf25577286fc307ae1b39225057079cfca1711679f9cc8019ea007eec"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_phase_id_completion_multibyte_258_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_phase_id_completion_multibyte_258_bytes.json",
+        "bytes": 678,
+        "sha256": "561ca25ece23e516b7f66e0f22901732937bc6d925fbcfd6414a09875e87dc1f"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_phase_id_completion_multibyte_258_bytes.jsonl",
+        "bytes": 229,
+        "sha256": "e45b3b49e270de96b1605529b381acb7781c9ff7e281184c02c9012c7efafd6c"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_phase_id_operation_target_blank",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_phase_id_operation_target_blank.json",
+        "bytes": 459,
+        "sha256": "4a2484b4790a79cbbb0f46dcaea6b1b207a9a990f788a3968a9799abd8fc3624"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_phase_id_operation_target_blank.jsonl",
+        "bytes": 220,
+        "sha256": "68a1c0877c74b697e0c604eda08d170823365dc510d49975d010d757fec9267c"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_empty_phases",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_empty_phases.json",
+        "bytes": 401,
+        "sha256": "7f9462a44da965e4aef3a6dbb6667ec0c791f33e6e1e1c2eb4d88c855d444fed"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_empty_phases.jsonl",
+        "bytes": 175,
+        "sha256": "39de571a7f401bcc354344db6b7dcd8bd35f6007512f60064fe419a6916ceebb"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_33_phases",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_33_phases.json",
+        "bytes": 4026,
+        "sha256": "5f6a961c8a00e41c41a4aa467daddec4c9e1b3235755935593b659923acf9846"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_33_phases.jsonl",
+        "bytes": 175,
+        "sha256": "39de571a7f401bcc354344db6b7dcd8bd35f6007512f60064fe419a6916ceebb"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_duplicate_phase",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_duplicate_phase.json",
+        "bytes": 433,
+        "sha256": "44d9e6c433343d671030dce7d2443b64a5a436ca9d17824d05bf54d238a7e2cd"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_duplicate_phase.jsonl",
+        "bytes": 177,
+        "sha256": "99b125d87614b3c4e39e913da1f9e9738461953d9256697a3004f3796ccde75f"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_unknown_initial_phase",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_unknown_initial_phase.json",
+        "bytes": 425,
+        "sha256": "79d631632e2a8b8b3241109b3afa344d15eada5cee3784ab78706617cd0b6267"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_unknown_initial_phase.jsonl",
+        "bytes": 182,
+        "sha256": "984123dc638d9331028fdfdb7df024e004594de4fe0c39962e40349ec144de20"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_129_edges",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_129_edges.json",
+        "bytes": 4040,
+        "sha256": "bdb07ca096696d0d6f99f015b8387b4df6639e4d49b1e5fa88760efef9517ea5"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_129_edges.jsonl",
+        "bytes": 174,
+        "sha256": "f8a5c889dbcd961b3b8a65f9fb28d5c5fb10da50a032259da484bd667a5f561a"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_unknown_edge_source",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_unknown_edge_source.json",
+        "bytes": 425,
+        "sha256": "fbf1bbef893cce97778141a522bef44a039ccd5b2cbf306bbf3417685ea87cb5"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_unknown_edge_source.jsonl",
+        "bytes": 181,
+        "sha256": "5620f790fcd5a6720310adb12983d152e10f75938cc4c03139016685024ad5a1"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_unknown_edge_target",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_unknown_edge_target.json",
+        "bytes": 426,
+        "sha256": "c4c3ec2e452582eb1b303eee99f992bea931824c9ee1f03bec53f174eaa885f9"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_unknown_edge_target.jsonl",
+        "bytes": 179,
+        "sha256": "b8f09bb47ae9e3fd1a5d698118a04732d0d2a6027d12fedd9de3bde44662379a"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_duplicate_edge",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_duplicate_edge.json",
+        "bytes": 455,
+        "sha256": "89f71391a662b63a40a49d27c2fbbcc4fc2eb6205c5c2848078bbd30f5a1d968"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_duplicate_edge.jsonl",
+        "bytes": 176,
+        "sha256": "58302be54304e8ff059b7daedb3bd14e47e1d9a03ecbc5401a2f0c2ae8a2e47e"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_33_completion_phases",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_33_completion_phases.json",
+        "bytes": 4026,
+        "sha256": "a7a1c227848f9118f61b294f41b5230fd671d00d3a334e6ccd510a8f9b14662c"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_33_completion_phases.jsonl",
+        "bytes": 186,
+        "sha256": "fc3faa9ff31e4d4c206c26916dede410e7f806479a3ee63de3d8894212e439ab"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_unknown_completion_phase",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_unknown_completion_phase.json",
+        "bytes": 427,
+        "sha256": "80bd3cd0848359e0df05ddf057035db5b94c6cd0b04997ea8640b79e284504f8"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_unknown_completion_phase.jsonl",
+        "bytes": 188,
+        "sha256": "527f8249647cf3c87d9c22bcbfbb3f900c7b5dc0dae37ea84f90261e34a28f71"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "error_invalid_workflow_duplicate_completion_phase",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_invalid_workflow_duplicate_completion_phase.json",
+        "bytes": 431,
+        "sha256": "260e1ce26408cd7df2368abd6f9410bae3728262f4a2f37ed1a5c6f3d6cb65cd"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_invalid_workflow_duplicate_completion_phase.jsonl",
+        "bytes": 188,
+        "sha256": "3f1ba4abbc9bbb19c3f8072b4b3ea8bf4c6eb115df0a49163d9aa6e967994e8f"
+      },
+      "exit_code": 2
+    },
+    {
+      "id": "success_request_size_1048575",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_request_size_1048575.json",
+        "bytes": 1048575,
+        "sha256": "d8326cf355d67b239cb85aaf1f09fd4db558c1d0dbb49be3a3a2441f37064f17"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_request_size_1048575.jsonl",
+        "bytes": 553,
+        "sha256": "c00677a9ee37912268a04190ef5c3e9995d1ffe8d275711f818520464d7aa964"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "success_request_size_1048576",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/success_request_size_1048576.json",
+        "bytes": 1048576,
+        "sha256": "62c6a4180632d6b75d833b1925ac1e8377c2bba73c8e0468d8183e1ed03bb0e4"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/success_request_size_1048576.jsonl",
+        "bytes": 553,
+        "sha256": "c00677a9ee37912268a04190ef5c3e9995d1ffe8d275711f818520464d7aa964"
+      },
+      "exit_code": 0
+    },
+    {
+      "id": "error_request_size_1048577",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/requests/error_request_size_1048577.json",
+        "bytes": 1048577,
+        "sha256": "154782742ac64f4d4332c8a7e6d4b164ce7603f9331e73f35a45ebe5316c5ac6"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/stdout/error_request_size_1048577.jsonl",
+        "bytes": 159,
+        "sha256": "218fe520a4381fafecad5c24925757ae13965bf54236c43bed81e534f4576f90"
+      },
+      "exit_code": 2
+    }
+  ]
+}

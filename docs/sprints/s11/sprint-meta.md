@@ -91,3 +91,13 @@
   weekly allowance. No approved-filesystem success is claimed, and T-1108
   remains queued until that exact branch executes or the blockage is resolved
   through a later locked plan.
+
+- **2026-08-14 — T-1112 root-consumer regression scope omission resolved:**
+  T-1107's locked root-consumer regression test treated both adapters as
+  unsupported-only bridges and therefore banned all in-memory `IntentUnit`
+  construction in `cubikan`. T-1112 explicitly supersedes that half of the
+  assertion by making `cubikan` a simulation-only core consumer. The minimal
+  repair keeps `cubikan-local` under the original complete ban while allowing
+  only core simulation in `cubikan` and continuing to reject database, RPC,
+  signing, durable-write, and synthetic-origin authority there. No production
+  path or protocol surface is added outside T-1112's locked Touches.

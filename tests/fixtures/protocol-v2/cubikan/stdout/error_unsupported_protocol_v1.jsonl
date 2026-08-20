@@ -1,0 +1,1 @@
+{"protocol_version":2,"authority":"simulation_only","outcome":"error","error":{"code":"unsupported_protocol_version","message":"protocol_version must be 2","field":"/protocol_version"}}

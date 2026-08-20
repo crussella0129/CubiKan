@@ -1,0 +1,1 @@
+{"protocol_version":2,"authority":"simulation_only","outcome":"error","error":{"code":"invalid_external_reference","message":"origin must be an exact bounded external reference","field":"/intent_unit/origin/scope"}}

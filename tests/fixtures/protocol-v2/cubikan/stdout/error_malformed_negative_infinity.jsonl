@@ -1,0 +1,1 @@
+{"protocol_version":2,"authority":"simulation_only","outcome":"error","error":{"code":"malformed_json","message":"request is not valid RFC 8259 JSON"}}

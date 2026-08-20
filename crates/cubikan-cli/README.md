@@ -1,41 +1,38 @@
 # `cubikan` JSON CLI
 
-`cubikan` is CubiKan's experimental runnable adapter. It reads one complete
-lifecycle scenario from standard input, delegates validation and mutation to
-`cubikan-core`, and writes exactly one compact JSON response followed by a
-newline. Before returning a modeled outcome, the runner requires response
-serialization, newline writing, and exactly one call to the supplied writer's
-`flush()` to each return successfully.
+`cubikan` is a strict, one-shot adapter for CubiKan's stateless protocol v2. It
+reads exactly one RFC 8259 JSON value from standard input, simulates an Intent
+Unit lifecycle with `cubikan-core`, and writes exactly one compact JSON response
+plus one line feed. A modeled exit is returned only after the response body,
+line feed, and an explicit stdout flush all succeed.
 
-One process owns one in-memory scenario. There is no durable session, repository,
-or cross-invocation state.
+The adapter is simulation-only. It has no database, RPC client, signer,
+repository, durable session, or cross-invocation state, and its output never
+claims canonical or durable authority.
 
-## Run the lifecycle example
+## Run a locked example
 
 From the repository root:
 
 ```sh
-cargo run -p cubikan-cli --bin cubikan < crates/cubikan-cli/tests/fixtures/lifecycle-success-v1.json
+cargo run -p cubikan-cli --bin cubikan \
+  < tests/fixtures/protocol-v2/cubikan/requests/success_completion.json
 ```
 
-## Protocol version 1 request
+The closed structural schema is
+[`protocol/v2/cubikan.schema.json`](../../protocol/v2/cubikan.schema.json). The
+independent raw request/response corpus and hashes are in
+[`tests/fixtures/protocol-v2/cubikan/manifest-v1.json`](../../tests/fixtures/protocol-v2/cubikan/manifest-v1.json).
 
-Version 1 is strict: `intent_unit.id` is the sole optional member. Other unknown
-or missing fields, and fields with the wrong JSON type, are rejected as
-`invalid_request`.
+## Request contract
 
-The complete raw request is limited to 1 MiB (`1_048_576` bytes). Every byte
-counts, including leading or trailing JSON whitespace. The runner retains at
-most one byte beyond the ceiling to distinguish an exact-size request from an
-oversized one, then rejects overflow before classifying JSON syntax or shape.
-The limit is the compile-time `cubikan_cli::MAX_REQUEST_BYTES` source constant;
-there is no runtime setting.
+A request has exactly these top-level members:
 
 ```json
 {
-  "protocol_version": 1,
+  "protocol_version": 2,
   "workflow": {
-    "id": "delivery",
+    "id": "delivery-v1",
     "phases": ["queued", "doing", "done"],
     "initial_phase": "queued",
     "edges": [
@@ -46,7 +43,12 @@ there is no runtime setting.
   },
   "intent_unit": {
     "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
-    "species": "feature"
+    "origin": {
+      "namespace": "book.intent",
+      "scope": "INT-0008",
+      "value": "required-origin"
+    },
+    "species": "work-item"
   },
   "operations": [
     { "type": "transition", "target": "doing" },
@@ -56,152 +58,55 @@ there is no runtime setting.
 }
 ```
 
-When `intent_unit.id` is absent, the core generates a non-nil UUID v4. When the
-member is present, its value must be a JSON string; `null`, Boolean, number,
-array, and object values are structural `invalid_request` failures. A present
-string is passed to the existing `cubikan-core` UUID parser: an accepted UUID
-retains the same value, while malformed UUID text produces
-`invalid_intent_unit_id` with field `intent_unit.id`. Exact human-readable error
-messages are not stable protocol surface and must not be parsed.
+Every object is closed at every depth: unknown and duplicate members reject.
+Required members reject when omitted or `null`. `intent_unit.id` is the sole
+optional member; omission generates a cryptographically random UUID v4 in the
+client process, while explicit `null` rejects. A supplied ID must be exactly a
+36-byte lowercase, hyphenated RFC 4122 UUID. Nil is syntactically valid.
 
-Workflow IDs, phases, species, and operation targets are caller-defined nonblank
-text and are not trimmed. Empty operation lists, empty completion sets, and
-explicit reverse or self edges are valid when the core accepts the topology.
+`intent_unit.origin` is required and is preserved exactly. Its namespace uses
+`[a-z][a-z0-9._-]{0,63}`; scope and value are nonblank, NUL-free UTF-8 of at
+most 256 bytes. Workflow IDs, phase IDs, and species use the same 256-byte text
+ceiling. Values are never trimmed, case-folded, or normalized.
 
-## Success response
+One workflow permits at most 32 phases, 128 edges, and 32 completion phases.
+One request permits at most 256 operations. Transition and completion behavior
+is delegated to the bounded core workflow and Intent Unit types.
 
-```json
-{
-  "outcome": "success",
-  "protocol_version": 1,
-  "intent_unit": {
-    "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
-    "species": "feature",
-    "workflow_id": "delivery",
-    "phase": "done",
-    "status": "completed",
-    "history": [
-      {
-        "type": "transition",
-        "sequence": 1,
-        "from": "queued",
-        "to": "doing"
-      },
-      {
-        "type": "transition",
-        "sequence": 2,
-        "from": "doing",
-        "to": "done"
-      },
-      { "type": "completion", "sequence": 3, "phase": "done" }
-    ]
-  }
-}
-```
+The complete raw request is limited to 1,048,576 bytes. Every byte counts,
+including leading and trailing JSON whitespace. The reader retains at most one
+byte beyond the ceiling to distinguish an exact-size request from an oversized
+request; overflow rejects before JSON classification.
 
-The response is an adapter-owned view assembled from core accessors. It is not
-the provisional serialized representation of `Workflow` or `IntentUnit`.
+## Responses and exits
 
-## Typed failure response
-
-Request and setup failures contain no `intent_unit` or `operation_number`.
-Field-specific failures may contain `field`. Lifecycle failures always contain
-the rejected operation's one-based `operation_number` and the Intent Unit state
-after earlier successful operations but before the rejected operation.
+Success is always explicitly simulation-only:
 
 ```json
-{
-  "outcome": "error",
-  "protocol_version": 1,
-  "error": {
-    "code": "transition_not_allowed",
-    "message": "transition `doing -> queued` is not declared",
-    "operation_number": 2
-  },
-  "intent_unit": {
-    "id": "67e55044-10b1-426f-9247-bb680e5fe0c8",
-    "species": "feature",
-    "workflow_id": "delivery",
-    "phase": "doing",
-    "status": "active",
-    "history": [
-      {
-        "type": "transition",
-        "sequence": 1,
-        "from": "queued",
-        "to": "doing"
-      }
-    ]
-  }
-}
+{"protocol_version":2,"authority":"simulation_only","outcome":"success","result":{"type":"simulation","intent_unit":{"id":"67e55044-10b1-426f-9247-bb680e5fe0c8","origin":{"namespace":"book.intent","scope":"INT-0008","value":"required-origin"},"species":"work-item","workflow":{"id":"delivery-v1","phases":["queued","doing","done"],"initial_phase":"queued","edges":[{"from":"queued","to":"doing"},{"from":"doing","to":"done"}],"completion_phases":["done"]},"phase":"done","status":"completed","revision":"3","history":[{"type":"transition","sequence":"1","from":"queued","to":"doing"},{"type":"transition","sequence":"2","from":"doing","to":"done"},{"type":"completion","sequence":"3","phase":"done"}]}}}
 ```
 
-Execution is fail-fast, not transactional. Earlier successful operations remain
-visible; the core guarantees that the rejected operation itself does not mutate
-state; later operations are not attempted. Error `message` text is for humans
-and must not be parsed as a machine contract.
+Request/setup failures contain `error` and no Intent Unit snapshot. Lifecycle
+failures use zero-based `operation_number` and include the partial state after
+earlier successful operations but before the rejected operation. Rejected
+operations do not mutate that snapshot, and later operations are not attempted.
+Revisions and history sequence numbers are canonical decimal JSON strings.
 
-## Error codes and exits
+| Exit | Meaning |
+|---:|---|
+| `0` | Simulation succeeded |
+| `1` | Input/output delivery failed; a complete response is not guaranteed |
+| `2` | Request or setup rejected |
+| `3` | Lifecycle operation rejected |
 
-| Exit | Meaning | Codes |
-|------|---------|-------|
-| `0` | Success | none |
-| `1` | Operational input/output failure; a complete JSON response cannot be guaranteed | none; best-effort stderr diagnostic |
-| `2` | Request or setup rejection | codes below; no Intent Unit snapshot |
-| `3` | Lifecycle rejection | codes below; operation number and partial snapshot included |
+Exit `1` covers request-read, response-body, response-line-feed, and explicit
+flush failures. The process writes one best-effort `cubikan: ...` diagnostic to
+stderr and preserves the underlying I/O error as the Rust error source.
 
-Exit `1` includes a response-body write failure, newline write failure, or
-supplied-writer flush failure. The process attempts a stderr diagnostic on a
-best-effort basis; successful diagnostic delivery is not guaranteed. A modeled
-exit `0`, `2`, or `3` is returned only after the corresponding stdout response,
-newline, and one explicit supplied-writer flush all succeed.
+The protocol's error codes, exact messages, field pointers, response member
+order, raw escaping, size boundaries, and I/O fault behavior are locked by the
+independent fixture corpus. Validate it with:
 
-Version 1 request/setup codes:
-
-- `invalid_json` for malformed JSON or unexpected EOF;
-- `invalid_request` for an invalid JSON shape or unknown field;
-- `request_too_large` when the raw request exceeds 1 MiB; this takes precedence
-  over JSON classification and returns exit `2` without an Intent Unit snapshot;
-- `unsupported_protocol_version`;
-- `blank_value`, with the failing JSON field path;
-- `invalid_intent_unit_id`, with `intent_unit.id`;
-- `workflow_empty_phases`;
-- `workflow_duplicate_phase`;
-- `workflow_unknown_initial_phase`;
-- `workflow_unknown_edge_source`;
-- `workflow_unknown_edge_target`;
-- `workflow_duplicate_edge`;
-- `workflow_unknown_completion_phase`;
-- `workflow_duplicate_completion_phase`.
-
-Version 1 lifecycle codes:
-
-- `transition_already_completed`;
-- `transition_unknown_target`;
-- `transition_not_allowed`;
-- `completion_already_completed`;
-- `completion_phase_not_eligible`.
-
-## Boundary and hardening status
-
-The protocol is explicitly experimental. Protocol version 1 defines the current
-adapter contract, but no cross-version compatibility guarantee exists yet.
-
-The explicit flush checks only the contract implemented by the supplied Rust
-`Write`. It does not promise stream atomicity or rollback: a later error may be
-reported after some or all response bytes have already been accepted. It also
-does not promise operating-system or kernel delivery, close success, `fsync` or
-durable storage, persistence, retries, external-reader receipt, or network
-acknowledgement.
-
-The 1 MiB ceiling bounds retained raw request bytes only. It does not bound the
-process's total memory, provide timeouts, rate limiting, or concurrent-client
-quotas, or make the local executable a production network service. Changing the
-compile-time source value requires new workload evidence; callers cannot
-override it at runtime.
-
-This adapter does not select or provide persistence, durable sessions,
-networking, deployment, authorization, concurrency, KPI enforcement,
-completed-unit naming, blockchain behavior, or UI policy. Each requires
-separate product intent rather than silent expansion of this execution
-envelope.
+```sh
+bash protocol/v2/verify-fixtures.sh --locked
+```

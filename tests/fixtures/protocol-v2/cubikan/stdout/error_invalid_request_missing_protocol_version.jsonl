@@ -1,0 +1,1 @@
+{"protocol_version":2,"authority":"simulation_only","outcome":"error","error":{"code":"invalid_request","message":"request does not match the stateless protocol v2 schema","field":"/protocol_version"}}

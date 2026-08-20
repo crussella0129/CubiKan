@@ -527,3 +527,13 @@
 - **Scope repair:** The locked Touches omitted `crates/cubikan-backend/src/migration.rs`; Sprint 11 meta records the minimal fail-closed removal of the otherwise-successful originless v1-to-v2 migration.
 - **Verification:** Root workspace all-target tests and doctests, warnings-denied Clippy, rustfmt, the Book-v2 validator, immutable fixture hashes, and an independent E2 authority audit passed.
 - **Commit:** `80c7a1f984534eba62d38b69e57abdc1ac373c75`
+
+## T-1112 (sprint 11)
+- **Description:** Replace `cubikan` with strict stateless protocol v2
+- **Intent:** [INT-0008](../intents/INT-0008-traceable-intent-instantiation.md), [INT-0009](../intents/INT-0009-revisioned-lifecycle-commands.md)
+- **Completed:** 2026-08-14T08:06:25Z
+- **Files modified:** `crates/cubikan-cli/**`, `protocol/v2/cubikan.schema.json`, `protocol/v2/verify-fixtures.sh`, `tests/fixtures/protocol-v2/cubikan/**`, `crates/cubikan-local/tests/protocol.rs`, `docs/sprints/s11/sprint-meta.md`, `docs/work/tasks.md`, `docs/work/completed-tasks.md`
+- **Scope repair:** T-1107's cross-consumer regression test prohibited the in-memory core construction T-1112 explicitly assigns to `cubikan`; Sprint 11 meta records the minimal test-only exemption while preserving every database, RPC, signing, durable-write, synthetic-origin, and `cubikan-local` prohibition.
+- **Oracle evidence:** Independently authored schema SHA-256 `309697fe6e718c78ef8802861d60a660500a985c05b5a94aaba35a28fb2cb4a3`, 96-case manifest SHA-256 `46eab998ec22d8c806c7f8ac347aa89efb4f69578c7a34f6ee4737fc24e97c75`, and four-case I/O oracle SHA-256 `32ed09ae7ec55005229e1a7fa1b5edc02ae1867c55bbbd6279b88048b0dd14f4` passed the isolated locked verifier before and after implementation.
+- **Verification:** Exact E1–E3 named tests, all CLI targets, the full warnings-denied workspace test suite, warnings-denied Clippy, doctests, rustfmt, diff checks, the Book-v2 validator, and an independent implementation acceptance audit passed.
+- **Commit:** PENDING

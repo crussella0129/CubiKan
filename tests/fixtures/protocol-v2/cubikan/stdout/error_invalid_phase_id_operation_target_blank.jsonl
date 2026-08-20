@@ -1,0 +1,1 @@
+{"protocol_version":2,"authority":"simulation_only","outcome":"error","error":{"code":"invalid_phase_id","message":"phase identifier must be nonblank NUL-free UTF-8 of at most 256 bytes","field":"/operations/0/target"}}

@@ -1,0 +1,134 @@
+{
+  "fixture_schema_version": 1,
+  "hash_algorithm": "sha256",
+  "cases": [
+    {
+      "id": "read_failure_after_17_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/request.json",
+        "bytes": 424,
+        "sha256": "e0be445c0770af45ed4c2244b06bde2ad7f7b1b85e6d1135cfc5ef7307177bf8"
+      },
+      "fault": {
+        "stage": "read",
+        "after_bytes": 17,
+        "io_kind": "other",
+        "source_message": "fixture read failure"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/stderr-read.txt",
+        "bytes": 54,
+        "sha256": "008ca7a92cde7f0521e1b1409d14530914a5ccf9ef627cd53cc205606424a8f4"
+      },
+      "exit_code": 1,
+      "response_attempts": 0,
+      "newline_attempts": 0,
+      "flush_attempts": 0,
+      "expected_source_chain": [
+        "failed to read request",
+        "fixture read failure"
+      ]
+    },
+    {
+      "id": "body_failure_after_17_bytes",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/request.json",
+        "bytes": 424,
+        "sha256": "e0be445c0770af45ed4c2244b06bde2ad7f7b1b85e6d1135cfc5ef7307177bf8"
+      },
+      "fault": {
+        "stage": "body",
+        "after_bytes": 17,
+        "io_kind": "other",
+        "source_message": "fixture body failure"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/body-prefix-17.bin",
+        "bytes": 17,
+        "sha256": "a61bb4e91d2495fd3c07637048a755dba8abdecb2e2b07cc45e1ffa2e7fc5c4b"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/stderr-body.txt",
+        "bytes": 61,
+        "sha256": "c61ce7712fc4214cbdd13dca8c28a4098dd4526ddc011fe978ba34b771ffeaa1"
+      },
+      "exit_code": 1,
+      "response_attempts": 1,
+      "newline_attempts": 0,
+      "flush_attempts": 0,
+      "expected_source_chain": [
+        "failed to write response body",
+        "fixture body failure"
+      ]
+    },
+    {
+      "id": "newline_failure_before_lf",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/request.json",
+        "bytes": 424,
+        "sha256": "e0be445c0770af45ed4c2244b06bde2ad7f7b1b85e6d1135cfc5ef7307177bf8"
+      },
+      "fault": {
+        "stage": "newline",
+        "after_bytes": 0,
+        "io_kind": "other",
+        "source_message": "fixture newline failure"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/response-body.json",
+        "bytes": 552,
+        "sha256": "7a7fda789787271f590a432ad4d6f0b64acda7f1947f4dfa4254ad67f124d46f"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/stderr-newline.txt",
+        "bytes": 67,
+        "sha256": "69df1d96656513656a599d64987f2b3fb9fc8976c3d704bbebd64fee246ce725"
+      },
+      "exit_code": 1,
+      "response_attempts": 1,
+      "newline_attempts": 1,
+      "flush_attempts": 0,
+      "expected_source_chain": [
+        "failed to write response newline",
+        "fixture newline failure"
+      ]
+    },
+    {
+      "id": "flush_failure_after_complete_response",
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/request.json",
+        "bytes": 424,
+        "sha256": "e0be445c0770af45ed4c2244b06bde2ad7f7b1b85e6d1135cfc5ef7307177bf8"
+      },
+      "fault": {
+        "stage": "flush",
+        "after_bytes": 0,
+        "io_kind": "other",
+        "source_message": "fixture flush failure"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/response-body.jsonl",
+        "bytes": 553,
+        "sha256": "c00677a9ee37912268a04190ef5c3e9995d1ffe8d275711f818520464d7aa964"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan/io/stderr-flush.txt",
+        "bytes": 57,
+        "sha256": "cec22d0cc7bb348ffdff7fa9e987305794adeb8841f4aa2bae034133e0b8fc7a"
+      },
+      "exit_code": 1,
+      "response_attempts": 1,
+      "newline_attempts": 1,
+      "flush_attempts": 1,
+      "expected_source_chain": [
+        "failed to flush response",
+        "fixture flush failure"
+      ]
+    }
+  ]
+}

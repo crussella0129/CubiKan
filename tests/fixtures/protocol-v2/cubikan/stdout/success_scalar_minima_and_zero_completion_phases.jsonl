@@ -1,0 +1,1 @@
+{"protocol_version":2,"authority":"simulation_only","outcome":"success","result":{"type":"simulation","intent_unit":{"id":"67e55044-10b1-426f-9247-bb680e5fe0c8","origin":{"namespace":"a","scope":"s","value":"v"},"species":"x","workflow":{"id":"w","phases":["p"],"initial_phase":"p","edges":[],"completion_phases":[]},"phase":"p","status":"active","revision":"0","history":[]}}}

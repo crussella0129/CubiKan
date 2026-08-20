@@ -1,0 +1,501 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cubikan.dev/protocol/v2/cubikan.schema.json",
+  "title": "CubiKan stateless protocol v2",
+  "description": "Closed structural schema for the one-shot, simulation-only CubiKan protocol. Byte-length, duplicate-member, canonical-serialization, and workflow-topology rules are enforced by the protocol verifier and implementation in addition to this structural schema.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/success_response"
+    },
+    {
+      "$ref": "#/$defs/setup_error_response"
+    },
+    {
+      "$ref": "#/$defs/operation_error_response"
+    }
+  ],
+  "$defs": {
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{0,63}$",
+      "maxLength": 64,
+      "x-cubikan-max-utf8-bytes": 64
+    },
+    "text256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?=[\\s\\S]*\\S)[^\\u0000]+$",
+      "x-cubikan-nonblank": true,
+      "x-cubikan-max-utf8-bytes": 256
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "minLength": 36,
+      "maxLength": 36,
+      "x-cubikan-encoding": "lowercase-hyphenated-rfc4122"
+    },
+    "u64_text": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$",
+      "x-cubikan-maximum": "18446744073709551615"
+    },
+    "json_pointer256": {
+      "type": "string",
+      "maxLength": 256,
+      "pattern": "^(?:/(?:[^~/\\u0000]|~[01])*)*$",
+      "x-cubikan-max-utf8-bytes": 256,
+      "x-cubikan-encoding": "rfc6901"
+    },
+    "external_reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "scope",
+        "value"
+      ],
+      "properties": {
+        "namespace": {
+          "$ref": "#/$defs/namespace"
+        },
+        "scope": {
+          "$ref": "#/$defs/text256"
+        },
+        "value": {
+          "$ref": "#/$defs/text256"
+        }
+      }
+    },
+    "workflow_edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/text256"
+        },
+        "to": {
+          "$ref": "#/$defs/text256"
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "phases",
+        "initial_phase",
+        "edges",
+        "completion_phases"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/text256"
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/text256"
+          }
+        },
+        "initial_phase": {
+          "$ref": "#/$defs/text256"
+        },
+        "edges": {
+          "type": "array",
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/workflow_edge"
+          }
+        },
+        "completion_phases": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/text256"
+          }
+        }
+      },
+      "x-cubikan-semantic-rules": "phase identifiers are unique; initial, edge endpoints, and completion phases are declared; edges and completion phases are unique"
+    },
+    "intent_unit_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "species"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/external_reference"
+        },
+        "species": {
+          "$ref": "#/$defs/text256"
+        }
+      }
+    },
+    "transition_operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "target"
+      ],
+      "properties": {
+        "type": {
+          "const": "transition"
+        },
+        "target": {
+          "$ref": "#/$defs/text256"
+        }
+      }
+    },
+    "complete_operation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "complete"
+        }
+      }
+    },
+    "operation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/transition_operation"
+        },
+        {
+          "$ref": "#/$defs/complete_operation"
+        }
+      ]
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "workflow",
+        "intent_unit",
+        "operations"
+      ],
+      "properties": {
+        "protocol_version": {
+          "type": "integer",
+          "const": 2
+        },
+        "workflow": {
+          "$ref": "#/$defs/workflow"
+        },
+        "intent_unit": {
+          "$ref": "#/$defs/intent_unit_input"
+        },
+        "operations": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        }
+      }
+    },
+    "transition_history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "sequence",
+        "from",
+        "to"
+      ],
+      "properties": {
+        "type": {
+          "const": "transition"
+        },
+        "sequence": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "from": {
+          "$ref": "#/$defs/text256"
+        },
+        "to": {
+          "$ref": "#/$defs/text256"
+        }
+      }
+    },
+    "completion_history": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "sequence",
+        "phase"
+      ],
+      "properties": {
+        "type": {
+          "const": "completion"
+        },
+        "sequence": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "phase": {
+          "$ref": "#/$defs/text256"
+        }
+      }
+    },
+    "history_record": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/transition_history"
+        },
+        {
+          "$ref": "#/$defs/completion_history"
+        }
+      ]
+    },
+    "unit_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "species",
+        "workflow",
+        "phase",
+        "status",
+        "revision",
+        "history"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/external_reference"
+        },
+        "species": {
+          "$ref": "#/$defs/text256"
+        },
+        "workflow": {
+          "$ref": "#/$defs/workflow"
+        },
+        "phase": {
+          "$ref": "#/$defs/text256"
+        },
+        "status": {
+          "enum": [
+            "active",
+            "completed"
+          ]
+        },
+        "revision": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "history": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/history_record"
+          }
+        }
+      }
+    },
+    "simulation_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "intent_unit"
+      ],
+      "properties": {
+        "type": {
+          "const": "simulation"
+        },
+        "intent_unit": {
+          "$ref": "#/$defs/unit_view"
+        }
+      }
+    },
+    "success_response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "authority",
+        "outcome",
+        "result"
+      ],
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "authority": {
+          "const": "simulation_only"
+        },
+        "outcome": {
+          "const": "success"
+        },
+        "result": {
+          "$ref": "#/$defs/simulation_result"
+        }
+      }
+    },
+    "setup_error_without_field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "malformed_json",
+            "request_too_large"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        }
+      }
+    },
+    "setup_error_with_field": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message",
+        "field"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "invalid_request",
+            "unsupported_protocol_version",
+            "invalid_intent_unit_id",
+            "invalid_external_reference",
+            "invalid_species",
+            "invalid_workflow_id",
+            "invalid_phase_id",
+            "invalid_workflow"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        },
+        "field": {
+          "$ref": "#/$defs/json_pointer256"
+        }
+      }
+    },
+    "setup_error_detail": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/setup_error_without_field"
+        },
+        {
+          "$ref": "#/$defs/setup_error_with_field"
+        }
+      ]
+    },
+    "setup_error_response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "authority",
+        "outcome",
+        "error"
+      ],
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "authority": {
+          "const": "simulation_only"
+        },
+        "outcome": {
+          "const": "error"
+        },
+        "error": {
+          "$ref": "#/$defs/setup_error_detail"
+        }
+      }
+    },
+    "operation_error_detail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "message",
+        "operation_number"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "transition_already_completed",
+            "transition_unknown_target",
+            "transition_not_allowed",
+            "completion_already_completed",
+            "completion_phase_not_eligible"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        },
+        "operation_number": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "operation_error_response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol_version",
+        "authority",
+        "outcome",
+        "error",
+        "intent_unit"
+      ],
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "authority": {
+          "const": "simulation_only"
+        },
+        "outcome": {
+          "const": "error"
+        },
+        "error": {
+          "$ref": "#/$defs/operation_error_detail"
+        },
+        "intent_unit": {
+          "$ref": "#/$defs/unit_view"
+        }
+      }
+    }
+  }
+}
