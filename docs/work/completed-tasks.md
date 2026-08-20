@@ -546,4 +546,4 @@
 - **Scope repair:** Exact safe SQLite compile-option/VFS inspection required the pinned vendored rusqlite wrapper and reconstruction-pin updates; exhaustive error handling required minimal existing backend regression-test updates. Sprint 11 meta records both repairs.
 - **Integrated implementation checkpoint:** `3239085b006884cb6c5c5452cc38b26e974635fb`
 - **Verification:** All four real owner-only approved-ext4 branches passed under `CUBIKAN_TEST_SUPPORTED_ROOT`; exact E1–E6 tests, all backend targets, full warnings-denied workspace tests, warnings-denied Clippy, doctests, rustfmt, diff checks, the Book-v2 validator, and independent authorizer/acceptance audits passed.
-- **Commit:** PENDING
+- **Commit:** `da903ecb10b9e6d6169613821c88606159e17676`
