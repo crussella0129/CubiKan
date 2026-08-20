@@ -161,3 +161,26 @@
   public API and consumes the frozen signing oracle, while the real-process E1,
   E3, and E6 filesystem tests remain in `tests/submission_journal.rs`. This
   placement changes no production authority or locked behavior.
+
+- **2026-08-20 — T-1113 typed-error seam omissions resolved:** The locked
+  local-v2 response contract requires `unsupported_event_schema_version` and
+  an exact `revision_conflict` expected/actual pair, but T-1110 had combined a
+  wrong accepted-event schema with malformed sequence evidence and T-1111 had
+  intentionally discarded pallet error details after classifying
+  `StaleRevision`. The minimal upstream repairs add one typed archive error and
+  one constructor-closed submission detail. The latter is reconstructed from
+  the signature-verified original call, the inclusion block's parent state,
+  and only earlier accepted lifecycle effects in that block, so neither a
+  later same-block mutation, the incoming retry, nor SQLite can supply the
+  reported revision. Journal bytes and all public raw-RPC, storage, signing,
+  row, and capability boundaries remain unchanged.
+
+- **2026-08-20 — T-1113 coordinate-input plan contradiction resolved:** The
+  locked operation inventory contains no coordinate-bearing request member;
+  ledger coordinates are response-only. Adding one merely to exercise the
+  T-1113-E1 phrase “bad coordinate” would violate the same criterion's exact
+  fifteen-operation field inventory. `invalid_coordinate` therefore remains a
+  closed `ErrorDetail` codec/legality value and unknown caller-supplied
+  coordinate members reject as `invalid_request`; the independent request
+  corpus records the coordinate-input case as not applicable rather than
+  inventing a sixteenth field or operation.

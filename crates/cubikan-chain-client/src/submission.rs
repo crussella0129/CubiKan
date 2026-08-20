@@ -251,6 +251,35 @@ impl AcceptedCoordinate {
     }
 }
 
+/// Exact stale-revision evidence reconstructed from the signed finalized call
+/// and the state visible immediately before that extrinsic executed.
+///
+/// The value is constructor-closed so callers cannot detach an expected or
+/// actual revision from the finalized rejection that proved it.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct RevisionConflictDetail {
+    unit_id: IntentUnitId,
+    expected_revision: u64,
+    actual_revision: u64,
+}
+
+impl RevisionConflictDetail {
+    #[must_use]
+    pub const fn unit_id(&self) -> IntentUnitId {
+        self.unit_id
+    }
+
+    #[must_use]
+    pub const fn expected_revision(&self) -> u64 {
+        self.expected_revision
+    }
+
+    #[must_use]
+    pub const fn actual_revision(&self) -> u64 {
+        self.actual_revision
+    }
+}
+
 /// Canonical effect proven by the one matching accepted event.
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum AcceptedEffect {
@@ -348,6 +377,7 @@ enum SubmissionOutcomeDetail {
         operation: MutationOperation,
         finalized_extrinsic: FinalizedExtrinsic,
         error: SubmissionFailureCode,
+        revision_conflict: Option<RevisionConflictDetail>,
     },
     FinalizedInvariantFailed {
         operation: MutationOperation,
@@ -490,6 +520,20 @@ impl SubmissionOutcome {
                 Some(SubmissionFailureCode::FinalizedInvariantFailed)
             }
             SubmissionOutcomeDetail::FinalizedAccepted { .. } => None,
+        }
+    }
+
+    /// Returns the exact stale-revision detail only for a finalized
+    /// `RevisionConflict` dispatch rejection.
+    #[must_use]
+    pub const fn revision_conflict(&self) -> Option<&RevisionConflictDetail> {
+        match &self.0 {
+            SubmissionOutcomeDetail::FinalizedDispatchRejected {
+                error: SubmissionFailureCode::RevisionConflict,
+                revision_conflict: Some(detail),
+                ..
+            } => Some(detail),
+            _ => None,
         }
     }
 }
@@ -810,6 +854,7 @@ struct ChainHead {
 struct SubmissionBlock {
     number: u64,
     hash: [u8; 32],
+    parent_hash: [u8; 32],
     raw_extrinsics: Vec<Vec<u8>>,
     raw_system_events: Vec<u8>,
     extrinsic_hashes: Vec<[u8; 32]>,
@@ -835,6 +880,7 @@ impl From<FinalizedBlock> for SubmissionBlock {
         Self {
             number: block.number(),
             hash: *block.hash(),
+            parent_hash: *block.parent_hash(),
             raw_extrinsics: block.raw_extrinsics().to_vec(),
             raw_system_events: block.raw_system_events().to_vec(),
             extrinsic_hashes: block.extrinsic_hashes().to_vec(),
@@ -1014,7 +1060,7 @@ impl SubmissionChain for RealSubmissionChain<'_> {
             self.rpc
                 .state_get_storage(&key, Some(H256::from(at)))
                 .await
-                .map_err(|error| ChainFailure::new("read exact finalized account storage", error))
+                .map_err(|error| ChainFailure::new("read exact finalized storage", error))
         })
     }
 
@@ -1533,6 +1579,70 @@ fn decode_account_nonce(
             )
         })?;
     Ok(u64::from(nonce))
+}
+
+fn intent_unit_storage_key(
+    at: &subxt::OfflineClientAtBlock<CubiKanConfig>,
+    unit_id: IntentUnitId,
+) -> Result<Vec<u8>, SubmissionError> {
+    let address = storage::<Vec<Value>, Value>(CUBIKAN_PALLET, "IntentUnits");
+    let entry = at.storage().entry(address).map_err(|error| {
+        SubmissionError::with_source(
+            SubmissionErrorKind::RuntimeMismatch,
+            "resolve Cubikan::IntentUnits storage metadata",
+            error,
+        )
+    })?;
+    entry
+        .fetch_key(vec![unit_id_value(unit_id)])
+        .map_err(|error| {
+            SubmissionError::with_source(
+                SubmissionErrorKind::RuntimeMismatch,
+                "encode Cubikan::IntentUnits storage key",
+                error,
+            )
+        })
+}
+
+fn decode_intent_unit_revision(
+    at: &subxt::OfflineClientAtBlock<CubiKanConfig>,
+    bytes: &[u8],
+) -> Result<u64, SubmissionError> {
+    let info = at
+        .metadata_ref()
+        .storage_info(CUBIKAN_PALLET, "IntentUnits")
+        .map_err(|error| {
+            SubmissionError::with_source(
+                SubmissionErrorKind::RuntimeMismatch,
+                "resolve Cubikan::IntentUnits value metadata",
+                error.into_owned(),
+            )
+        })?;
+    let mut input = bytes;
+    let value =
+        decode_as_type(&mut input, info.value_id, at.metadata_ref().types()).map_err(|error| {
+            SubmissionError::with_source(
+                SubmissionErrorKind::RuntimeMismatch,
+                "decode Cubikan::IntentUnits at exact parent hash",
+                error,
+            )
+        })?;
+    if !input.is_empty() {
+        return Err(SubmissionError::without_source(
+            SubmissionErrorKind::RuntimeMismatch,
+            "Cubikan::IntentUnits storage has trailing bytes",
+        ));
+    }
+    value
+        .at("revision")
+        .and_then(|revision| revision.as_u128())
+        .and_then(|revision| u64::try_from(revision).ok())
+        .ok_or_else(|| {
+            SubmissionError::without_source(
+                SubmissionErrorKind::RuntimeMismatch,
+                "Cubikan::IntentUnits revision is not the pinned u64 field",
+            )
+        })
 }
 
 fn expected_signer_payload(
@@ -2492,6 +2602,31 @@ async fn resolve_in_block(
         .finalized_dispatch_evidence(&block, extrinsic_index)
         .await?;
 
+    let exact_rejection = evidence.successes == 0
+        && evidence.errors.len() == 1
+        && !block
+            .accepted_events
+            .iter()
+            .any(|event| event.extrinsic_index() == extrinsic_index);
+    let revision_conflict = if exact_rejection
+        && map_decoded_dispatch_failure(operation, &evidence.errors[0])
+            == SubmissionFailureCode::RevisionConflict
+    {
+        Some(
+            reconstruct_revision_conflict(
+                chain,
+                prepared,
+                &block,
+                finalized_extrinsic,
+                operation,
+                &inspected.call_args,
+            )
+            .await?,
+        )
+    } else {
+        None
+    };
+
     classify_finalized_evidence(
         prepared,
         block.number,
@@ -2502,7 +2637,143 @@ async fn resolve_in_block(
         evidence.successes,
         &evidence.errors,
         &block.accepted_events,
+        revision_conflict,
     )
+}
+
+async fn reconstruct_revision_conflict(
+    chain: &dyn SubmissionChain,
+    prepared: &JournalRecord,
+    block: &SubmissionBlock,
+    finalized_extrinsic: FinalizedExtrinsic,
+    operation: MutationOperation,
+    call_args: &[u8],
+) -> Result<RevisionConflictDetail, ChainFailure> {
+    let (unit_id, expected_revision) = match operation {
+        MutationOperation::TransitionUnit => {
+            let (unit_id, _, expected_revision) =
+                parse_transition_call(call_args).ok_or_else(|| {
+                    ChainFailure::new(
+                        "decode revision-conflicted transition call",
+                        StaticFailure("signed transition call arguments are malformed"),
+                    )
+                })?;
+            (unit_id, expected_revision)
+        }
+        MutationOperation::CompleteUnit => parse_completion_call(call_args).ok_or_else(|| {
+            ChainFailure::new(
+                "decode revision-conflicted completion call",
+                StaticFailure("signed completion call arguments are malformed"),
+            )
+        })?,
+        _ => {
+            return Err(ChainFailure::new(
+                "classify revision-conflicted operation",
+                StaticFailure("revision conflict is impossible for this persisted operation"),
+            ));
+        }
+    };
+
+    let offline = offline_client(&chain.identity())
+        .map_err(|error| ChainFailure::new("instantiate parent-state revision decoder", error))?;
+    let at = offline
+        .at_block(block.number)
+        .map_err(|error| ChainFailure::new("instantiate parent-state revision decoder", error))?;
+    let key = intent_unit_storage_key(&at, unit_id)
+        .map_err(|error| ChainFailure::new("derive exact parent-state storage key", error))?;
+    let parent = chain.storage(key, block.parent_hash).await?;
+    let mut actual_revision = match parent {
+        Some(bytes) => Some(
+            decode_intent_unit_revision(&at, &bytes)
+                .map_err(|error| ChainFailure::new("decode exact parent-state revision", error))?,
+        ),
+        None => None,
+    };
+
+    for event in block
+        .accepted_events
+        .iter()
+        .filter(|event| event.extrinsic_index() < finalized_extrinsic.extrinsic_index)
+    {
+        let (event_unit_id, committed_revision, creates_unit) = match event.payload() {
+            CanonicalPayload::UnitCreated(unit) => (unit.id(), unit.revision().value(), true),
+            CanonicalPayload::UnitTransitioned {
+                unit_id,
+                committed_revision,
+                ..
+            }
+            | CanonicalPayload::UnitCompleted {
+                unit_id,
+                committed_revision,
+                ..
+            } => (*unit_id, *committed_revision, false),
+            CanonicalPayload::RelationshipDefinitionCreated(_)
+            | CanonicalPayload::RelationshipCreated(_)
+            | CanonicalPayload::RelationshipDeleted(_)
+            | CanonicalPayload::AssociationRecorded(_)
+            | CanonicalPayload::AssociationRevoked(_) => continue,
+        };
+        if event_unit_id != unit_id {
+            continue;
+        }
+        if event.deployment_id() != prepared.deployment_id()
+            || event.event_schema_version() != EVENT_SCHEMA_VERSION
+        {
+            return Err(ChainFailure::new(
+                "replay earlier revision evidence",
+                StaticFailure("earlier lifecycle event has foreign deployment or schema"),
+            ));
+        }
+
+        if creates_unit {
+            if actual_revision.is_some() || committed_revision != 0 {
+                return Err(ChainFailure::new(
+                    "replay earlier revision evidence",
+                    StaticFailure("earlier unit creation contradicts parent state"),
+                ));
+            }
+            actual_revision = Some(0);
+            continue;
+        }
+
+        let previous = actual_revision.ok_or_else(|| {
+            ChainFailure::new(
+                "replay earlier revision evidence",
+                StaticFailure("earlier lifecycle event has no parent or creation state"),
+            )
+        })?;
+        let expected_committed = previous.checked_add(1).ok_or_else(|| {
+            ChainFailure::new(
+                "replay earlier revision evidence",
+                StaticFailure("earlier lifecycle revision is exhausted"),
+            )
+        })?;
+        if committed_revision != expected_committed {
+            return Err(ChainFailure::new(
+                "replay earlier revision evidence",
+                StaticFailure("earlier lifecycle event breaks revision continuity"),
+            ));
+        }
+        actual_revision = Some(committed_revision);
+    }
+
+    let actual_revision = actual_revision.ok_or_else(|| {
+        ChainFailure::new(
+            "reconstruct revision conflict",
+            StaticFailure("unit is absent from parent state and earlier accepted events"),
+        )
+    })?;
+    if expected_revision == actual_revision {
+        return Err(ChainFailure::new(
+            "reconstruct revision conflict",
+            StaticFailure("dispatch rejection contradicts equal expected and actual revisions"),
+        ));
+    }
+    Ok(RevisionConflictDetail {
+        unit_id,
+        expected_revision,
+        actual_revision,
+    })
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -2516,6 +2787,7 @@ fn classify_finalized_evidence(
     successes: usize,
     dispatch_errors: &[DecodedDispatchFailure],
     accepted_events: &[AcceptedEvent],
+    revision_conflict: Option<RevisionConflictDetail>,
 ) -> Result<(JournalRecord, SubmissionOutcomeDetail), ChainFailure> {
     let accepted_in_extrinsic: Vec<_> = accepted_events
         .iter()
@@ -2535,6 +2807,14 @@ fn classify_finalized_evidence(
 
     if successes == 0 && dispatch_errors.len() == 1 && accepted_in_extrinsic.is_empty() {
         let error = map_decoded_dispatch_failure(operation, &dispatch_errors[0]);
+        if (error == SubmissionFailureCode::RevisionConflict) != revision_conflict.is_some() {
+            return Err(ChainFailure::new(
+                "prove finalized revision conflict",
+                StaticFailure(
+                    "revision-conflict detail does not match the finalized dispatch failure",
+                ),
+            ));
+        }
         let resolved = prepared
             .resolved(
                 JournalState::FinalizedDispatchRejected,
@@ -2548,6 +2828,7 @@ fn classify_finalized_evidence(
                 operation,
                 finalized_extrinsic,
                 error,
+                revision_conflict,
             },
         ));
     }
@@ -3062,14 +3343,18 @@ mod tests {
     enum FakeDispatch {
         Success,
         Failed,
+        StaleRevision,
         Missing,
         DuplicateSuccess,
     }
+
+    type FakeExactStorage = BTreeMap<([u8; 32], Vec<u8>), Option<Vec<u8>>>;
 
     struct FakeState {
         head: ChainHead,
         blocks: BTreeMap<u64, SubmissionBlock>,
         account: Option<Vec<u8>>,
+        exact_storage: FakeExactStorage,
         dry_run: DryRunOutcome,
         watch: FakeWatch,
         dispatch: FakeDispatch,
@@ -3096,6 +3381,7 @@ mod tests {
                     head,
                     blocks: BTreeMap::new(),
                     account: Some(account_info(66_051)),
+                    exact_storage: BTreeMap::new(),
                     dry_run: DryRunOutcome::Valid,
                     watch: FakeWatch::Timeout,
                     dispatch: FakeDispatch::Success,
@@ -3166,13 +3452,13 @@ mod tests {
             block: &'a SubmissionBlock,
             extrinsic_index: u32,
         ) -> ChainFuture<'a, FinalizedDispatchEvidence> {
-            let dispatch = {
+            let (dispatch, identity) = {
                 let mut state = self.state();
                 state.trace.push(TraceCall::FinalizedDispatchEvidence {
                     block: block.number,
                     extrinsic_index,
                 });
-                state.dispatch
+                (state.dispatch, self.identity)
             };
             Box::pin(async move {
                 Ok(match dispatch {
@@ -3184,6 +3470,9 @@ mod tests {
                         successes: 0,
                         errors: vec![DecodedDispatchFailure::Known(DispatchError::BadOrigin)],
                     },
+                    FakeDispatch::StaleRevision => {
+                        decode_finalized_dispatch_evidence(identity, block, extrinsic_index)?
+                    }
                     FakeDispatch::Missing => FinalizedDispatchEvidence {
                         successes: 0,
                         errors: Vec::new(),
@@ -3197,12 +3486,18 @@ mod tests {
         }
 
         fn storage(&self, key: Vec<u8>, at: [u8; 32]) -> ChainFuture<'_, Option<Vec<u8>>> {
-            let account = {
+            let value = {
                 let mut state = self.state();
-                state.trace.push(TraceCall::Storage { key, at });
-                state.account.clone()
+                state.trace.push(TraceCall::Storage {
+                    key: key.clone(),
+                    at,
+                });
+                match state.exact_storage.get(&(at, key)) {
+                    Some(value) => value.clone(),
+                    None => state.account.clone(),
+                }
             };
-            Box::pin(async move { Ok(account) })
+            Box::pin(async move { Ok(value) })
         }
 
         fn dry_run(&self, _extrinsic: Vec<u8>, at: [u8; 32]) -> ChainFuture<'_, DryRunOutcome> {
@@ -3265,6 +3560,7 @@ mod tests {
     enum RawSystemDispatch {
         Success,
         BadOrigin,
+        StaleRevision,
         TrieInvalidStateRoot,
     }
 
@@ -3290,6 +3586,12 @@ mod tests {
                     // System::ExtrinsicFailed then DispatchError::BadOrigin.
                     bytes.extend([1, 2]);
                 }
+                RawSystemDispatch::StaleRevision => {
+                    // System::ExtrinsicFailed, DispatchError::Module,
+                    // Cubikan pallet index 50, StaleRevision error index 4,
+                    // and the remaining fixed ModuleError bytes.
+                    bytes.extend([1, 3, 50, 4, 0, 0, 0]);
+                }
                 RawSystemDispatch::TrieInvalidStateRoot => {
                     // System::ExtrinsicFailed, DispatchError::Trie, then the
                     // unit TrieError::InvalidStateRoot variant.
@@ -3311,6 +3613,7 @@ mod tests {
         SubmissionBlock {
             number,
             hash: [marker; 32],
+            parent_hash: [marker.wrapping_add(1); 32],
             raw_extrinsics: Vec::new(),
             raw_system_events: vec![0],
             extrinsic_hashes: Vec::new(),
@@ -3754,6 +4057,558 @@ mod tests {
         )
     }
 
+    fn fixture_unit(unit_id: IntentUnitId) -> cubikan_core::IntentUnit {
+        let CanonicalPayload::UnitCreated(template) =
+            crate::decode_canonical_payload(&decode_hex(UNIT_CREATED_HEX))
+                .expect("decode unit-created state template")
+        else {
+            panic!("unit-created state template has wrong variant")
+        };
+        cubikan_core::IntentUnit::new(
+            unit_id,
+            template.origin().clone(),
+            template.species().clone(),
+            template.workflow().clone(),
+        )
+    }
+
+    fn runtime_intent_unit_state(unit_id: IntentUnitId, revision: u64) -> Vec<u8> {
+        assert!(
+            revision <= 1,
+            "test state encoder covers revisions zero and one"
+        );
+        let unit = fixture_unit(unit_id);
+        let mut bytes = Vec::new();
+        encode_unit_id(unit.id(), &mut bytes);
+        encode_reference(unit.origin(), &mut bytes).expect("encode state origin");
+        encode_text(unit.species().as_str(), &mut bytes).expect("encode state species");
+        encode_workflow(unit.workflow(), &mut bytes).expect("encode state workflow");
+
+        if revision == 0 {
+            encode_text(unit.workflow().initial_phase().as_str(), &mut bytes)
+                .expect("encode initial state phase");
+            // IntentUnitStatus::Active and an empty LifecycleHistory.
+            bytes.extend([0, 0]);
+        } else {
+            let edge = unit
+                .workflow()
+                .edges()
+                .first()
+                .expect("state template workflow has an edge");
+            encode_text(edge.to().as_str(), &mut bytes).expect("encode transitioned state phase");
+            // IntentUnitStatus::Active, one LifecycleRecord::Transition,
+            // sequence one, then its exact from/to phases.
+            bytes.extend([0, 4, 0]);
+            1_u64.encode_to(&mut bytes);
+            encode_text(edge.from().as_str(), &mut bytes).expect("encode transition source");
+            encode_text(edge.to().as_str(), &mut bytes).expect("encode transition target");
+        }
+        revision.encode_to(&mut bytes);
+        bytes
+    }
+
+    fn transition_event(
+        prepared: &JournalRecord,
+        extrinsic_index: u32,
+        unit_id: IntentUnitId,
+        committed_revision: u64,
+        extrinsic_hash: [u8; 32],
+    ) -> AcceptedEvent {
+        let unit = fixture_unit(unit_id);
+        let edge = unit
+            .workflow()
+            .edges()
+            .first()
+            .expect("event template workflow has an edge");
+        let from = edge.from().clone();
+        let to = edge.to().clone();
+        let mut raw_payload = vec![1];
+        encode_unit_id(unit_id, &mut raw_payload);
+        committed_revision.encode_to(&mut raw_payload);
+        encode_text(from.as_str(), &mut raw_payload).expect("encode transition from");
+        encode_text(to.as_str(), &mut raw_payload).expect("encode transition to");
+        AcceptedEvent::new(
+            extrinsic_index,
+            extrinsic_index + 10,
+            u64::from(extrinsic_index) + 40,
+            *prepared.deployment_id(),
+            EVENT_SCHEMA_VERSION,
+            *prepared.signer(),
+            extrinsic_hash,
+            raw_payload,
+            CanonicalPayload::UnitTransitioned {
+                unit_id,
+                committed_revision,
+                from,
+                to,
+            },
+        )
+    }
+
+    fn unit_created_event(
+        prepared: &JournalRecord,
+        extrinsic_index: u32,
+        unit_id: IntentUnitId,
+        extrinsic_hash: [u8; 32],
+    ) -> AcceptedEvent {
+        let unit = fixture_unit(unit_id);
+        let mutation = Mutation::CreateUnit {
+            id: unit.id(),
+            origin: unit.origin().clone(),
+            species: unit.species().clone(),
+            workflow: unit.workflow().clone(),
+        };
+        let call = manual_call_data(&mutation).expect("encode unit creation event payload");
+        let mut raw_payload = vec![0];
+        raw_payload.extend_from_slice(&call[2..]);
+        AcceptedEvent::new(
+            extrinsic_index,
+            extrinsic_index + 10,
+            u64::from(extrinsic_index) + 40,
+            *prepared.deployment_id(),
+            EVENT_SCHEMA_VERSION,
+            *prepared.signer(),
+            extrinsic_hash,
+            raw_payload,
+            CanonicalPayload::UnitCreated(unit),
+        )
+    }
+
+    fn set_exact_parent_state(
+        chain: &FakeChain,
+        block_number: u64,
+        parent_hash: [u8; 32],
+        unit_id: IntentUnitId,
+        value: Option<Vec<u8>>,
+    ) {
+        let offline = offline_client(&chain.identity()).expect("construct parent-state key client");
+        let at = offline
+            .at_block(block_number)
+            .expect("construct parent-state key block");
+        let key = intent_unit_storage_key(&at, unit_id).expect("derive parent-state fixture key");
+        chain
+            .state()
+            .exact_storage
+            .insert((parent_hash, key), value);
+    }
+
+    #[tokio::test]
+    async fn test_revision_conflict_uses_parent_state_and_only_earlier_same_block_events() {
+        let unit_id = match completion_mutation() {
+            Mutation::CompleteUnit { id, .. } => id,
+            _ => unreachable!("completion fixture has wrong operation"),
+        };
+        let transition_target = fixture_unit(unit_id)
+            .workflow()
+            .edges()
+            .first()
+            .expect("transition fixture workflow has an edge")
+            .to()
+            .clone();
+        let mutations = [
+            Mutation::CompleteUnit {
+                id: unit_id,
+                expected_revision: 0,
+            },
+            Mutation::TransitionUnit {
+                id: unit_id,
+                target: transition_target,
+                expected_revision: 0,
+            },
+        ];
+
+        for mutation in mutations {
+            let signing_head = ChainHead {
+                number: 131,
+                hash: ORACLE_SIGNING_HASH,
+            };
+            let signing_chain = FakeChain::new(signing_head);
+            let prepared =
+                prepare_submission(&signing_chain, DevSigner::Charlie, &mutation, signing_head)
+                    .await
+                    .expect("prepare signature-verified revision-conflict call");
+            let block_number = 137;
+            let block_hash = [0xa7; 32];
+            let parent_hash = [0xa6; 32];
+            let earlier_hash = [0x61; 32];
+            let later_hash = [0x63; 32];
+            let block = SubmissionBlock {
+                number: block_number,
+                hash: block_hash,
+                parent_hash,
+                raw_extrinsics: vec![vec![0], vec![1], prepared.encoded.clone(), vec![3]],
+                raw_system_events: raw_system_dispatch_events(&[(
+                    RawEventPhase::ApplyExtrinsic(2),
+                    RawSystemDispatch::StaleRevision,
+                )]),
+                extrinsic_hashes: vec![
+                    [0x60; 32],
+                    earlier_hash,
+                    *prepared.record.extrinsic_hash(),
+                    later_hash,
+                ],
+                accepted_events: vec![
+                    transition_event(&prepared.record, 1, unit_id, 2, earlier_hash),
+                    // This deliberately discontinuous later effect must not
+                    // affect the state seen by extrinsic index two.
+                    transition_event(&prepared.record, 3, unit_id, 99, later_hash),
+                ],
+            };
+            let chain = FakeChain::new(ChainHead {
+                number: block_number,
+                hash: block_hash,
+            });
+            {
+                let mut state = chain.state();
+                state.dispatch = FakeDispatch::StaleRevision;
+                state.blocks.insert(block_number, block);
+            }
+            set_exact_parent_state(
+                &chain,
+                block_number,
+                parent_hash,
+                unit_id,
+                Some(runtime_intent_unit_state(unit_id, 1)),
+            );
+
+            let (resolved, detail) = resolve_finalized(&chain, &prepared.record, block_hash)
+                .await
+                .expect("resolve exact stale-revision evidence");
+            assert_eq!(resolved.state(), JournalState::FinalizedDispatchRejected);
+            let outcome = SubmissionOutcome(detail);
+            assert_eq!(
+                outcome.failure_code(),
+                Some(SubmissionFailureCode::RevisionConflict)
+            );
+            let conflict = outcome
+                .revision_conflict()
+                .expect("revision rejection carries exact detail");
+            assert_eq!(conflict.unit_id(), unit_id);
+            assert_eq!(conflict.expected_revision(), 0);
+            assert_eq!(conflict.actual_revision(), 2);
+            assert_eq!(outcome.operation(), mutation.operation());
+            assert!(chain.state().trace.iter().any(|call| matches!(
+                call,
+                TraceCall::Storage { at, .. } if *at == parent_hash
+            )));
+        }
+    }
+
+    #[tokio::test]
+    async fn test_revision_conflict_requires_coherent_parent_or_earlier_creation() {
+        let mutation = completion_mutation();
+        let Mutation::CompleteUnit {
+            id: unit_id,
+            expected_revision,
+        } = mutation.clone()
+        else {
+            unreachable!("completion fixture has wrong operation")
+        };
+        let signing_head = ChainHead {
+            number: 131,
+            hash: ORACLE_SIGNING_HASH,
+        };
+        let signing_chain = FakeChain::new(signing_head);
+        let prepared =
+            prepare_submission(&signing_chain, DevSigner::Charlie, &mutation, signing_head)
+                .await
+                .expect("prepare parent-absence revision-conflict call");
+        let block_number = 137;
+        let block_hash = [0xb7; 32];
+        let parent_hash = [0xb6; 32];
+        let create_hash = [0x70; 32];
+        let transition_hash = [0x71; 32];
+        let block = SubmissionBlock {
+            number: block_number,
+            hash: block_hash,
+            parent_hash,
+            raw_extrinsics: vec![vec![0], vec![1], prepared.encoded.clone()],
+            raw_system_events: raw_system_dispatch_events(&[(
+                RawEventPhase::ApplyExtrinsic(2),
+                RawSystemDispatch::StaleRevision,
+            )]),
+            extrinsic_hashes: vec![
+                create_hash,
+                transition_hash,
+                *prepared.record.extrinsic_hash(),
+            ],
+            accepted_events: vec![
+                unit_created_event(&prepared.record, 0, unit_id, create_hash),
+                transition_event(&prepared.record, 1, unit_id, 1, transition_hash),
+            ],
+        };
+        let chain = FakeChain::new(ChainHead {
+            number: block_number,
+            hash: block_hash,
+        });
+        {
+            let mut state = chain.state();
+            state.dispatch = FakeDispatch::StaleRevision;
+            state.blocks.insert(block_number, block.clone());
+        }
+        set_exact_parent_state(&chain, block_number, parent_hash, unit_id, None);
+        let (_, detail) = resolve_finalized(&chain, &prepared.record, block_hash)
+            .await
+            .expect("earlier creation establishes an absent parent unit");
+        let outcome = SubmissionOutcome(detail);
+        let conflict = outcome
+            .revision_conflict()
+            .expect("created-then-transitioned unit carries revision detail");
+        assert_eq!(conflict.expected_revision(), expected_revision);
+        assert_eq!(conflict.actual_revision(), 1);
+
+        for (label, parent, events) in [
+            ("missing", None, Vec::new()),
+            ("malformed", Some(vec![0xff]), Vec::new()),
+            (
+                "contradictory",
+                Some(runtime_intent_unit_state(unit_id, 1)),
+                vec![transition_event(
+                    &prepared.record,
+                    1,
+                    unit_id,
+                    3,
+                    transition_hash,
+                )],
+            ),
+        ] {
+            let mut negative_block = block.clone();
+            negative_block.accepted_events = events;
+            let negative_chain = FakeChain::new(ChainHead {
+                number: block_number,
+                hash: block_hash,
+            });
+            {
+                let mut state = negative_chain.state();
+                state.dispatch = FakeDispatch::StaleRevision;
+                state.blocks.insert(block_number, negative_block);
+            }
+            set_exact_parent_state(&negative_chain, block_number, parent_hash, unit_id, parent);
+            assert!(
+                resolve_finalized(&negative_chain, &prepared.record, block_hash)
+                    .await
+                    .is_err(),
+                "{label} parent/evidence must fail closed"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_revision_conflict_recovery_uses_persisted_signed_operation_and_retains_failures()
+    {
+        let Some(directory) = TestDirectory::new("revision-conflict-recovery") else {
+            return;
+        };
+        let mutation = completion_mutation();
+        let Mutation::CompleteUnit {
+            id: unit_id,
+            expected_revision,
+        } = mutation.clone()
+        else {
+            unreachable!("completion fixture has wrong operation")
+        };
+        let signing_head = ChainHead {
+            number: 131,
+            hash: ORACLE_SIGNING_HASH,
+        };
+        let signing_chain = FakeChain::new(signing_head);
+        let prepared =
+            prepare_submission(&signing_chain, DevSigner::Charlie, &mutation, signing_head)
+                .await
+                .expect("prepare recoverable stale-revision call");
+        let block_number = 137;
+        let block_hash = [0xc7; 32];
+        let parent_hash = [0xc6; 32];
+        let earlier_hash = [0x81; 32];
+        let block = SubmissionBlock {
+            number: block_number,
+            hash: block_hash,
+            parent_hash,
+            raw_extrinsics: vec![vec![0], prepared.encoded.clone()],
+            raw_system_events: raw_system_dispatch_events(&[(
+                RawEventPhase::ApplyExtrinsic(1),
+                RawSystemDispatch::StaleRevision,
+            )]),
+            extrinsic_hashes: vec![earlier_hash, *prepared.record.extrinsic_hash()],
+            accepted_events: vec![transition_event(
+                &prepared.record,
+                0,
+                unit_id,
+                2,
+                earlier_hash,
+            )],
+        };
+        let live_chain = FakeChain::new(ChainHead {
+            number: block_number,
+            hash: block_hash,
+        });
+        {
+            let mut state = live_chain.state();
+            state.dispatch = FakeDispatch::StaleRevision;
+            state.blocks.insert(block_number, block.clone());
+        }
+        set_exact_parent_state(
+            &live_chain,
+            block_number,
+            parent_hash,
+            unit_id,
+            Some(runtime_intent_unit_state(unit_id, 1)),
+        );
+        let (resolved, live_detail) = resolve_finalized(&live_chain, &prepared.record, block_hash)
+            .await
+            .expect("resolve live stale-revision watcher outcome");
+        let live_outcome = SubmissionOutcome(live_detail);
+        let live_conflict = live_outcome
+            .revision_conflict()
+            .expect("live stale-revision outcome has detail")
+            .clone();
+
+        let names = LaneNames::derive(
+            directory.path(),
+            prepared.record.deployment_id(),
+            prepared.record.signer(),
+        )
+        .expect("derive revision recovery lane names");
+        let journal_path = directory.path().join(names.journal());
+        {
+            let mut lane = SignerLane::open(
+                directory.path(),
+                *prepared.record.deployment_id(),
+                *prepared.record.signer(),
+            )
+            .expect("open revision recovery lane");
+            lane.publish_prepared(prepared.record.clone())
+                .expect("publish revision recovery prepared record");
+            lane.publish_resolved(resolved)
+                .expect("publish revision recovery terminal record");
+        }
+
+        let recovery_chain = FakeChain::new(ChainHead {
+            number: block_number,
+            hash: block_hash,
+        });
+        {
+            let mut state = recovery_chain.state();
+            state.dispatch = FakeDispatch::StaleRevision;
+            state.blocks.insert(block_number, block.clone());
+        }
+        set_exact_parent_state(
+            &recovery_chain,
+            block_number,
+            parent_hash,
+            unit_id,
+            Some(runtime_intent_unit_state(unit_id, 1)),
+        );
+        let incoming = Mutation::TransitionUnit {
+            id: IntentUnitId::from_uuid(uuid::Uuid::from_bytes([0xdd; 16])),
+            target: PhaseId::try_from("incoming-must-not-authorize-recovery")
+                .expect("valid incoming sentinel phase"),
+            expected_revision: 999,
+        };
+        let recovered = submit_with_chain(
+            &recovery_chain,
+            directory.path(),
+            DevSigner::Charlie,
+            incoming,
+            DEFAULT_FINALITY_WAIT,
+        )
+        .await
+        .expect("recover persisted stale-revision terminal");
+        assert_eq!(
+            recovered.outcome().operation(),
+            MutationOperation::CompleteUnit
+        );
+        assert_eq!(
+            recovered.outcome().revision_conflict(),
+            Some(&live_conflict)
+        );
+        assert_eq!(live_conflict.unit_id(), unit_id);
+        assert_eq!(live_conflict.expected_revision(), expected_revision);
+        assert_eq!(live_conflict.actual_revision(), 2);
+        assert!(journal_path.is_file());
+        assert!(recovered.requires_acknowledgement());
+        assert!(!recovery_chain.state().trace.iter().any(|call| matches!(
+            call,
+            TraceCall::FinalizedHead | TraceCall::DryRun { .. } | TraceCall::SubmitAndWatch { .. }
+        )));
+        recovered
+            .acknowledge_response_durable()
+            .expect("acknowledge recovered revision-conflict response");
+        assert!(!journal_path.exists());
+
+        let Some(negative_directory) = TestDirectory::new("revision-conflict-unresolved") else {
+            return;
+        };
+        let negative_names = LaneNames::derive(
+            negative_directory.path(),
+            prepared.record.deployment_id(),
+            prepared.record.signer(),
+        )
+        .expect("derive unresolved revision lane names");
+        let negative_path = negative_directory.path().join(negative_names.journal());
+        {
+            let mut lane = SignerLane::open(
+                negative_directory.path(),
+                *prepared.record.deployment_id(),
+                *prepared.record.signer(),
+            )
+            .expect("open unresolved revision lane");
+            lane.publish_prepared(prepared.record.clone())
+                .expect("publish unresolved revision prepared record");
+        }
+        let negative_chain = FakeChain::new(ChainHead {
+            number: block_number,
+            hash: block_hash,
+        });
+        {
+            let mut state = negative_chain.state();
+            state.dispatch = FakeDispatch::StaleRevision;
+            for number in prepared.record.birth()..block_number {
+                state.blocks.insert(number, empty_block(number));
+            }
+            state.blocks.insert(block_number, block);
+        }
+        set_exact_parent_state(
+            &negative_chain,
+            block_number,
+            parent_hash,
+            unit_id,
+            Some(vec![0xff]),
+        );
+        let unresolved = submit_with_chain(
+            &negative_chain,
+            negative_directory.path(),
+            DevSigner::Charlie,
+            Mutation::TransitionUnit {
+                id: IntentUnitId::from_uuid(uuid::Uuid::from_bytes([0xee; 16])),
+                target: PhaseId::try_from("second-ignored-incoming")
+                    .expect("valid second incoming sentinel"),
+                expected_revision: 55,
+            },
+            DEFAULT_FINALITY_WAIT,
+        )
+        .await
+        .expect("retain unresolved lane on malformed parent state");
+        assert_eq!(
+            unresolved.outcome().kind(),
+            SubmissionOutcomeKind::SubmissionLaneUnresolved
+        );
+        assert_eq!(
+            unresolved.outcome().operation(),
+            MutationOperation::CompleteUnit
+        );
+        assert!(!unresolved.requires_acknowledgement());
+        let retained = JournalRecord::decode(
+            &fs::read(&negative_path).expect("prepared revision journal remains durable"),
+        )
+        .expect("decode retained revision journal");
+        assert_eq!(retained.state(), JournalState::Prepared);
+        assert!(!negative_chain.state().trace.iter().any(|call| matches!(
+            call,
+            TraceCall::DryRun { .. } | TraceCall::SubmitAndWatch { .. }
+        )));
+    }
+
     #[tokio::test]
     async fn test_finalized_submission_outcomes_match_exact_extrinsic_and_event() {
         let prepared = JournalRecord::decode(&decode_hex(PREPARED_HEX))
@@ -3791,6 +4646,7 @@ mod tests {
         let raw_event_block = |raw_system_events| SubmissionBlock {
             number: block_number,
             hash: block_hash,
+            parent_hash: [0x88; 32],
             raw_extrinsics: Vec::new(),
             raw_system_events,
             extrinsic_hashes: Vec::new(),
@@ -3865,6 +4721,7 @@ mod tests {
             trie.successes,
             &trie.errors,
             &[],
+            None,
         )
         .expect("resolve metadata-valid unsupported dispatch variant");
         assert_eq!(trie_record.state(), JournalState::FinalizedDispatchRejected);
@@ -3955,6 +4812,7 @@ mod tests {
         let exact_block = SubmissionBlock {
             number: block_number,
             hash: block_hash,
+            parent_hash: [0x88; 32],
             raw_extrinsics: vec![decode_hex(EXTRINSIC_HEX)],
             raw_system_events: Vec::new(),
             extrinsic_hashes: vec![*prepared.extrinsic_hash()],
@@ -4014,6 +4872,7 @@ mod tests {
             1,
             &[],
             std::slice::from_ref(&matching),
+            None,
         )
         .expect("classify exact finalized acceptance");
         assert_eq!(record.state(), JournalState::FinalizedAccepted);
@@ -4106,6 +4965,7 @@ mod tests {
                 1,
                 &[],
                 &events,
+                None,
             )
             .expect("classify successful inclusion invariant");
             assert_eq!(record.state(), JournalState::FinalizedInvariantFailed);
@@ -4129,6 +4989,7 @@ mod tests {
             0,
             &dispatch_errors,
             &[],
+            None,
         )
         .expect("classify exact finalized dispatch rejection");
         assert_eq!(record.state(), JournalState::FinalizedDispatchRejected);
@@ -4138,6 +4999,7 @@ mod tests {
                 operation: MutationOperation::CompleteUnit,
                 finalized_extrinsic: actual,
                 error: SubmissionFailureCode::UnsignedCall,
+                revision_conflict: None,
             } if actual == finalized_extrinsic
         ));
 
@@ -4151,6 +5013,7 @@ mod tests {
             0,
             &dispatch_errors,
             std::slice::from_ref(&matching),
+            None,
         )
         .expect("reject dispatch/event contradiction as invariant failure");
         assert_eq!(record.state(), JournalState::FinalizedInvariantFailed);
@@ -4218,6 +5081,7 @@ mod tests {
             1,
             &[],
             std::slice::from_ref(&matching),
+            None,
         )
         .expect("rebuild exact accepted resolution for durable publication");
         let names = LaneNames::derive(
@@ -4403,6 +5267,7 @@ mod tests {
             1,
             &[],
             &[],
+            None,
         )
         .expect("classify unavailable accepted evidence");
         assert!(matches!(
@@ -4869,6 +5734,7 @@ mod tests {
         let terminal_block = SubmissionBlock {
             number: terminal_block_number,
             hash: terminal_block_hash,
+            parent_hash: [0x76; 32],
             raw_extrinsics: vec![live.encoded.clone()],
             raw_system_events: Vec::new(),
             extrinsic_hashes: vec![*live.record.extrinsic_hash()],

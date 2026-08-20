@@ -678,10 +678,16 @@ impl VerifiedArchiveClient {
             if deployment_id != *self.identity.deployment_id() {
                 return Err(ArchiveError::DeploymentMismatch);
             }
-            if event_schema_version != self.identity.event_schema_version() || global_sequence == 0
-            {
+            let expected_event_schema_version = self.identity.event_schema_version();
+            if event_schema_version != expected_event_schema_version {
+                return Err(ArchiveError::UnsupportedEventSchemaVersion {
+                    expected: expected_event_schema_version,
+                    actual: event_schema_version,
+                });
+            }
+            if global_sequence == 0 {
                 return Err(ArchiveError::MalformedResponse(
-                    "accepted event schema or sequence",
+                    "accepted event global sequence",
                 ));
             }
             let payload = decode_canonical_payload(raw_payload).map_err(map_payload_error)?;
@@ -1126,6 +1132,10 @@ pub enum ArchiveError {
     },
     DeploymentMismatch,
     RuntimeMismatch,
+    UnsupportedEventSchemaVersion {
+        expected: u16,
+        actual: u16,
+    },
     ForeignFinalizedHead,
     DisplacedFinalizedHead,
     NotFinalized {
@@ -1165,6 +1175,10 @@ impl fmt::Display for ArchiveError {
                 formatter.write_str("archive deployment identity does not match")
             }
             Self::RuntimeMismatch => formatter.write_str("archive runtime identity does not match"),
+            Self::UnsupportedEventSchemaVersion { expected, actual } => write!(
+                formatter,
+                "accepted event schema version {actual} does not match supported version {expected}"
+            ),
             Self::ForeignFinalizedHead => {
                 formatter.write_str("finalized head belongs to a different archive client")
             }
@@ -2073,6 +2087,41 @@ mod tests {
                 number: Some(1),
                 ..
             })
+        ));
+
+        let (client, rpc, head) = connected().await;
+        let mut wrong_schema = decode_hex(EVENT_HEX[2]);
+        let deployment_offset = wrong_schema
+            .windows(32)
+            .position(|window| window == client.identity().deployment_id())
+            .expect("accepted event contains the fixed deployment ID");
+        let schema_offset = deployment_offset + 32;
+        wrong_schema[schema_offset..schema_offset + 2].copy_from_slice(&2_u16.to_le_bytes());
+        let sequence_offset = deployment_offset + 34;
+        wrong_schema[sequence_offset..sequence_offset + 8].fill(0);
+        rpc.override_events(2, Some(wrong_schema));
+        assert!(matches!(
+            client.finalized_block(&head, 2).await,
+            Err(ArchiveError::UnsupportedEventSchemaVersion {
+                expected: 1,
+                actual: 2
+            })
+        ));
+
+        let (client, rpc, head) = connected().await;
+        let mut zero_sequence = decode_hex(EVENT_HEX[2]);
+        let deployment_offset = zero_sequence
+            .windows(32)
+            .position(|window| window == client.identity().deployment_id())
+            .expect("accepted event contains the fixed deployment ID");
+        let sequence_offset = deployment_offset + 34;
+        zero_sequence[sequence_offset..sequence_offset + 8].fill(0);
+        rpc.override_events(2, Some(zero_sequence));
+        assert!(matches!(
+            client.finalized_block(&head, 2).await,
+            Err(ArchiveError::MalformedResponse(
+                "accepted event global sequence"
+            ))
         ));
 
         let (client, rpc, head) = connected().await;

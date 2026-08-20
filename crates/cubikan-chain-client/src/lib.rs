@@ -27,8 +27,9 @@ pub use identity::{
 pub use rpc::{ArchiveError, FinalizedBlock, FinalizedHead, VerifiedArchiveClient};
 pub use submission::{
     AcceptedCoordinate, AcceptedEffect, DevSigner, FinalizedExtrinsic, MortalEra, Mutation,
-    MutationOperation, SubmissionError, SubmissionErrorKind, SubmissionFailureCode,
-    SubmissionOutcome, SubmissionOutcomeKind, SubmissionResult, submit_finalized,
+    MutationOperation, RevisionConflictDetail, SubmissionError, SubmissionErrorKind,
+    SubmissionFailureCode, SubmissionOutcome, SubmissionOutcomeKind, SubmissionResult,
+    submit_finalized,
 };
 
 /// Exact maximum for one accepted event's SCALE domain payload.
