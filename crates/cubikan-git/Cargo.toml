@@ -1,0 +1,18 @@
+[package]
+name = "cubikan-git"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Provider-neutral, offline Git commit reference adapter for CubiKan"
+
+[dependencies]
+cubikan-core = { path = "../cubikan-core" }
+rustix.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+sha2.workspace = true
+
+[lints]
+workspace = true

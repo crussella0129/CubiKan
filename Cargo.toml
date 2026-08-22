@@ -4,6 +4,7 @@ members = [
     "crates/cubikan-chain-client",
     "crates/cubikan-cli",
     "crates/cubikan-core",
+    "crates/cubikan-git",
     "crates/cubikan-local",
 ]
 exclude = ["chain", "vendor/rusqlite-0.40.2-cubikan"]

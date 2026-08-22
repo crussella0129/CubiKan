@@ -746,6 +746,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "cubikan-git"
+version = "0.1.0"
+dependencies = [
+ "cubikan-core",
+ "rustix",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
 name = "cubikan-local"
 version = "0.1.0"
 dependencies = [

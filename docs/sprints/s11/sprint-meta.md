@@ -193,3 +193,15 @@
   the stateless evidence prefix while T-1113's local integration test pins the
   complete two-line transcript. No stateless schema, fixture, decoder, response,
   or process behavior changes.
+
+- **2026-08-22 — T-1114 finalized-rebuild ownership contradiction resolved:**
+  T-1114's locked Touches can implement and exercise the provider-neutral Git
+  adapter but cannot mint a finalized chain event or construct the backend's
+  private attested-read capability. Its E3 named test therefore owns the Git
+  half of the invariant: record exact `RecordedAssociation` bytes, move/edit the
+  source and change blame/committer metadata, then prove that resolving later
+  repository state cannot rewrite those bytes or add attribution. T-1115-E2/E4
+  owns the literal finalized-association and rebuilt-query proof on the real
+  four-node journey and must compare the same immutable reference identity.
+  Neither an in-memory vector replay nor caller-constructed read capability may
+  stand in for finality or rebuild evidence.
