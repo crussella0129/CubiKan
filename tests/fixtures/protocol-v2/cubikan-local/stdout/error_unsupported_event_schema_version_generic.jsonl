@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"unsupported_event_schema_version","message":"finalized event schema version is unsupported"}}

@@ -1,6 +1,7 @@
 use std::io;
 
-fn main() {
+#[tokio::main(flavor = "current_thread")]
+async fn main() {
     let stdin = io::stdin();
     let stdout = io::stdout();
     let stderr = io::stderr();
@@ -9,6 +10,7 @@ fn main() {
         stdin.lock(),
         stdout.lock(),
         stderr.lock(),
-    );
+    )
+    .await;
     std::process::exit(exit.into());
 }

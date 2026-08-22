@@ -1,0 +1,1 @@
+{"protocol_version":2,"operation":{"type":"project_intent_units_v1","query_version":2,"filters":{"status":"active"},"predicate":{"type":"outgoing","definition":{"id":"depends_on","version":"7"},"anchor_id":"00112233-4455-4677-8899-aabbccddeeff"},"limit":1}}

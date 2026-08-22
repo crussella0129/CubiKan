@@ -1,0 +1,1 @@
+{"protocol_version":2,"operation":{"type":"record_association","association":{"unit_id":"00112233-4455-4677-8899-aabbccddeeff","subject":{"type":"revision","revision":"0","unknown":true},"reference":{"namespace":"git.commit.sha256","scope":"public-synthetic/repository","value":"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"}}}}

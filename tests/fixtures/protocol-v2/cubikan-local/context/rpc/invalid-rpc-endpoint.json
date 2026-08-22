@@ -1,0 +1,1 @@
+{"context_schema_version":1,"label":"invalid-rpc-endpoint","endpoint":"ws://127.0.0.1:9944/","proc_discovery":{"sorted_numeric_entries":[4242],"successful_archive_pids":[],"result":"not_attempted"},"dial_count":0,"calls":[],"terminal":{"phase":"endpoint_parse","code":"invalid_rpc_endpoint","field":"/rpc"}}

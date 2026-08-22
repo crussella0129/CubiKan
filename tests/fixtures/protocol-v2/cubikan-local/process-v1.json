@@ -1,0 +1,2334 @@
+{
+  "fixture_schema_version": 1,
+  "hash_algorithm": "sha256",
+  "usage": {
+    "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+    "bytes": 75,
+    "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+  },
+  "cases": [
+    {
+      "id": "argv_no_arguments",
+      "argv": [
+        "cubikan-local"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_database_flag_only",
+      "argv": [
+        "cubikan-local",
+        "--database"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_database_without_rpc",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_rpc_missing_value",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_reordered",
+      "argv": [
+        "cubikan-local",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--database",
+        "/tmp/public-synthetic.sqlite3"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_repeat_database",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--database",
+        "/tmp/b.sqlite3"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_repeat_rpc",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--rpc",
+        "ws://127.0.0.1:9945/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_equals_database",
+      "argv": [
+        "cubikan-local",
+        "--database=/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_equals_rpc",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc=ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_double_dash",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_extra",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "extra"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_help",
+      "argv": [
+        "cubikan-local",
+        "--help"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_wrong_flag",
+      "argv": [
+        "cubikan-local",
+        "--db",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_empty_database",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_read_with_signer",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--dev-signer",
+        "charlie"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_mutation_without_signer",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_complete_intent_unit.json",
+        "bytes": 134,
+        "sha256": "33fb41185e56bb4a40dcbd7569748fa1346226ee5f06db310850a5545dc3e7d1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 134,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_signer_before_rpc",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--dev-signer",
+        "charlie",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_repeat_signer",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--dev-signer",
+        "charlie",
+        "--dev-signer",
+        "dave"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_equals_signer",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--dev-signer=charlie"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_raw_seed",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--seed",
+        "//Charlie"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_private_key",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--private-key",
+        "00"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_journal_path",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--journal",
+        "/tmp/journal"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_unknown_signer",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--dev-signer",
+        "alice"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_complete_intent_unit.json",
+        "bytes": 134,
+        "sha256": "33fb41185e56bb4a40dcbd7569748fa1346226ee5f06db310850a5545dc3e7d1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 134,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_uppercase_signer",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--dev-signer",
+        "Charlie"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_complete_intent_unit.json",
+        "bytes": 134,
+        "sha256": "33fb41185e56bb4a40dcbd7569748fa1346226ee5f06db310850a5545dc3e7d1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 134,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_pid_forbidden",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--pid",
+        "4242"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_precedes_malformed_stdin",
+      "argv": [
+        "cubikan-local",
+        "--help"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/error_malformed_json.json",
+        "bytes": 1,
+        "sha256": "021fb596db81e6d02bf3d2586ee3981fe519f275c0ac9ca76bbcf2ebb4097d96"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_environment_only_forbidden",
+      "argv": [
+        "cubikan-local"
+      ],
+      "environment": {
+        "CUBIKAN_DATABASE": "/tmp/ignored.sqlite3",
+        "CUBIKAN_RPC": "ws://127.0.0.1:9944/"
+      },
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_environment_cannot_fill_rpc",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3"
+      ],
+      "environment": {
+        "CUBIKAN_RPC": "ws://127.0.0.1:9944/"
+      },
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 0,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_environment_cannot_fill_signer",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {
+        "CUBIKAN_DEV_SIGNER": "charlie"
+      },
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_complete_intent_unit.json",
+        "bytes": 134,
+        "sha256": "33fb41185e56bb4a40dcbd7569748fa1346226ee5f06db310850a5545dc3e7d1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/usage.txt",
+        "bytes": 75,
+        "sha256": "edd3671eb88d02e5cb9bd81357a807b8e79781ba098a808f5c0752dc638bebb6"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 134,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "argv_environment_cannot_override_explicit_read",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {
+        "CUBIKAN_DATABASE": "/tmp/ignored.sqlite3",
+        "CUBIKAN_RPC": "ws://192.0.2.1:80/",
+        "CUBIKAN_DEV_SIGNER": "dave",
+        "CUBIKAN_JOURNAL": "/tmp/ignored.journal"
+      },
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_get_intent_unit.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 0,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 1,
+      "sqlite_access_count": 1,
+      "submission_count": 0,
+      "acknowledge_count": 1
+    },
+    {
+      "id": "request_decode_precedes_rpc_parse",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/a.sqlite3",
+        "--rpc",
+        "http://example.invalid/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/error_malformed_json.json",
+        "bytes": 1,
+        "sha256": "021fb596db81e6d02bf3d2586ee3981fe519f275c0ac9ca76bbcf2ebb4097d96"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_malformed_json.jsonl",
+        "bytes": 122,
+        "sha256": "86b5a81053ae1b5424650fd9da6e0c97828870258cd26dc9a6ebcc83b4936fcb"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 1,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_empty",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        ""
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_scheme_http",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "http://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_scheme_case",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "WS://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_leading_zero_ipv4",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.000.000.001:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_short_ipv4",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_integer_ipv4",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://2130706433:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_octal_ipv4",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://0177.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_hex_ipv4",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://0x7f.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_percent_host",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.%31:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_hostname",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://localhost:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_hostname_case",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://LOCALHOST:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_hostname_trailing_dot",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://localhost.:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_userinfo",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://user@127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_password",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://user:pass@127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_query",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/?x=1"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_fragment",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/#x"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_redirect_path",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/rpc"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_double_slash_path",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944//"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_omitted_path",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_missing_port",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_leading_zero_port",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:09944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_default_port",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:80/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_zero_port",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:0/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_out_of_range_port",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:65536/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_public_ipv4",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://192.0.2.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_wildcard_ipv4",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://0.0.0.0:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_ipv6_unspecified",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://[::]:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_ipv6_mapped",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://[::ffff:127.0.0.1]:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_ipv6_expanded_loopback",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://[0:0:0:0:0:0:0:1]:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_ipv6_uppercase",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://[0:0:0:0:0:0:0:AB]:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_port_plus",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:+9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_leading_space",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        " ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_reject_trailing_space",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/ "
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_invalid_rpc_endpoint.jsonl",
+        "bytes": 190,
+        "sha256": "fa9244681260a6d0e6c9f0696113de7ac6c26501c3a5e54a5de0256f7c19efb8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    },
+    {
+      "id": "url_accept_ipv4_min",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_get_intent_unit.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 0,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 1,
+      "sqlite_access_count": 1,
+      "submission_count": 0,
+      "acknowledge_count": 1
+    },
+    {
+      "id": "url_accept_ipv4_range",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.255.255.254:65535/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_get_intent_unit.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 0,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 1,
+      "sqlite_access_count": 1,
+      "submission_count": 0,
+      "acknowledge_count": 1
+    },
+    {
+      "id": "url_accept_ipv6_loopback",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://[::1]:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_get_intent_unit.json",
+        "bytes": 105,
+        "sha256": "63bf8abdf34b6ad490b39d66c3fc2bbbf4ef5c6532b8316b183990633ce14322"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_get_intent_unit.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 0,
+      "stdin_bytes_consumed": 105,
+      "dial_count": 1,
+      "sqlite_access_count": 1,
+      "submission_count": 0,
+      "acknowledge_count": 1
+    },
+    {
+      "id": "signer_accept_charlie_mutation",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--dev-signer",
+        "charlie"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_complete_intent_unit.json",
+        "bytes": 134,
+        "sha256": "33fb41185e56bb4a40dcbd7569748fa1346226ee5f06db310850a5545dc3e7d1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_complete_intent_unit.jsonl",
+        "bytes": 696,
+        "sha256": "997f741acbfe3d576e56fd2728d5c086fe34117f80a31e9b00a0d68b27b1bf8c"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 0,
+      "stdin_bytes_consumed": 134,
+      "dial_count": 1,
+      "sqlite_access_count": 1,
+      "submission_count": 1,
+      "acknowledge_count": 1
+    },
+    {
+      "id": "signer_accept_dave_mutation",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/",
+        "--dev-signer",
+        "dave"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/success_complete_intent_unit.json",
+        "bytes": 134,
+        "sha256": "33fb41185e56bb4a40dcbd7569748fa1346226ee5f06db310850a5545dc3e7d1"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_submission_rejected_nonce_conflict.jsonl",
+        "bytes": 184,
+        "sha256": "4148624200691db0f517397b1b944bd7671152323e82d853a9df69bc8683911e"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 3,
+      "stdin_bytes_consumed": 134,
+      "dial_count": 1,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 1
+    },
+    {
+      "id": "ingress_accept_1048575",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/size_exact_1048575.json",
+        "bytes": 1048575,
+        "sha256": "351bac0d14b878fd32ca784806ddeeafb00714b30cf6c954b7d82f06d1218f96"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/size_exact_1048575.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 0,
+      "stdin_bytes_consumed": 1048575,
+      "dial_count": 1,
+      "sqlite_access_count": 1,
+      "submission_count": 0,
+      "acknowledge_count": 1
+    },
+    {
+      "id": "ingress_accept_1048576",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/size_exact_1048576.json",
+        "bytes": 1048576,
+        "sha256": "0416abb0ad62f4f08555c0003aaa80d84f2d0cc847cd22141412cdbbbc1245a8"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/size_exact_1048576.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 0,
+      "stdin_bytes_consumed": 1048576,
+      "dial_count": 1,
+      "sqlite_access_count": 1,
+      "submission_count": 0,
+      "acknowledge_count": 1
+    },
+    {
+      "id": "ingress_reject_1048577",
+      "argv": [
+        "cubikan-local",
+        "--database",
+        "/tmp/public-synthetic.sqlite3",
+        "--rpc",
+        "ws://127.0.0.1:9944/"
+      ],
+      "environment": {},
+      "request": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/requests/error_request_too_large.json",
+        "bytes": 1048577,
+        "sha256": "5e0b74d926083b07258008ec0e6f58b3731df42ab7c64262b0cc31104300a0b2"
+      },
+      "stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/error_request_too_large.jsonl",
+        "bytes": 129,
+        "sha256": "ec13ede839ac7616551204ed278e9a93ed3ae2e3ea33ca03b3c2707f3c52e5d8"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "exit_code": 2,
+      "stdin_bytes_consumed": 1048577,
+      "dial_count": 0,
+      "sqlite_access_count": 0,
+      "submission_count": 0,
+      "acknowledge_count": 0
+    }
+  ]
+}

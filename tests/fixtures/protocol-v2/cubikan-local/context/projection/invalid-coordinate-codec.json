@@ -1,0 +1,1 @@
+{"context_schema_version":1,"label":"invalid-coordinate-codec","database":{"mode":"create_if_absent_or_open_if_existing","pre_submission_access_count":0,"open_count":1},"sync_count":1,"attest_count":1,"query_count":1,"terminal":{"type":"codec_error","code":"invalid_coordinate","field":"/result/intent_unit/last_coordinate"}}

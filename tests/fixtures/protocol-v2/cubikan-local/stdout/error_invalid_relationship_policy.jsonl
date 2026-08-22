@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"invalid_relationship_policy","message":"relationship policy must be allow or reject","field":"/operation/self_policy"}}

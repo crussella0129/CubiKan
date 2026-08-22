@@ -1,0 +1,1 @@
+{"context_schema_version":1,"label":"generic-unsupported_platform","endpoint":"ws://127.0.0.1:9944/","proc_discovery":{"sorted_numeric_entries":[4242],"successful_archive_pids":[],"result":"not_attempted"},"dial_count":0,"calls":[],"terminal":{"phase":"read","type":"source_error","source_mapping":"unsupported_platform","code":"unsupported_platform"}}

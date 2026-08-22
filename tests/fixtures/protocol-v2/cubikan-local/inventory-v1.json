@@ -1,0 +1,1656 @@
+{
+  "fixture_schema_version": 1,
+  "hash_algorithm": "sha256",
+  "authority": "independently_authored_synthetic_oracle",
+  "schema": {
+    "path": "protocol/v2/cubikan-local.schema.json",
+    "bytes": 56832,
+    "sha256": "869d30e3865cbaf80af60616fdf13d0e4b848997bb36f4bcc68f0e7cc2d7d4ff"
+  },
+    "manifest": {
+      "path": "tests/fixtures/protocol-v2/cubikan-local/manifest-v1.json",
+      "bytes": 334595,
+      "sha256": "09cb8615098c7d38ca0b2420d554b21b758267e1f2d2c4089025610b25148e70"
+    },
+  "controls": {
+    "process": {
+      "path": "tests/fixtures/protocol-v2/cubikan-local/process-v1.json",
+      "bytes": 77752,
+      "sha256": "12ab16324568bc207367d05b1dd9cd49d284054cebbad1a222a582ff4801071d"
+    },
+    "io": {
+      "path": "tests/fixtures/protocol-v2/cubikan-local/io-v1.json",
+      "bytes": 8141,
+      "sha256": "e46c9ff56ee7bd3df3a9d74ce0fae1116a258bad0e748d7122ed88331a14607e"
+    },
+    "source_mapping": {
+      "path": "tests/fixtures/protocol-v2/cubikan-local/source-mapping-v1.json",
+      "bytes": 32263,
+      "sha256": "dbe31207223b65cf06610ed17238b136e8295b873ec2ef8cb6f847bcebf1486c"
+    }
+  },
+  "public_schema": {
+    "root_union_count": 10,
+    "definition_count": 96,
+    "definition_names": [
+      "namespace",
+      "text256",
+      "uuid",
+      "u64_text",
+      "nonzero_u64_text",
+      "u32",
+      "hash32",
+      "json_pointer256",
+      "page_limit",
+      "unit_status",
+      "relationship_policy",
+      "mutation_operation",
+      "error_code",
+      "external_reference",
+      "workflow_edge",
+      "workflow",
+      "intent_unit_input",
+      "definition_key",
+      "relationship_key",
+      "association_subject_whole_unit",
+      "association_subject_revision",
+      "association_subject",
+      "association_key",
+      "list_filters",
+      "outgoing_predicate",
+      "incoming_predicate",
+      "direct_relationship_predicate",
+      "ledger_coordinate",
+      "finalized_extrinsic_coordinate",
+      "projection_checkpoint",
+      "mortal_era",
+      "create_intent_unit_operation",
+      "get_intent_unit_operation",
+      "list_intent_units_operation",
+      "transition_intent_unit_operation",
+      "complete_intent_unit_operation",
+      "create_relationship_definition_operation",
+      "get_relationship_definition_operation",
+      "create_relationship_operation",
+      "delete_relationship_operation",
+      "list_relationships_operation",
+      "project_intent_units_v1_operation",
+      "record_association_operation",
+      "revoke_association_operation",
+      "list_associations_by_unit_operation",
+      "list_associations_by_reference_operation",
+      "operation",
+      "request",
+      "transition_history",
+      "completion_history",
+      "history_record",
+      "unit_view",
+      "projected_unit",
+      "unit_summary",
+      "projected_definition",
+      "projected_relationship",
+      "projected_association",
+      "intent_unit_result",
+      "intent_unit_page_result",
+      "relationship_definition_result",
+      "relationship_page_result",
+      "projection_v1_page_result",
+      "association_page_result",
+      "result",
+      "read_success_response",
+      "unit_created_effect",
+      "unit_transitioned_effect",
+      "unit_completed_effect",
+      "relationship_definition_created_effect",
+      "relationship_created_effect",
+      "relationship_deleted_effect",
+      "association_recorded_effect",
+      "association_revoked_effect",
+      "accepted_effect",
+      "caught_up_projection",
+      "lagging_projection",
+      "accepted_projection",
+      "field_error_detail",
+      "generic_plain_error_detail",
+      "generic_error_detail",
+      "generic_error_response",
+      "submission_rejected_error_detail",
+      "submission_lane_unresolved_error_detail",
+      "expired_not_included_error_detail",
+      "finalized_dispatch_plain_error_detail",
+      "revision_conflict_error_detail",
+      "finalized_dispatch_error_detail",
+      "finalized_invariant_error_detail",
+      "delivery_indeterminate_error_detail",
+      "submission_rejected_response",
+      "submission_lane_unresolved_response",
+      "expired_not_included_response",
+      "finalized_dispatch_rejected_response",
+      "finalized_invariant_failed_response",
+      "delivery_indeterminate_response",
+      "finalized_accepted_response"
+    ],
+    "operation_count": 15,
+    "operations": [
+      {
+        "name": "create_intent_unit",
+        "kind": "mutation",
+        "fields": [
+          "type",
+          "intent_unit",
+          "workflow"
+        ]
+      },
+      {
+        "name": "get_intent_unit",
+        "kind": "read",
+        "fields": [
+          "type",
+          "id"
+        ]
+      },
+      {
+        "name": "list_intent_units",
+        "kind": "read",
+        "fields": [
+          "type",
+          "filters",
+          "limit",
+          "after?"
+        ]
+      },
+      {
+        "name": "transition_intent_unit",
+        "kind": "mutation",
+        "fields": [
+          "type",
+          "id",
+          "target",
+          "expected_revision"
+        ]
+      },
+      {
+        "name": "complete_intent_unit",
+        "kind": "mutation",
+        "fields": [
+          "type",
+          "id",
+          "expected_revision"
+        ]
+      },
+      {
+        "name": "create_relationship_definition",
+        "kind": "mutation",
+        "fields": [
+          "type",
+          "definition",
+          "source_species?",
+          "target_species?",
+          "self_policy",
+          "cycle_policy"
+        ]
+      },
+      {
+        "name": "get_relationship_definition",
+        "kind": "read",
+        "fields": [
+          "type",
+          "definition"
+        ]
+      },
+      {
+        "name": "create_relationship",
+        "kind": "mutation",
+        "fields": [
+          "type",
+          "relationship"
+        ]
+      },
+      {
+        "name": "delete_relationship",
+        "kind": "mutation",
+        "fields": [
+          "type",
+          "relationship"
+        ]
+      },
+      {
+        "name": "list_relationships",
+        "kind": "read",
+        "fields": [
+          "type",
+          "definition",
+          "source_id?",
+          "target_id?",
+          "limit",
+          "after?"
+        ]
+      },
+      {
+        "name": "project_intent_units_v1",
+        "kind": "read",
+        "fields": [
+          "type",
+          "query_version",
+          "filters",
+          "predicate?",
+          "limit",
+          "after?"
+        ]
+      },
+      {
+        "name": "record_association",
+        "kind": "mutation",
+        "fields": [
+          "type",
+          "association"
+        ]
+      },
+      {
+        "name": "revoke_association",
+        "kind": "mutation",
+        "fields": [
+          "type",
+          "association"
+        ]
+      },
+      {
+        "name": "list_associations_by_unit",
+        "kind": "read",
+        "fields": [
+          "type",
+          "unit_id",
+          "subject?",
+          "limit",
+          "after?"
+        ]
+      },
+      {
+        "name": "list_associations_by_reference",
+        "kind": "read",
+        "fields": [
+          "type",
+          "reference",
+          "limit",
+          "after?"
+        ]
+      }
+    ],
+    "result_tags": [
+      "intent_unit",
+      "intent_unit_page",
+      "relationship_definition",
+      "relationship_page",
+      "projection_v1_page",
+      "association_page"
+    ],
+    "mutation_outcomes": [
+      "submission_rejected",
+      "submission_lane_unresolved",
+      "expired_not_included",
+      "finalized_dispatch_rejected",
+      "finalized_invariant_failed",
+      "delivery_indeterminate",
+      "finalized_accepted"
+    ],
+    "accepted_effect_tags": [
+      "unit_created",
+      "unit_transitioned",
+      "unit_completed",
+      "relationship_definition_created",
+      "relationship_created",
+      "relationship_deleted",
+      "association_recorded",
+      "association_revoked"
+    ],
+    "command_schema_version": 1,
+    "caller_selectable_command_schema_version": false
+  },
+  "error_registry": [
+    {
+      "code": "malformed_json",
+      "message": "request is not valid RFC 8259 JSON",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "request_too_large",
+      "message": "request exceeds the 1048576-byte limit",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_request",
+      "message": "request does not match the local protocol v2 schema",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "unsupported_protocol_version",
+      "message": "protocol_version must be 2",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_intent_unit_id",
+      "message": "intent unit identifier must be a lowercase hyphenated RFC 4122 UUID",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_external_reference",
+      "message": "external reference must contain an exact bounded namespace, scope, and value",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_species",
+      "message": "species must be nonblank NUL-free UTF-8 of at most 256 bytes",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_workflow_id",
+      "message": "workflow identifier must be nonblank NUL-free UTF-8 of at most 256 bytes",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_phase_id",
+      "message": "phase identifier must be nonblank NUL-free UTF-8 of at most 256 bytes",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_workflow",
+      "message": "workflow topology is invalid",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_revision",
+      "message": "revision must be canonical unsigned decimal text within u64",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_definition_id",
+      "message": "definition identifier must use the canonical namespace grammar",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_definition_version",
+      "message": "definition version must be canonical nonzero unsigned decimal text within u64",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_relationship_policy",
+      "message": "relationship policy must be allow or reject",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_association_subject",
+      "message": "association subject must be whole_unit or an exact revision",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_query",
+      "message": "query does not match the supported bounded query contract",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_cursor",
+      "message": "cursor does not belong to the requested ordered query",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_coordinate",
+      "message": "ledger coordinate is structurally invalid or fails its joined hash invariant",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "invalid_rpc_endpoint",
+      "message": "RPC endpoint must be a canonical loopback ws URL with an explicit nondefault port",
+      "field_policy": "required",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 2
+        }
+      ]
+    },
+    {
+      "code": "unsupported_platform",
+      "message": "the required local platform boundary is unsupported",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "insecure_projection_path",
+      "message": "projection path failed the local security boundary",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "projection_busy",
+      "message": "projection storage is busy",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "unsupported_schema_version",
+      "message": "projection schema version is unsupported",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "unsupported_envelope_version",
+      "message": "stored envelope version is unsupported",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "corrupt_schema",
+      "message": "projection schema is corrupt",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "corrupt_envelope",
+      "message": "stored envelope is corrupt",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "projection_mismatch",
+      "message": "projection does not match the attested finalized archive",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "refresh_required",
+      "message": "projection changed before the verified read was pinned",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "archive_rpc_unavailable",
+      "message": "archive RPC is unavailable or lacks unique local process evidence",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "archive_history_unavailable",
+      "message": "required finalized archive history is unavailable",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "deployment_mismatch",
+      "message": "archive deployment identity does not match the pinned deployment",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "runtime_mismatch",
+      "message": "archive runtime identity or response does not match the pinned runtime",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        },
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "unsupported_event_schema_version",
+      "message": "finalized event schema version is unsupported",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "conflicting_finalized_block",
+      "message": "finalized block history conflicts at one height",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "projection_error",
+      "message": "projection processing failed without a more specific safe classification",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 4
+        }
+      ]
+    },
+    {
+      "code": "dev_signer_unavailable",
+      "message": "the selected named development signer is unavailable",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "submission_lane_corrupt",
+      "message": "the derived signer submission lane is corrupt",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "submission_lane_unresolved",
+      "message": "the derived signer submission lane remains unresolved",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "submission_lane_unresolved",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "nonce_conflict",
+      "message": "canonical signer nonce could not be used safely",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "submission_rejected",
+          "exit_code": 3
+        },
+        {
+          "outcome": "delivery_indeterminate",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "insufficient_balance",
+      "message": "canonical signer balance cannot pay the transaction",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "submission_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "transaction_invalid",
+      "message": "transaction validity could not be proven",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "submission_rejected",
+          "exit_code": 3
+        },
+        {
+          "outcome": "delivery_indeterminate",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "rpc_submission_rejected",
+      "message": "submission RPC failed after the send boundary",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "delivery_indeterminate",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "submission_watch_lost",
+      "message": "submission watcher ended before a finalized outcome",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "delivery_indeterminate",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "submission_timeout",
+      "message": "submission did not reach a finalized outcome within the bounded wait",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "delivery_indeterminate",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "finalized_invariant_failed",
+      "message": "finalized inclusion violated the exact accepted-event invariant",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_invariant_failed",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "expired_not_included",
+      "message": "the exact extrinsic hash was absent throughout its finalized mortal era",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "expired_not_included",
+          "exit_code": 1
+        }
+      ]
+    },
+    {
+      "code": "unsupported_command_schema_version",
+      "message": "runtime rejected the fixed command schema version",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "unsigned_call",
+      "message": "runtime rejected an unsigned mutation call",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "unauthorized_submitter",
+      "message": "runtime rejected the development submitter",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "duplicate_intent_unit",
+      "message": "intent unit already exists",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "intent_unit_not_found",
+      "message": "intent unit was not found",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 3
+        },
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "revision_conflict",
+      "message": "expected revision does not match canonical parent state",
+      "field_policy": "forbidden",
+      "revision_pair": "required",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "lifecycle_history_capacity_exceeded",
+      "message": "lifecycle history reached its fixed capacity",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "transition_already_completed",
+      "message": "cannot transition a completed intent unit",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "transition_unknown_target",
+      "message": "transition target is not declared by the workflow",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "transition_not_allowed",
+      "message": "workflow does not allow this transition",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "completion_already_completed",
+      "message": "cannot complete an already completed intent unit",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "completion_phase_not_eligible",
+      "message": "current phase is not eligible for completion",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "global_sequence_exhausted",
+      "message": "global event sequence is exhausted",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "relationship_definition_already_exists",
+      "message": "relationship definition already exists",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "relationship_definition_not_found",
+      "message": "relationship definition was not found",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "error",
+          "exit_code": 3
+        },
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "relationship_source_not_found",
+      "message": "relationship source intent unit was not found",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "relationship_target_not_found",
+      "message": "relationship target intent unit was not found",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "relationship_source_species_mismatch",
+      "message": "relationship source species violates its definition",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "relationship_target_species_mismatch",
+      "message": "relationship target species violates its definition",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "self_relationship_rejected",
+      "message": "relationship definition rejects self relationships",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "duplicate_relationship",
+      "message": "relationship already exists",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "cycle_rejected",
+      "message": "relationship definition rejects the resulting cycle",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "relationship_capacity_exceeded",
+      "message": "relationship definition reached its fixed edge capacity",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "relationship_not_found",
+      "message": "relationship was not found",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "association_revision_out_of_range",
+      "message": "association revision is outside the intent unit history",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "duplicate_association",
+      "message": "association already exists",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "association_capacity_exceeded",
+      "message": "intent unit reached its fixed association capacity",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    },
+    {
+      "code": "association_not_found",
+      "message": "association was not found",
+      "field_policy": "forbidden",
+      "revision_pair": "forbidden",
+      "legal_envelopes": [
+        {
+          "outcome": "finalized_dispatch_rejected",
+          "exit_code": 3
+        }
+      ]
+    }
+  ],
+  "semantic_spine": {
+    "positive_operation_cells": 15,
+    "error_code_cells": 79,
+    "total": 94,
+    "case_ids": [
+      "success_create_intent_unit",
+      "success_transition_intent_unit",
+      "success_complete_intent_unit",
+      "success_create_relationship_definition",
+      "success_create_relationship",
+      "success_delete_relationship",
+      "success_record_association",
+      "success_revoke_association",
+      "success_get_intent_unit",
+      "success_list_intent_units",
+      "success_get_relationship_definition",
+      "success_list_relationships",
+      "success_project_intent_units_v1",
+      "success_list_associations_by_unit",
+      "success_list_associations_by_reference",
+      "error_malformed_json",
+      "error_request_too_large",
+      "error_invalid_request",
+      "error_unsupported_protocol_version",
+      "error_invalid_intent_unit_id",
+      "error_invalid_external_reference",
+      "error_invalid_species",
+      "error_invalid_workflow_id",
+      "error_invalid_phase_id",
+      "error_invalid_workflow",
+      "error_invalid_revision",
+      "error_invalid_definition_id",
+      "error_invalid_definition_version",
+      "error_invalid_relationship_policy",
+      "error_invalid_association_subject",
+      "error_invalid_query",
+      "error_invalid_cursor",
+      "error_invalid_coordinate_codec",
+      "error_invalid_rpc_endpoint",
+      "error_unsupported_platform_generic",
+      "error_insecure_projection_path_generic",
+      "error_projection_busy_generic",
+      "error_unsupported_schema_version_generic",
+      "error_unsupported_envelope_version_generic",
+      "error_corrupt_schema_generic",
+      "error_corrupt_envelope_generic",
+      "error_projection_mismatch_generic",
+      "error_refresh_required_generic",
+      "error_archive_rpc_unavailable_generic",
+      "error_archive_history_unavailable_generic",
+      "error_deployment_mismatch_generic",
+      "error_runtime_mismatch_generic",
+      "error_unsupported_event_schema_version_generic",
+      "error_conflicting_finalized_block_generic",
+      "error_projection_error_generic",
+      "error_dev_signer_unavailable_generic",
+      "error_submission_lane_corrupt_generic",
+      "error_intent_unit_not_found_read_miss",
+      "error_relationship_definition_not_found_read_miss",
+      "error_submission_rejected_nonce_conflict",
+      "error_submission_rejected_insufficient_balance",
+      "error_submission_rejected_transaction_invalid",
+      "error_submission_lane_unresolved",
+      "error_expired_not_included",
+      "error_finalized_dispatch_rejected_runtime_mismatch",
+      "error_finalized_dispatch_rejected_unsupported_command_schema_version",
+      "error_finalized_dispatch_rejected_unsigned_call",
+      "error_finalized_dispatch_rejected_unauthorized_submitter",
+      "error_finalized_dispatch_rejected_duplicate_intent_unit",
+      "error_finalized_dispatch_rejected_intent_unit_not_found",
+      "error_finalized_dispatch_rejected_revision_conflict",
+      "error_finalized_dispatch_rejected_lifecycle_history_capacity_exceeded",
+      "error_finalized_dispatch_rejected_transition_already_completed",
+      "error_finalized_dispatch_rejected_transition_unknown_target",
+      "error_finalized_dispatch_rejected_transition_not_allowed",
+      "error_finalized_dispatch_rejected_completion_already_completed",
+      "error_finalized_dispatch_rejected_completion_phase_not_eligible",
+      "error_finalized_dispatch_rejected_global_sequence_exhausted",
+      "error_finalized_dispatch_rejected_relationship_definition_already_exists",
+      "error_finalized_dispatch_rejected_relationship_definition_not_found",
+      "error_finalized_dispatch_rejected_relationship_source_not_found",
+      "error_finalized_dispatch_rejected_relationship_target_not_found",
+      "error_finalized_dispatch_rejected_relationship_source_species_mismatch",
+      "error_finalized_dispatch_rejected_relationship_target_species_mismatch",
+      "error_finalized_dispatch_rejected_self_relationship_rejected",
+      "error_finalized_dispatch_rejected_duplicate_relationship",
+      "error_finalized_dispatch_rejected_cycle_rejected",
+      "error_finalized_dispatch_rejected_relationship_capacity_exceeded",
+      "error_finalized_dispatch_rejected_relationship_not_found",
+      "error_finalized_dispatch_rejected_association_revision_out_of_range",
+      "error_finalized_dispatch_rejected_duplicate_association",
+      "error_finalized_dispatch_rejected_association_capacity_exceeded",
+      "error_finalized_dispatch_rejected_association_not_found",
+      "error_finalized_invariant_failed",
+      "error_delivery_indeterminate_nonce_conflict",
+      "error_delivery_indeterminate_transaction_invalid",
+      "error_delivery_indeterminate_rpc_submission_rejected",
+      "error_delivery_indeterminate_submission_watch_lost",
+      "error_delivery_indeterminate_submission_timeout"
+    ]
+    },
+    "structural_corpus": {
+      "total": 187,
+    "case_ids": [
+      "shape_empty_input",
+      "shape_whitespace_input",
+      "shape_trailing_json",
+      "shape_invalid_utf8",
+      "shape_nonfinite_nan",
+      "shape_nonfinite_positive_infinity",
+      "shape_nonfinite_negative_infinity",
+      "shape_root_null",
+      "shape_root_boolean",
+      "shape_root_number",
+      "shape_root_string",
+      "shape_root_array",
+      "shape_root_empty_object",
+      "shape_missing_protocol_version",
+      "shape_missing_operation",
+      "shape_future_protocol_version",
+      "shape_null_protocol_version",
+      "shape_null_operation",
+      "shape_unknown_root_member",
+      "shape_duplicate_protocol_version",
+      "shape_duplicate_operation",
+      "shape_missing_operation_type",
+      "shape_unknown_operation_type",
+      "shape_numeric_operation_type",
+      "shape_unknown_member_create_intent_unit",
+      "shape_duplicate_type_create_intent_unit",
+      "shape_unknown_member_get_intent_unit",
+      "shape_duplicate_type_get_intent_unit",
+      "shape_unknown_member_list_intent_units",
+      "shape_duplicate_type_list_intent_units",
+      "shape_unknown_member_transition_intent_unit",
+      "shape_duplicate_type_transition_intent_unit",
+      "shape_unknown_member_complete_intent_unit",
+      "shape_duplicate_type_complete_intent_unit",
+      "shape_unknown_member_create_relationship_definition",
+      "shape_duplicate_type_create_relationship_definition",
+      "shape_unknown_member_get_relationship_definition",
+      "shape_duplicate_type_get_relationship_definition",
+      "shape_unknown_member_create_relationship",
+      "shape_duplicate_type_create_relationship",
+      "shape_unknown_member_delete_relationship",
+      "shape_duplicate_type_delete_relationship",
+      "shape_unknown_member_list_relationships",
+      "shape_duplicate_type_list_relationships",
+      "shape_unknown_member_project_intent_units_v1",
+      "shape_duplicate_type_project_intent_units_v1",
+      "shape_unknown_member_record_association",
+      "shape_duplicate_type_record_association",
+      "shape_unknown_member_revoke_association",
+      "shape_duplicate_type_revoke_association",
+      "shape_unknown_member_list_associations_by_unit",
+      "shape_duplicate_type_list_associations_by_unit",
+      "shape_unknown_member_list_associations_by_reference",
+      "shape_duplicate_type_list_associations_by_reference",
+      "shape_unknown_member_tilde_pointer_escape",
+      "shape_unknown_member_slash_pointer_escape",
+      "shape_missing_required_create_intent_unit_intent_unit",
+      "shape_missing_required_get_intent_unit_id",
+      "shape_missing_required_list_intent_units_filters",
+      "shape_missing_required_transition_intent_unit_expected_revision",
+      "shape_missing_required_complete_intent_unit_expected_revision",
+      "shape_missing_required_create_relationship_definition_definition",
+      "shape_missing_required_get_relationship_definition_definition",
+      "shape_missing_required_create_relationship_relationship",
+      "shape_missing_required_delete_relationship_relationship",
+      "shape_missing_required_list_relationships_definition",
+      "shape_missing_required_project_intent_units_v1_query_version",
+      "shape_missing_required_record_association_association",
+      "shape_missing_required_revoke_association_association",
+      "shape_missing_required_list_associations_by_unit_unit_id",
+      "shape_missing_required_list_associations_by_reference_reference",
+      "shape_unknown_nested_intent_unit",
+      "shape_duplicate_nested_intent_unit_origin",
+      "shape_unknown_nested_external_reference",
+      "shape_duplicate_nested_external_reference_namespace",
+      "shape_unknown_nested_workflow",
+      "shape_duplicate_nested_workflow_id",
+      "shape_unknown_nested_workflow_edge",
+      "shape_duplicate_nested_workflow_edge_from",
+      "shape_unknown_nested_filters",
+      "shape_duplicate_nested_filters_status",
+      "shape_unknown_nested_definition",
+      "shape_duplicate_nested_definition_id",
+      "shape_unknown_nested_relationship",
+      "shape_duplicate_nested_relationship_source_id",
+      "shape_unknown_nested_predicate",
+      "shape_duplicate_nested_predicate_type",
+      "shape_unknown_nested_association",
+      "shape_duplicate_nested_association_unit_id",
+      "shape_unknown_nested_association_subject",
+      "shape_duplicate_nested_association_subject_type",
+      "shape_null_optional_create_intent_unit_intent_unit_id",
+      "shape_null_optional_list_intent_units_filters_workflow_id",
+      "shape_null_optional_list_intent_units_filters_species",
+      "shape_null_optional_list_intent_units_filters_phase",
+      "shape_null_optional_list_intent_units_filters_status",
+      "shape_null_optional_list_intent_units_after",
+      "shape_null_optional_create_relationship_definition_source_species",
+      "shape_null_optional_create_relationship_definition_target_species",
+      "shape_null_optional_list_relationships_source_id",
+      "shape_null_optional_list_relationships_target_id",
+      "shape_null_optional_list_relationships_after",
+      "shape_null_optional_project_intent_units_v1_filters_workflow_id",
+      "shape_null_optional_project_intent_units_v1_filters_species",
+      "shape_null_optional_project_intent_units_v1_filters_phase",
+      "shape_null_optional_project_intent_units_v1_filters_status",
+      "shape_null_optional_project_intent_units_v1_predicate",
+      "shape_null_optional_project_intent_units_v1_after",
+      "shape_null_optional_list_associations_by_unit_subject",
+      "shape_null_optional_list_associations_by_unit_after",
+      "shape_null_optional_list_associations_by_reference_after",
+      "shape_valid_present_generated_id",
+      "shape_valid_omitted_definition_species",
+      "scalar_uuid_uppercase",
+      "scalar_uuid_compact",
+      "scalar_uuid_braced",
+      "scalar_uuid_short",
+      "scalar_uuid_wrong_type",
+      "scalar_revision_leading_zero",
+      "scalar_revision_negative",
+      "scalar_revision_plus",
+      "scalar_revision_overflow",
+      "scalar_revision_too_many_digits",
+      "scalar_revision_wrong_type",
+      "scalar_definition_id_empty",
+      "scalar_definition_id_uppercase",
+      "scalar_definition_id_digit_start",
+      "scalar_definition_id_non_ascii",
+      "scalar_definition_id_too_long",
+      "scalar_definition_version_zero",
+      "scalar_definition_version_leading_zero",
+      "scalar_definition_version_overflow",
+      "scalar_species_empty",
+      "scalar_species_blank",
+      "scalar_species_nul",
+      "scalar_species_ascii_257",
+      "scalar_species_utf8_258",
+      "scalar_external_reference_namespace_upper",
+      "scalar_external_reference_namespace_too_long",
+      "scalar_external_reference_scope_blank",
+      "scalar_external_reference_value_nul",
+      "scalar_external_reference_sha256_short",
+      "scalar_external_reference_sha256_upper",
+      "scalar_page_limit_zero",
+      "scalar_page_limit_over",
+      "scalar_page_limit_negative",
+      "scalar_page_limit_string",
+      "scalar_page_limit_fraction",
+      "scalar_status_unknown",
+      "scalar_policy_unknown",
+      "workflow_no_phases",
+      "workflow_duplicate_phase",
+      "workflow_too_many_phases",
+      "workflow_initial_missing",
+      "workflow_edge_target_missing",
+      "workflow_completion_missing",
+      "workflow_duplicate_edge",
+      "workflow_duplicate_completion_phase",
+      "workflow_too_many_edges",
+      "workflow_too_many_completion_phases",
+      "subject_unknown_variant",
+      "subject_whole_unit_with_revision",
+      "subject_revision_missing_revision",
+      "query_wrong_version",
+      "query_unknown_predicate",
+      "query_predicate_missing_anchor",
+      "cursor_relationship_wrong_definition",
+        "cursor_association_wrong_unit",
+        "cursor_association_wrong_reference",
+        "cursor_uuid_noncanonical",
+        "shape_valid_list_intent_units_after",
+        "shape_valid_list_relationships_after",
+        "shape_valid_project_intent_units_v1_after",
+        "shape_valid_list_associations_by_unit_after",
+        "shape_valid_list_associations_by_reference_after",
+        "scalar_valid_revision_u64_max",
+      "scalar_valid_text_ascii_256",
+      "scalar_valid_text_utf8_256_bytes",
+      "scalar_valid_namespace64_nonzero_u64_max",
+      "scalar_valid_git_sha1",
+      "workflow_valid_collection_maxima",
+      "workflow_valid_zero_edges_and_completions",
+      "success_canonical_escaping_and_utf8",
+      "success_create_relationship_definition_option_none",
+      "success_get_relationship_definition_omitted_species",
+      "size_exact_1048575",
+      "size_exact_1048576"
+    ]
+  },
+  "process_corpus": {
+    "total": 72,
+    "case_ids": [
+      "argv_no_arguments",
+      "argv_database_flag_only",
+      "argv_database_without_rpc",
+      "argv_rpc_missing_value",
+      "argv_reordered",
+      "argv_repeat_database",
+      "argv_repeat_rpc",
+      "argv_equals_database",
+      "argv_equals_rpc",
+      "argv_double_dash",
+      "argv_extra",
+      "argv_help",
+      "argv_wrong_flag",
+      "argv_empty_database",
+      "argv_read_with_signer",
+      "argv_mutation_without_signer",
+      "argv_signer_before_rpc",
+      "argv_repeat_signer",
+      "argv_equals_signer",
+      "argv_raw_seed",
+      "argv_private_key",
+      "argv_journal_path",
+      "argv_unknown_signer",
+      "argv_uppercase_signer",
+      "argv_pid_forbidden",
+      "argv_precedes_malformed_stdin",
+      "argv_environment_only_forbidden",
+      "argv_environment_cannot_fill_rpc",
+      "argv_environment_cannot_fill_signer",
+      "argv_environment_cannot_override_explicit_read",
+      "request_decode_precedes_rpc_parse",
+      "url_reject_empty",
+      "url_reject_scheme_http",
+      "url_reject_scheme_case",
+      "url_reject_leading_zero_ipv4",
+      "url_reject_short_ipv4",
+      "url_reject_integer_ipv4",
+      "url_reject_octal_ipv4",
+      "url_reject_hex_ipv4",
+      "url_reject_percent_host",
+      "url_reject_hostname",
+      "url_reject_hostname_case",
+      "url_reject_hostname_trailing_dot",
+      "url_reject_userinfo",
+      "url_reject_password",
+      "url_reject_query",
+      "url_reject_fragment",
+      "url_reject_redirect_path",
+      "url_reject_double_slash_path",
+      "url_reject_omitted_path",
+      "url_reject_missing_port",
+      "url_reject_leading_zero_port",
+      "url_reject_default_port",
+      "url_reject_zero_port",
+      "url_reject_out_of_range_port",
+      "url_reject_public_ipv4",
+      "url_reject_wildcard_ipv4",
+      "url_reject_ipv6_unspecified",
+      "url_reject_ipv6_mapped",
+      "url_reject_ipv6_expanded_loopback",
+      "url_reject_ipv6_uppercase",
+      "url_reject_port_plus",
+      "url_reject_leading_space",
+      "url_reject_trailing_space",
+      "url_accept_ipv4_min",
+      "url_accept_ipv4_range",
+      "url_accept_ipv6_loopback",
+      "signer_accept_charlie_mutation",
+      "signer_accept_dave_mutation",
+      "ingress_accept_1048575",
+      "ingress_accept_1048576",
+      "ingress_reject_1048577"
+    ]
+  },
+  "io_corpus": {
+    "total": 8,
+    "case_ids": [
+      "request_read_failure",
+      "read_response_body_failure",
+      "read_response_newline_failure",
+      "read_response_flush_failure",
+      "mutation_response_body_failure",
+      "mutation_response_newline_failure",
+      "mutation_response_flush_failure",
+      "mutation_acknowledgement_failure"
+    ]
+  },
+  "source_mapping_corpus": {
+    "public_error_variant_cells": 148,
+    "private_proc_discovery_cells": 5
+  },
+  "private_context_contract": {
+    "manifest_members": [
+      "generated_uuid?",
+      "rpc?",
+      "signer?",
+      "projection?"
+    ],
+    "rpc_context_members": [
+      "context_schema_version",
+      "label",
+      "endpoint",
+      "proc_discovery",
+      "dial_count",
+      "calls",
+      "terminal"
+    ],
+    "signer_context_families": [
+      "signed_vector",
+      "pre_send_rejection",
+      "reconciliation",
+      "decode_barrier"
+    ],
+    "projection_context_members": [
+      "context_schema_version",
+      "label",
+      "database",
+      "sync_count",
+      "attest_count",
+      "query_count",
+      "terminal"
+    ],
+    "public_selector": false,
+    "signature_authority": "oracle_only_not_production_byte_equality"
+  },
+  "errata": [
+    {
+      "criterion": "T-1113-E1 bad coordinate request",
+      "status": "not_applicable",
+      "reason": "the exact fifteen-operation request inventory has no coordinate member",
+      "codec_coverage_case": "error_invalid_coordinate_codec",
+      "unknown_input_case": "shape_unknown_root_member",
+      "must_not_add_request_field": true
+    }
+  ],
+  "safety_nonclaims": [
+    "fixture signers are independent offline codec oracles and are not production signature byte oracles",
+    "request-buffer bounds do not claim total-process-memory bounds",
+    "projection caught_up never follows only from a checkpoint probe",
+    "delivery indeterminacy never claims rollback or permits retry"
+  ]
+}

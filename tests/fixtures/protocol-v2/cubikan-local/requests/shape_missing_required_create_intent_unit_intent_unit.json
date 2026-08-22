@@ -1,0 +1,1 @@
+{"protocol_version":2,"operation":{"type":"create_intent_unit","workflow":{"id":"lifecycle-v1","phases":["queued","doing"],"initial_phase":"queued","edges":[{"from":"queued","to":"doing"}],"completion_phases":["doing"]}}}

@@ -1,0 +1,1 @@
+{"context_schema_version":1,"authority":"independent_oracle_only","dev_signer":"charlie","account_id":"0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22","operation":"complete_intent_unit","phase":"before_submission","terminal_code":"dev_signer_unavailable","new_sign_count":0,"new_send_count":0}

@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"invalid_external_reference","message":"external reference must contain an exact bounded namespace, scope, and value","field":"/operation/reference/value"}}

@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"invalid_request","message":"request does not match the local protocol v2 schema","field":"/coordinate"}}

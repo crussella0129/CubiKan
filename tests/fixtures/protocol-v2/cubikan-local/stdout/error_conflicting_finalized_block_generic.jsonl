@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"conflicting_finalized_block","message":"finalized block history conflicts at one height"}}

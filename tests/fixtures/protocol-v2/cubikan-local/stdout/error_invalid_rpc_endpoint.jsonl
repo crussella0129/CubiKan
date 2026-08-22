@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"invalid_rpc_endpoint","message":"RPC endpoint must be a canonical loopback ws URL with an explicit nondefault port","field":"/rpc"}}

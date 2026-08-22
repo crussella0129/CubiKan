@@ -1,0 +1,1 @@
+{"protocol_version":2,"operation":{"type":"create_intent_unit","intent_unit":{"origin":{"namespace":"book.intent","scope":"sprint-11","value":"INT-0008"},"species":"task","unknown":true},"workflow":{"id":"lifecycle-v1","phases":["queued","doing"],"initial_phase":"queued","edges":[{"from":"queued","to":"doing"}],"completion_phases":["doing"]}}}

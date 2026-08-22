@@ -1,6 +1,5 @@
 # Agent Tasks (Persistent Backlog)
 
-- [ ] T-1113 (sprint 11) [intent: INT-0008, INT-0009, INT-0012, INT-0014]: Replace cubikan-local with strict chain-backed protocol v2 — touches: local adapter, manifests/lock, local schema/verifier/fixtures
 - [ ] T-1114 (sprint 11) [intent: INT-0008]: Add the local Git reference adapter demonstration — touches: Git crate, manifests/lock, Git fixtures
 - [ ] T-1115 (sprint 11) [intent: INT-0008, INT-0012, INT-0014]: Prove the four-node local failover, resynchronization, and rebuild journey — touches: Zombienet config/tools, chain E2E fixtures and local adapter E2E test
 - [ ] T-1116 (sprint 11) [intent: INT-0008, INT-0012, INT-0014]: Reconcile security, authority, and current-state documentation — touches: root/crate/chain READMEs, derivative appendix and Book summary

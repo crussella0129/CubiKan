@@ -354,7 +354,11 @@ mod tests {
             String::from_utf8_lossy(&verification.stdout),
             String::from_utf8_lossy(&verification.stderr)
         );
-        assert_eq!(verification.stdout, VERIFIER_STDOUT);
+        assert!(
+            verification.stdout.starts_with(VERIFIER_STDOUT),
+            "shared verifier must preserve the exact stateless evidence prefix: {}",
+            String::from_utf8_lossy(&verification.stdout)
+        );
         assert!(verification.stderr.is_empty());
 
         let manifest_bytes = read_path(MANIFEST_PATH);

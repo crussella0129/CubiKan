@@ -1,0 +1,1 @@
+{"context_schema_version":1,"label":"generic-insecure_projection_path","database":{"mode":"create_if_absent_or_open_if_existing","pre_submission_access_count":0,"open_count":0},"sync_count":0,"attest_count":0,"query_count":0,"terminal":{"type":"source_error","source_mapping":"insecure_projection_path","code":"insecure_projection_path"}}

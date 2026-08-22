@@ -184,3 +184,12 @@
   coordinate members reject as `invalid_request`; the independent request
   corpus records the coordinate-input case as not applicable rather than
   inventing a sixteenth field or operation.
+
+- **2026-08-22 — T-1113 shared-verifier regression scope omission resolved:**
+  T-1113 extends the locked shared protocol verifier to validate both adapter-
+  owned v2 corpora in one canonical command, but T-1112's existing stateless
+  regression asserted that the verifier's complete stdout contained only its
+  original line. The minimal test-only repair preserves an exact assertion over
+  the stateless evidence prefix while T-1113's local integration test pins the
+  complete two-line transcript. No stateless schema, fixture, decoder, response,
+  or process behavior changes.

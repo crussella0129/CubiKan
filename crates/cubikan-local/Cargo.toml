@@ -8,9 +8,11 @@ publish = false
 
 [dependencies]
 cubikan-backend = { path = "../cubikan-backend" }
+cubikan-chain-client = { path = "../cubikan-chain-client" }
 cubikan-core = { path = "../cubikan-core" }
 serde.workspace = true
 serde_json.workspace = true
+tokio.workspace = true
 
 [lints]
 workspace = true

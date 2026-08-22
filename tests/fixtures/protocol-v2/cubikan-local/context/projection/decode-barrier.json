@@ -1,0 +1,1 @@
+{"context_schema_version":1,"label":"decode-barrier","database":{"mode":"not_attempted","pre_submission_access_count":0,"open_count":0},"sync_count":0,"attest_count":0,"query_count":0,"terminal":{"phase":"decode","state_access":"forbidden"}}

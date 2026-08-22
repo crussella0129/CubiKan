@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"invalid_coordinate","message":"ledger coordinate is structurally invalid or fails its joined hash invariant","field":"/result/intent_unit/last_coordinate"}}

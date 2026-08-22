@@ -1,7 +1,8 @@
-//! Unsupported-only bridge for the retired durable JSON protocol v1.
+//! Strict chain-backed local protocol-v2 process adapter.
 //!
-//! The requested database path is retained for process compatibility but is
-//! never opened, created, read, or written by this bridge.
+//! The crate intentionally exposes only its bounded process surface. Request
+//! decoding, RPC access, projection access, signing, submission, and durable
+//! acknowledgement remain closed implementation details.
 
 #![forbid(unsafe_code)]
 
@@ -9,6 +10,4 @@ mod execution;
 mod protocol;
 mod runner;
 
-pub use execution::execute_request;
-pub use protocol::{ExecutedRequest, PROTOCOL_VERSION, ResponseClass};
-pub use runner::{MAX_REQUEST_BYTES, RunError, run, run_process};
+pub use runner::{MAX_REQUEST_BYTES, run_process};

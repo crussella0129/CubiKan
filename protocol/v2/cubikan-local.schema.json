@@ -1,0 +1,2416 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://cubikan.invalid/protocol/v2/cubikan-local.schema.json",
+  "title": "CubiKan chain-backed local protocol v2",
+  "description": "Closed request and response schema for one strict local chain/projection operation.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/read_success_response"
+    },
+    {
+      "$ref": "#/$defs/generic_error_response"
+    },
+    {
+      "$ref": "#/$defs/submission_rejected_response"
+    },
+    {
+      "$ref": "#/$defs/submission_lane_unresolved_response"
+    },
+    {
+      "$ref": "#/$defs/expired_not_included_response"
+    },
+    {
+      "$ref": "#/$defs/finalized_dispatch_rejected_response"
+    },
+    {
+      "$ref": "#/$defs/finalized_invariant_failed_response"
+    },
+    {
+      "$ref": "#/$defs/delivery_indeterminate_response"
+    },
+    {
+      "$ref": "#/$defs/finalized_accepted_response"
+    }
+  ],
+  "$defs": {
+    "namespace": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{0,63}$",
+      "minLength": 1,
+      "maxLength": 64,
+      "x-cubikan-encoding": "ascii"
+    },
+    "text256": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^(?=[\\s\\S]*\\S)[^\\u0000]+$",
+      "x-cubikan-nonblank": true,
+      "x-cubikan-max-utf8-bytes": 256
+    },
+    "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+      "minLength": 36,
+      "maxLength": 36,
+      "x-cubikan-encoding": "lowercase-hyphenated-rfc4122"
+    },
+    "u64_text": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,19})$",
+      "x-cubikan-maximum": "18446744073709551615"
+    },
+    "nonzero_u64_text": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,19}$",
+      "x-cubikan-maximum": "18446744073709551615"
+    },
+    "u32": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "hash32": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$",
+      "minLength": 66,
+      "maxLength": 66
+    },
+    "json_pointer256": {
+      "type": "string",
+      "maxLength": 256,
+      "pattern": "^(?:/(?:[^~/\\u0000]|~[01])*)*$",
+      "x-cubikan-max-utf8-bytes": 256,
+      "x-cubikan-encoding": "rfc6901"
+    },
+    "page_limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 100
+    },
+    "unit_status": {
+      "enum": [
+        "active",
+        "completed"
+      ]
+    },
+    "relationship_policy": {
+      "enum": [
+        "allow",
+        "reject"
+      ]
+    },
+    "mutation_operation": {
+      "enum": [
+        "create_intent_unit",
+        "transition_intent_unit",
+        "complete_intent_unit",
+        "create_relationship_definition",
+        "create_relationship",
+        "delete_relationship",
+        "record_association",
+        "revoke_association"
+      ]
+    },
+    "error_code": {
+      "enum": [
+        "malformed_json",
+        "request_too_large",
+        "invalid_request",
+        "unsupported_protocol_version",
+        "invalid_intent_unit_id",
+        "invalid_external_reference",
+        "invalid_species",
+        "invalid_workflow_id",
+        "invalid_phase_id",
+        "invalid_workflow",
+        "invalid_revision",
+        "invalid_definition_id",
+        "invalid_definition_version",
+        "invalid_relationship_policy",
+        "invalid_association_subject",
+        "invalid_query",
+        "invalid_cursor",
+        "invalid_coordinate",
+        "invalid_rpc_endpoint",
+        "unsupported_platform",
+        "insecure_projection_path",
+        "projection_busy",
+        "unsupported_schema_version",
+        "unsupported_envelope_version",
+        "corrupt_schema",
+        "corrupt_envelope",
+        "projection_mismatch",
+        "refresh_required",
+        "archive_rpc_unavailable",
+        "archive_history_unavailable",
+        "deployment_mismatch",
+        "runtime_mismatch",
+        "unsupported_event_schema_version",
+        "conflicting_finalized_block",
+        "projection_error",
+        "dev_signer_unavailable",
+        "submission_lane_corrupt",
+        "submission_lane_unresolved",
+        "nonce_conflict",
+        "insufficient_balance",
+        "transaction_invalid",
+        "rpc_submission_rejected",
+        "submission_watch_lost",
+        "submission_timeout",
+        "finalized_invariant_failed",
+        "expired_not_included",
+        "unsupported_command_schema_version",
+        "unsigned_call",
+        "unauthorized_submitter",
+        "duplicate_intent_unit",
+        "intent_unit_not_found",
+        "revision_conflict",
+        "lifecycle_history_capacity_exceeded",
+        "transition_already_completed",
+        "transition_unknown_target",
+        "transition_not_allowed",
+        "completion_already_completed",
+        "completion_phase_not_eligible",
+        "global_sequence_exhausted",
+        "relationship_definition_already_exists",
+        "relationship_definition_not_found",
+        "relationship_source_not_found",
+        "relationship_target_not_found",
+        "relationship_source_species_mismatch",
+        "relationship_target_species_mismatch",
+        "self_relationship_rejected",
+        "duplicate_relationship",
+        "cycle_rejected",
+        "relationship_capacity_exceeded",
+        "relationship_not_found",
+        "association_revision_out_of_range",
+        "duplicate_association",
+        "association_capacity_exceeded",
+        "association_not_found"
+      ]
+    },
+    "external_reference": {
+      "type": "object",
+      "properties": {
+        "namespace": {
+          "$ref": "#/$defs/namespace"
+        },
+        "scope": {
+          "$ref": "#/$defs/text256"
+        },
+        "value": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "namespace",
+        "scope",
+        "value"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "namespace": {
+                "const": "git.commit.sha1"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "namespace": {
+                "const": "git.commit.sha256"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "workflow_edge": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/text256"
+        },
+        "to": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "additionalProperties": false
+    },
+    "workflow": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/text256"
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text256"
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "initial_phase": {
+          "$ref": "#/$defs/text256"
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/workflow_edge"
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "completion_phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text256"
+          },
+          "maxItems": 32,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "phases",
+        "initial_phase",
+        "edges",
+        "completion_phases"
+      ],
+      "additionalProperties": false
+    },
+    "intent_unit_input": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/external_reference"
+        },
+        "species": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "origin",
+        "species"
+      ],
+      "additionalProperties": false
+    },
+    "definition_key": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/namespace"
+        },
+        "version": {
+          "$ref": "#/$defs/nonzero_u64_text"
+        }
+      },
+      "required": [
+        "id",
+        "version"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_key": {
+      "type": "object",
+      "properties": {
+        "definition": {
+          "$ref": "#/$defs/definition_key"
+        },
+        "source_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "target_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "required": [
+        "definition",
+        "source_id",
+        "target_id"
+      ],
+      "additionalProperties": false
+    },
+    "association_subject_whole_unit": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "whole_unit"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "association_subject_revision": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "revision"
+        },
+        "revision": {
+          "$ref": "#/$defs/u64_text"
+        }
+      },
+      "required": [
+        "type",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "association_subject": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/association_subject_whole_unit"
+        },
+        {
+          "$ref": "#/$defs/association_subject_revision"
+        }
+      ]
+    },
+    "association_key": {
+      "type": "object",
+      "properties": {
+        "unit_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "subject": {
+          "$ref": "#/$defs/association_subject"
+        },
+        "reference": {
+          "$ref": "#/$defs/external_reference"
+        }
+      },
+      "required": [
+        "unit_id",
+        "subject",
+        "reference"
+      ],
+      "additionalProperties": false
+    },
+    "list_filters": {
+      "type": "object",
+      "properties": {
+        "workflow_id": {
+          "$ref": "#/$defs/text256"
+        },
+        "species": {
+          "$ref": "#/$defs/text256"
+        },
+        "phase": {
+          "$ref": "#/$defs/text256"
+        },
+        "status": {
+          "$ref": "#/$defs/unit_status"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "outgoing_predicate": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "outgoing"
+        },
+        "definition": {
+          "$ref": "#/$defs/definition_key"
+        },
+        "anchor_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "required": [
+        "type",
+        "definition",
+        "anchor_id"
+      ],
+      "additionalProperties": false
+    },
+    "incoming_predicate": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "incoming"
+        },
+        "definition": {
+          "$ref": "#/$defs/definition_key"
+        },
+        "anchor_id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "required": [
+        "type",
+        "definition",
+        "anchor_id"
+      ],
+      "additionalProperties": false
+    },
+    "direct_relationship_predicate": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/outgoing_predicate"
+        },
+        {
+          "$ref": "#/$defs/incoming_predicate"
+        }
+      ]
+    },
+    "ledger_coordinate": {
+      "type": "object",
+      "properties": {
+        "parachain_genesis_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "deployment_id": {
+          "$ref": "#/$defs/hash32"
+        },
+        "block_number": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "block_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "extrinsic_index": {
+          "$ref": "#/$defs/u32"
+        },
+        "extrinsic_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "system_event_index": {
+          "$ref": "#/$defs/u32"
+        },
+        "global_sequence": {
+          "$ref": "#/$defs/nonzero_u64_text"
+        }
+      },
+      "required": [
+        "parachain_genesis_hash",
+        "deployment_id",
+        "block_number",
+        "block_hash",
+        "extrinsic_index",
+        "extrinsic_hash",
+        "system_event_index",
+        "global_sequence"
+      ],
+      "additionalProperties": false
+    },
+    "finalized_extrinsic_coordinate": {
+      "type": "object",
+      "properties": {
+        "parachain_genesis_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "deployment_id": {
+          "$ref": "#/$defs/hash32"
+        },
+        "block_number": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "block_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "extrinsic_index": {
+          "$ref": "#/$defs/u32"
+        },
+        "extrinsic_hash": {
+          "$ref": "#/$defs/hash32"
+        }
+      },
+      "required": [
+        "parachain_genesis_hash",
+        "deployment_id",
+        "block_number",
+        "block_hash",
+        "extrinsic_index",
+        "extrinsic_hash"
+      ],
+      "additionalProperties": false
+    },
+    "projection_checkpoint": {
+      "type": "object",
+      "properties": {
+        "block_number": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "block_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "last_global_sequence": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/nonzero_u64_text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "runtime_spec_version": {
+          "$ref": "#/$defs/u32"
+        },
+        "runtime_code_hash": {
+          "$ref": "#/$defs/hash32"
+        }
+      },
+      "required": [
+        "block_number",
+        "block_hash",
+        "last_global_sequence",
+        "runtime_spec_version",
+        "runtime_code_hash"
+      ],
+      "additionalProperties": false
+    },
+    "mortal_era": {
+      "type": "object",
+      "properties": {
+        "birth": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "death": {
+          "$ref": "#/$defs/u64_text"
+        }
+      },
+      "required": [
+        "birth",
+        "death"
+      ],
+      "additionalProperties": false
+    },
+    "create_intent_unit_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "create_intent_unit"
+        },
+        "intent_unit": {
+          "$ref": "#/$defs/intent_unit_input"
+        },
+        "workflow": {
+          "$ref": "#/$defs/workflow"
+        }
+      },
+      "required": [
+        "type",
+        "intent_unit",
+        "workflow"
+      ],
+      "additionalProperties": false
+    },
+    "get_intent_unit_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "get_intent_unit"
+        },
+        "id": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "required": [
+        "type",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "list_intent_units_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "list_intent_units"
+        },
+        "filters": {
+          "$ref": "#/$defs/list_filters"
+        },
+        "limit": {
+          "$ref": "#/$defs/page_limit"
+        },
+        "after": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "required": [
+        "type",
+        "filters",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "transition_intent_unit_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "transition_intent_unit"
+        },
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "target": {
+          "$ref": "#/$defs/text256"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/u64_text"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "target",
+        "expected_revision"
+      ],
+      "additionalProperties": false
+    },
+    "complete_intent_unit_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "complete_intent_unit"
+        },
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/u64_text"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "expected_revision"
+      ],
+      "additionalProperties": false
+    },
+    "create_relationship_definition_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "create_relationship_definition"
+        },
+        "definition": {
+          "$ref": "#/$defs/definition_key"
+        },
+        "source_species": {
+          "$ref": "#/$defs/text256"
+        },
+        "target_species": {
+          "$ref": "#/$defs/text256"
+        },
+        "self_policy": {
+          "$ref": "#/$defs/relationship_policy"
+        },
+        "cycle_policy": {
+          "$ref": "#/$defs/relationship_policy"
+        }
+      },
+      "required": [
+        "type",
+        "definition",
+        "self_policy",
+        "cycle_policy"
+      ],
+      "additionalProperties": false
+    },
+    "get_relationship_definition_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "get_relationship_definition"
+        },
+        "definition": {
+          "$ref": "#/$defs/definition_key"
+        }
+      },
+      "required": [
+        "type",
+        "definition"
+      ],
+      "additionalProperties": false
+    },
+    "create_relationship_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "create_relationship"
+        },
+        "relationship": {
+          "$ref": "#/$defs/relationship_key"
+        }
+      },
+      "required": [
+        "type",
+        "relationship"
+      ],
+      "additionalProperties": false
+    },
+    "delete_relationship_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "delete_relationship"
+        },
+        "relationship": {
+          "$ref": "#/$defs/relationship_key"
+        }
+      },
+      "required": [
+        "type",
+        "relationship"
+      ],
+      "additionalProperties": false
+    },
+    "list_relationships_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "list_relationships"
+        },
+        "definition": {
+          "$ref": "#/$defs/definition_key"
+        },
+        "source_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "target_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "limit": {
+          "$ref": "#/$defs/page_limit"
+        },
+        "after": {
+          "$ref": "#/$defs/relationship_key"
+        }
+      },
+      "required": [
+        "type",
+        "definition",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "project_intent_units_v1_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "project_intent_units_v1"
+        },
+        "query_version": {
+          "const": 1
+        },
+        "filters": {
+          "$ref": "#/$defs/list_filters"
+        },
+        "predicate": {
+          "$ref": "#/$defs/direct_relationship_predicate"
+        },
+        "limit": {
+          "$ref": "#/$defs/page_limit"
+        },
+        "after": {
+          "$ref": "#/$defs/uuid"
+        }
+      },
+      "required": [
+        "type",
+        "query_version",
+        "filters",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "record_association_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "record_association"
+        },
+        "association": {
+          "$ref": "#/$defs/association_key"
+        }
+      },
+      "required": [
+        "type",
+        "association"
+      ],
+      "additionalProperties": false
+    },
+    "revoke_association_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "revoke_association"
+        },
+        "association": {
+          "$ref": "#/$defs/association_key"
+        }
+      },
+      "required": [
+        "type",
+        "association"
+      ],
+      "additionalProperties": false
+    },
+    "list_associations_by_unit_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "list_associations_by_unit"
+        },
+        "unit_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "subject": {
+          "$ref": "#/$defs/association_subject"
+        },
+        "limit": {
+          "$ref": "#/$defs/page_limit"
+        },
+        "after": {
+          "$ref": "#/$defs/association_key"
+        }
+      },
+      "required": [
+        "type",
+        "unit_id",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "list_associations_by_reference_operation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "list_associations_by_reference"
+        },
+        "reference": {
+          "$ref": "#/$defs/external_reference"
+        },
+        "limit": {
+          "$ref": "#/$defs/page_limit"
+        },
+        "after": {
+          "$ref": "#/$defs/association_key"
+        }
+      },
+      "required": [
+        "type",
+        "reference",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "operation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/create_intent_unit_operation"
+        },
+        {
+          "$ref": "#/$defs/get_intent_unit_operation"
+        },
+        {
+          "$ref": "#/$defs/list_intent_units_operation"
+        },
+        {
+          "$ref": "#/$defs/transition_intent_unit_operation"
+        },
+        {
+          "$ref": "#/$defs/complete_intent_unit_operation"
+        },
+        {
+          "$ref": "#/$defs/create_relationship_definition_operation"
+        },
+        {
+          "$ref": "#/$defs/get_relationship_definition_operation"
+        },
+        {
+          "$ref": "#/$defs/create_relationship_operation"
+        },
+        {
+          "$ref": "#/$defs/delete_relationship_operation"
+        },
+        {
+          "$ref": "#/$defs/list_relationships_operation"
+        },
+        {
+          "$ref": "#/$defs/project_intent_units_v1_operation"
+        },
+        {
+          "$ref": "#/$defs/record_association_operation"
+        },
+        {
+          "$ref": "#/$defs/revoke_association_operation"
+        },
+        {
+          "$ref": "#/$defs/list_associations_by_unit_operation"
+        },
+        {
+          "$ref": "#/$defs/list_associations_by_reference_operation"
+        }
+      ]
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "operation": {
+          "$ref": "#/$defs/operation"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "operation"
+      ],
+      "additionalProperties": false
+    },
+    "transition_history": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "transition"
+        },
+        "sequence": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "from": {
+          "$ref": "#/$defs/text256"
+        },
+        "to": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "type",
+        "sequence",
+        "from",
+        "to"
+      ],
+      "additionalProperties": false
+    },
+    "completion_history": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "completion"
+        },
+        "sequence": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "phase": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "type",
+        "sequence",
+        "phase"
+      ],
+      "additionalProperties": false
+    },
+    "history_record": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/transition_history"
+        },
+        {
+          "$ref": "#/$defs/completion_history"
+        }
+      ]
+    },
+    "unit_view": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/external_reference"
+        },
+        "species": {
+          "$ref": "#/$defs/text256"
+        },
+        "workflow": {
+          "$ref": "#/$defs/workflow"
+        },
+        "phase": {
+          "$ref": "#/$defs/text256"
+        },
+        "status": {
+          "$ref": "#/$defs/unit_status"
+        },
+        "revision": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/history_record"
+          },
+          "maxItems": 256
+        }
+      },
+      "required": [
+        "id",
+        "origin",
+        "species",
+        "workflow",
+        "phase",
+        "status",
+        "revision",
+        "history"
+      ],
+      "additionalProperties": false
+    },
+    "projected_unit": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/external_reference"
+        },
+        "species": {
+          "$ref": "#/$defs/text256"
+        },
+        "workflow": {
+          "$ref": "#/$defs/workflow"
+        },
+        "phase": {
+          "$ref": "#/$defs/text256"
+        },
+        "status": {
+          "$ref": "#/$defs/unit_status"
+        },
+        "revision": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "history": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/history_record"
+          },
+          "maxItems": 256
+        },
+        "last_coordinate": {
+          "$ref": "#/$defs/ledger_coordinate"
+        }
+      },
+      "required": [
+        "id",
+        "origin",
+        "species",
+        "workflow",
+        "phase",
+        "status",
+        "revision",
+        "history",
+        "last_coordinate"
+      ],
+      "additionalProperties": false
+    },
+    "unit_summary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "origin": {
+          "$ref": "#/$defs/external_reference"
+        },
+        "species": {
+          "$ref": "#/$defs/text256"
+        },
+        "workflow_id": {
+          "$ref": "#/$defs/text256"
+        },
+        "phase": {
+          "$ref": "#/$defs/text256"
+        },
+        "status": {
+          "$ref": "#/$defs/unit_status"
+        },
+        "revision": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "last_coordinate": {
+          "$ref": "#/$defs/ledger_coordinate"
+        }
+      },
+      "required": [
+        "id",
+        "origin",
+        "species",
+        "workflow_id",
+        "phase",
+        "status",
+        "revision",
+        "last_coordinate"
+      ],
+      "additionalProperties": false
+    },
+    "projected_definition": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/definition_key"
+        },
+        "directed": {
+          "const": true
+        },
+        "source_species": {
+          "$ref": "#/$defs/text256"
+        },
+        "target_species": {
+          "$ref": "#/$defs/text256"
+        },
+        "self_policy": {
+          "$ref": "#/$defs/relationship_policy"
+        },
+        "cycle_policy": {
+          "$ref": "#/$defs/relationship_policy"
+        },
+        "created_coordinate": {
+          "$ref": "#/$defs/ledger_coordinate"
+        }
+      },
+      "required": [
+        "key",
+        "directed",
+        "self_policy",
+        "cycle_policy",
+        "created_coordinate"
+      ],
+      "additionalProperties": false
+    },
+    "projected_relationship": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/relationship_key"
+        },
+        "created_coordinate": {
+          "$ref": "#/$defs/ledger_coordinate"
+        }
+      },
+      "required": [
+        "key",
+        "created_coordinate"
+      ],
+      "additionalProperties": false
+    },
+    "projected_association": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "$ref": "#/$defs/association_key"
+        },
+        "created_coordinate": {
+          "$ref": "#/$defs/ledger_coordinate"
+        }
+      },
+      "required": [
+        "key",
+        "created_coordinate"
+      ],
+      "additionalProperties": false
+    },
+    "intent_unit_result": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "intent_unit"
+        },
+        "intent_unit": {
+          "$ref": "#/$defs/projected_unit"
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/projection_checkpoint"
+        }
+      },
+      "required": [
+        "type",
+        "intent_unit",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "intent_unit_page_result": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "intent_unit_page"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/unit_summary"
+          },
+          "maxItems": 100
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/projection_checkpoint"
+        }
+      },
+      "required": [
+        "type",
+        "items",
+        "next_cursor",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_definition_result": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "relationship_definition"
+        },
+        "definition": {
+          "$ref": "#/$defs/projected_definition"
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/projection_checkpoint"
+        }
+      },
+      "required": [
+        "type",
+        "definition",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_page_result": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "relationship_page"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/projected_relationship"
+          },
+          "maxItems": 100
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/relationship_key"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/projection_checkpoint"
+        }
+      },
+      "required": [
+        "type",
+        "items",
+        "next_cursor",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "projection_v1_page_result": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "projection_v1_page"
+        },
+        "query_version": {
+          "const": 1
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/unit_summary"
+          },
+          "maxItems": 100
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/projection_checkpoint"
+        }
+      },
+      "required": [
+        "type",
+        "query_version",
+        "items",
+        "next_cursor",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "association_page_result": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "association_page"
+        },
+        "direction": {
+          "enum": [
+            "by_unit",
+            "by_reference"
+          ]
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/projected_association"
+          },
+          "maxItems": 100
+        },
+        "next_cursor": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/association_key"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/projection_checkpoint"
+        }
+      },
+      "required": [
+        "type",
+        "direction",
+        "items",
+        "next_cursor",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/intent_unit_result"
+        },
+        {
+          "$ref": "#/$defs/intent_unit_page_result"
+        },
+        {
+          "$ref": "#/$defs/relationship_definition_result"
+        },
+        {
+          "$ref": "#/$defs/relationship_page_result"
+        },
+        {
+          "$ref": "#/$defs/projection_v1_page_result"
+        },
+        {
+          "$ref": "#/$defs/association_page_result"
+        }
+      ]
+    },
+    "read_success_response": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "outcome": {
+          "const": "success"
+        },
+        "result": {
+          "$ref": "#/$defs/result"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "outcome",
+        "result"
+      ],
+      "additionalProperties": false
+    },
+    "unit_created_effect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "unit_created"
+        },
+        "unit_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "committed_revision": {
+          "$ref": "#/$defs/u64_text"
+        }
+      },
+      "required": [
+        "type",
+        "unit_id",
+        "committed_revision"
+      ],
+      "additionalProperties": false
+    },
+    "unit_transitioned_effect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "unit_transitioned"
+        },
+        "unit_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "committed_revision": {
+          "$ref": "#/$defs/u64_text"
+        }
+      },
+      "required": [
+        "type",
+        "unit_id",
+        "committed_revision"
+      ],
+      "additionalProperties": false
+    },
+    "unit_completed_effect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "unit_completed"
+        },
+        "unit_id": {
+          "$ref": "#/$defs/uuid"
+        },
+        "committed_revision": {
+          "$ref": "#/$defs/u64_text"
+        }
+      },
+      "required": [
+        "type",
+        "unit_id",
+        "committed_revision"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_definition_created_effect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "relationship_definition_created"
+        },
+        "definition": {
+          "$ref": "#/$defs/definition_key"
+        }
+      },
+      "required": [
+        "type",
+        "definition"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_created_effect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "relationship_created"
+        },
+        "relationship": {
+          "$ref": "#/$defs/relationship_key"
+        }
+      },
+      "required": [
+        "type",
+        "relationship"
+      ],
+      "additionalProperties": false
+    },
+    "relationship_deleted_effect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "relationship_deleted"
+        },
+        "relationship": {
+          "$ref": "#/$defs/relationship_key"
+        }
+      },
+      "required": [
+        "type",
+        "relationship"
+      ],
+      "additionalProperties": false
+    },
+    "association_recorded_effect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "association_recorded"
+        },
+        "association": {
+          "$ref": "#/$defs/association_key"
+        }
+      },
+      "required": [
+        "type",
+        "association"
+      ],
+      "additionalProperties": false
+    },
+    "association_revoked_effect": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "association_revoked"
+        },
+        "association": {
+          "$ref": "#/$defs/association_key"
+        }
+      },
+      "required": [
+        "type",
+        "association"
+      ],
+      "additionalProperties": false
+    },
+    "accepted_effect": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/unit_created_effect"
+        },
+        {
+          "$ref": "#/$defs/unit_transitioned_effect"
+        },
+        {
+          "$ref": "#/$defs/unit_completed_effect"
+        },
+        {
+          "$ref": "#/$defs/relationship_definition_created_effect"
+        },
+        {
+          "$ref": "#/$defs/relationship_created_effect"
+        },
+        {
+          "$ref": "#/$defs/relationship_deleted_effect"
+        },
+        {
+          "$ref": "#/$defs/association_recorded_effect"
+        },
+        {
+          "$ref": "#/$defs/association_revoked_effect"
+        }
+      ]
+    },
+    "caught_up_projection": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "caught_up"
+        },
+        "checkpoint": {
+          "$ref": "#/$defs/projection_checkpoint"
+        }
+      },
+      "required": [
+        "status",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "lagging_projection": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "const": "lagging"
+        },
+        "checkpoint": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/projection_checkpoint"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "checkpoint"
+      ],
+      "additionalProperties": false
+    },
+    "accepted_projection": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/caught_up_projection"
+        },
+        {
+          "$ref": "#/$defs/lagging_projection"
+        }
+      ]
+    },
+    "field_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "enum": [
+            "invalid_request",
+            "unsupported_protocol_version",
+            "invalid_intent_unit_id",
+            "invalid_external_reference",
+            "invalid_species",
+            "invalid_workflow_id",
+            "invalid_phase_id",
+            "invalid_workflow",
+            "invalid_revision",
+            "invalid_definition_id",
+            "invalid_definition_version",
+            "invalid_relationship_policy",
+            "invalid_association_subject",
+            "invalid_query",
+            "invalid_cursor",
+            "invalid_coordinate",
+            "invalid_rpc_endpoint"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        },
+        "field": {
+          "$ref": "#/$defs/json_pointer256"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "field"
+      ],
+      "additionalProperties": false
+    },
+    "generic_plain_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "enum": [
+            "malformed_json",
+            "request_too_large",
+            "unsupported_platform",
+            "insecure_projection_path",
+            "projection_busy",
+            "unsupported_schema_version",
+            "unsupported_envelope_version",
+            "corrupt_schema",
+            "corrupt_envelope",
+            "projection_mismatch",
+            "refresh_required",
+            "archive_rpc_unavailable",
+            "archive_history_unavailable",
+            "deployment_mismatch",
+            "runtime_mismatch",
+            "unsupported_event_schema_version",
+            "conflicting_finalized_block",
+            "projection_error",
+            "dev_signer_unavailable",
+            "submission_lane_corrupt",
+            "intent_unit_not_found",
+            "relationship_definition_not_found"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "generic_error_detail": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/field_error_detail"
+        },
+        {
+          "$ref": "#/$defs/generic_plain_error_detail"
+        }
+      ]
+    },
+    "generic_error_response": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "outcome": {
+          "const": "error"
+        },
+        "error": {
+          "$ref": "#/$defs/generic_error_detail"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "outcome",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "submission_rejected_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "enum": [
+            "nonce_conflict",
+            "insufficient_balance",
+            "transaction_invalid"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "submission_lane_unresolved_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "const": "submission_lane_unresolved"
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "expired_not_included_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "const": "expired_not_included"
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "finalized_dispatch_plain_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "enum": [
+            "runtime_mismatch",
+            "unsupported_command_schema_version",
+            "unsigned_call",
+            "unauthorized_submitter",
+            "duplicate_intent_unit",
+            "intent_unit_not_found",
+            "lifecycle_history_capacity_exceeded",
+            "transition_already_completed",
+            "transition_unknown_target",
+            "transition_not_allowed",
+            "completion_already_completed",
+            "completion_phase_not_eligible",
+            "global_sequence_exhausted",
+            "relationship_definition_already_exists",
+            "relationship_definition_not_found",
+            "relationship_source_not_found",
+            "relationship_target_not_found",
+            "relationship_source_species_mismatch",
+            "relationship_target_species_mismatch",
+            "self_relationship_rejected",
+            "duplicate_relationship",
+            "cycle_rejected",
+            "relationship_capacity_exceeded",
+            "relationship_not_found",
+            "association_revision_out_of_range",
+            "duplicate_association",
+            "association_capacity_exceeded",
+            "association_not_found"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "revision_conflict_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "const": "revision_conflict"
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        },
+        "expected_revision": {
+          "$ref": "#/$defs/u64_text"
+        },
+        "actual_revision": {
+          "$ref": "#/$defs/u64_text"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "expected_revision",
+        "actual_revision"
+      ],
+      "additionalProperties": false
+    },
+    "finalized_dispatch_error_detail": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/finalized_dispatch_plain_error_detail"
+        },
+        {
+          "$ref": "#/$defs/revision_conflict_error_detail"
+        }
+      ]
+    },
+    "finalized_invariant_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "const": "finalized_invariant_failed"
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "delivery_indeterminate_error_detail": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "enum": [
+            "nonce_conflict",
+            "transaction_invalid",
+            "rpc_submission_rejected",
+            "submission_watch_lost",
+            "submission_timeout"
+          ]
+        },
+        "message": {
+          "$ref": "#/$defs/text256"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "submission_rejected_response": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "outcome": {
+          "const": "submission_rejected"
+        },
+        "operation": {
+          "$ref": "#/$defs/mutation_operation"
+        },
+        "error": {
+          "$ref": "#/$defs/submission_rejected_error_detail"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "outcome",
+        "operation",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "submission_lane_unresolved_response": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "outcome": {
+          "const": "submission_lane_unresolved"
+        },
+        "operation": {
+          "$ref": "#/$defs/mutation_operation"
+        },
+        "expected_extrinsic_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "era": {
+          "$ref": "#/$defs/mortal_era"
+        },
+        "error": {
+          "$ref": "#/$defs/submission_lane_unresolved_error_detail"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "outcome",
+        "operation",
+        "expected_extrinsic_hash",
+        "era",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "expired_not_included_response": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "outcome": {
+          "const": "expired_not_included"
+        },
+        "operation": {
+          "$ref": "#/$defs/mutation_operation"
+        },
+        "expected_extrinsic_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "era": {
+          "$ref": "#/$defs/mortal_era"
+        },
+        "error": {
+          "$ref": "#/$defs/expired_not_included_error_detail"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "outcome",
+        "operation",
+        "expected_extrinsic_hash",
+        "era",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "finalized_dispatch_rejected_response": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "outcome": {
+          "const": "finalized_dispatch_rejected"
+        },
+        "operation": {
+          "$ref": "#/$defs/mutation_operation"
+        },
+        "finalized_extrinsic": {
+          "$ref": "#/$defs/finalized_extrinsic_coordinate"
+        },
+        "error": {
+          "$ref": "#/$defs/finalized_dispatch_error_detail"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "outcome",
+        "operation",
+        "finalized_extrinsic",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "finalized_invariant_failed_response": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "outcome": {
+          "const": "finalized_invariant_failed"
+        },
+        "operation": {
+          "$ref": "#/$defs/mutation_operation"
+        },
+        "finalized_extrinsic": {
+          "$ref": "#/$defs/finalized_extrinsic_coordinate"
+        },
+        "error": {
+          "$ref": "#/$defs/finalized_invariant_error_detail"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "outcome",
+        "operation",
+        "finalized_extrinsic",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "delivery_indeterminate_response": {
+      "type": "object",
+      "properties": {
+        "protocol_version": {
+          "const": 2
+        },
+        "outcome": {
+          "const": "delivery_indeterminate"
+        },
+        "operation": {
+          "$ref": "#/$defs/mutation_operation"
+        },
+        "expected_extrinsic_hash": {
+          "$ref": "#/$defs/hash32"
+        },
+        "era": {
+          "$ref": "#/$defs/mortal_era"
+        },
+        "error": {
+          "$ref": "#/$defs/delivery_indeterminate_error_detail"
+        }
+      },
+      "required": [
+        "protocol_version",
+        "outcome",
+        "operation",
+        "expected_extrinsic_hash",
+        "era",
+        "error"
+      ],
+      "additionalProperties": false
+    },
+    "finalized_accepted_response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "protocol_version": {
+              "const": 2
+            },
+            "outcome": {
+              "const": "finalized_accepted"
+            },
+            "operation": {
+              "const": "create_intent_unit"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/ledger_coordinate"
+            },
+            "effect": {
+              "$ref": "#/$defs/unit_created_effect"
+            },
+            "projection": {
+              "$ref": "#/$defs/accepted_projection"
+            }
+          },
+          "required": [
+            "protocol_version",
+            "outcome",
+            "operation",
+            "coordinate",
+            "effect",
+            "projection"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "protocol_version": {
+              "const": 2
+            },
+            "outcome": {
+              "const": "finalized_accepted"
+            },
+            "operation": {
+              "const": "transition_intent_unit"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/ledger_coordinate"
+            },
+            "effect": {
+              "$ref": "#/$defs/unit_transitioned_effect"
+            },
+            "projection": {
+              "$ref": "#/$defs/accepted_projection"
+            }
+          },
+          "required": [
+            "protocol_version",
+            "outcome",
+            "operation",
+            "coordinate",
+            "effect",
+            "projection"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "protocol_version": {
+              "const": 2
+            },
+            "outcome": {
+              "const": "finalized_accepted"
+            },
+            "operation": {
+              "const": "complete_intent_unit"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/ledger_coordinate"
+            },
+            "effect": {
+              "$ref": "#/$defs/unit_completed_effect"
+            },
+            "projection": {
+              "$ref": "#/$defs/accepted_projection"
+            }
+          },
+          "required": [
+            "protocol_version",
+            "outcome",
+            "operation",
+            "coordinate",
+            "effect",
+            "projection"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "protocol_version": {
+              "const": 2
+            },
+            "outcome": {
+              "const": "finalized_accepted"
+            },
+            "operation": {
+              "const": "create_relationship_definition"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/ledger_coordinate"
+            },
+            "effect": {
+              "$ref": "#/$defs/relationship_definition_created_effect"
+            },
+            "projection": {
+              "$ref": "#/$defs/accepted_projection"
+            }
+          },
+          "required": [
+            "protocol_version",
+            "outcome",
+            "operation",
+            "coordinate",
+            "effect",
+            "projection"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "protocol_version": {
+              "const": 2
+            },
+            "outcome": {
+              "const": "finalized_accepted"
+            },
+            "operation": {
+              "const": "create_relationship"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/ledger_coordinate"
+            },
+            "effect": {
+              "$ref": "#/$defs/relationship_created_effect"
+            },
+            "projection": {
+              "$ref": "#/$defs/accepted_projection"
+            }
+          },
+          "required": [
+            "protocol_version",
+            "outcome",
+            "operation",
+            "coordinate",
+            "effect",
+            "projection"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "protocol_version": {
+              "const": 2
+            },
+            "outcome": {
+              "const": "finalized_accepted"
+            },
+            "operation": {
+              "const": "delete_relationship"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/ledger_coordinate"
+            },
+            "effect": {
+              "$ref": "#/$defs/relationship_deleted_effect"
+            },
+            "projection": {
+              "$ref": "#/$defs/accepted_projection"
+            }
+          },
+          "required": [
+            "protocol_version",
+            "outcome",
+            "operation",
+            "coordinate",
+            "effect",
+            "projection"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "protocol_version": {
+              "const": 2
+            },
+            "outcome": {
+              "const": "finalized_accepted"
+            },
+            "operation": {
+              "const": "record_association"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/ledger_coordinate"
+            },
+            "effect": {
+              "$ref": "#/$defs/association_recorded_effect"
+            },
+            "projection": {
+              "$ref": "#/$defs/accepted_projection"
+            }
+          },
+          "required": [
+            "protocol_version",
+            "outcome",
+            "operation",
+            "coordinate",
+            "effect",
+            "projection"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "protocol_version": {
+              "const": 2
+            },
+            "outcome": {
+              "const": "finalized_accepted"
+            },
+            "operation": {
+              "const": "revoke_association"
+            },
+            "coordinate": {
+              "$ref": "#/$defs/ledger_coordinate"
+            },
+            "effect": {
+              "$ref": "#/$defs/association_revoked_effect"
+            },
+            "projection": {
+              "$ref": "#/$defs/accepted_projection"
+            }
+          },
+          "required": [
+            "protocol_version",
+            "outcome",
+            "operation",
+            "coordinate",
+            "effect",
+            "projection"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

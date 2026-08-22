@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"invalid_workflow","message":"workflow topology is invalid","field":"/operation/workflow/initial_phase"}}

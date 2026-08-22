@@ -750,9 +750,11 @@ name = "cubikan-local"
 version = "0.1.0"
 dependencies = [
  "cubikan-backend",
+ "cubikan-chain-client",
  "cubikan-core",
  "serde",
  "serde_json",
+ "tokio",
 ]
 
 [[package]]

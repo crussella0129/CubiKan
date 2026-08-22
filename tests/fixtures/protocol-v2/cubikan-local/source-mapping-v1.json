@@ -1,0 +1,1080 @@
+{
+  "fixture_schema_version": 1,
+  "hash_algorithm": "sha256",
+  "public_error_variant_mappings": [
+    {
+      "source": "ArchiveError::Identity(IdentityError::ArtifactMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::Identity(IdentityError::ArtifactMismatch))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::Identity(IdentityError::ArtifactMismatch))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::Identity(IdentityError::InvalidManifestJson)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::Identity(IdentityError::InvalidManifestJson))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::Identity(IdentityError::InvalidManifestJson))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::Identity(IdentityError::ManifestMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::Identity(IdentityError::ManifestMismatch))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::Identity(IdentityError::ManifestMismatch))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidence(NodeEvidenceError::UnsupportedPlatform)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::UnsupportedPlatform))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::UnsupportedPlatform))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidence(NodeEvidenceError::ZeroPid)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::ZeroPid))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::ZeroPid))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidence(NodeEvidenceError::Io)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::Io))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::Io))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidence(NodeEvidenceError::OverBound)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::OverBound))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::OverBound))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidence(NodeEvidenceError::MalformedCmdline)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::MalformedCmdline))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::MalformedCmdline))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidence(NodeEvidenceError::Executable)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::Executable))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::Executable))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidence(NodeEvidenceError::ArchiveFlags)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::ArchiveFlags))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::ArchiveFlags))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidence(NodeEvidenceError::RpcPort)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::RpcPort))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidence(NodeEvidenceError::RpcPort))",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NodeEvidenceEndpointMismatch",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NodeEvidenceEndpointMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NodeEvidenceEndpointMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::Rpc",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::Rpc)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::Rpc)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::Timeout",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::Timeout)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::Timeout)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::ArchiveHistoryUnavailable",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_history_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::ArchiveHistoryUnavailable)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_history_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::ArchiveHistoryUnavailable)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_history_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NotFinalized",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_history_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NotFinalized)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_history_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NotFinalized)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_history_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::DeploymentMismatch",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "deployment_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::DeploymentMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "deployment_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::DeploymentMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "deployment_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::RuntimeMismatch",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::RuntimeMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::RuntimeMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::UnsupportedEventSchemaVersion",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_event_schema_version",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::UnsupportedEventSchemaVersion)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_event_schema_version",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::UnsupportedEventSchemaVersion)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_event_schema_version",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::ForeignFinalizedHead",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::ForeignFinalizedHead)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::ForeignFinalizedHead)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::DisplacedFinalizedHead",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::DisplacedFinalizedHead)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::DisplacedFinalizedHead)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::NonContiguousFinalizedStream",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::NonContiguousFinalizedStream)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::NonContiguousFinalizedStream)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::MalformedResponse",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::MalformedResponse)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::MalformedResponse)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::MalformedCanonicalPayload",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::MalformedCanonicalPayload)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::MalformedCanonicalPayload)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::EventDecode",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::EventDecode)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::EventDecode)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ArchiveError::OverBound",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Archive(ArchiveError::OverBound)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Archive(ArchiveError::OverBound)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::DuplicateIntentUnit",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::DuplicateIntentUnit)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::DuplicateIntentUnit)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::IntentUnitNotFound",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::IntentUnitNotFound)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::IntentUnitNotFound)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::RevisionConflict",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::RevisionConflict)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::RevisionConflict)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::TransitionRejected",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::TransitionRejected)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::TransitionRejected)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::CompletionRejected",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::CompletionRejected)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::CompletionRejected)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::UnownedDatabase",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "insecure_projection_path",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::UnownedDatabase)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "insecure_projection_path",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::UnownedDatabase)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "insecure_projection_path",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::UnsupportedPlatform",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::UnsupportedPlatform)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::UnsupportedPlatform)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::InsecureProjectionPath",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "insecure_projection_path",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::InsecureProjectionPath)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "insecure_projection_path",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::InsecureProjectionPath)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "insecure_projection_path",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::UnsupportedSchemaVersion",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_schema_version",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::UnsupportedSchemaVersion)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_schema_version",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::UnsupportedSchemaVersion)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_schema_version",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::CorruptSchema",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "corrupt_schema",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::CorruptSchema)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "corrupt_schema",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::CorruptSchema)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "corrupt_schema",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::UnsupportedEnvelopeVersion",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_envelope_version",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::UnsupportedEnvelopeVersion)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_envelope_version",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::UnsupportedEnvelopeVersion)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_envelope_version",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::CorruptEnvelope",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "corrupt_envelope",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::CorruptEnvelope)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "corrupt_envelope",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::CorruptEnvelope)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "corrupt_envelope",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::ProjectionMismatch",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::ProjectionMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::ProjectionMismatch)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::StorageBusy",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_busy",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::StorageBusy)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_busy",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::StorageBusy)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_busy",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::StorageFull",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::StorageFull)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::StorageFull)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::ConcurrentStorageChange",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "refresh_required",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::ConcurrentStorageChange)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "refresh_required",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::ConcurrentStorageChange)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "refresh_required",
+      "exit_code": 4
+    },
+    {
+      "source": "BackendError::Storage",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::Backend(BackendError::Storage)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::Backend(BackendError::Storage)",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::ConflictingFinalizedBlock",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "conflicting_finalized_block",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::RefreshRequired",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "refresh_required",
+      "exit_code": 4
+    },
+    {
+      "source": "ProjectionError::InvalidFinalizedStream",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::InvalidFinalizedStream",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::ProjectionUnavailable",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_error",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::RefreshRequired",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "refresh_required",
+      "exit_code": 4
+    },
+    {
+      "source": "AttestationError::ProjectionMismatch",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "projection_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "ReadMiss::IntentUnit",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "intent_unit_not_found",
+      "exit_code": 3
+    },
+    {
+      "source": "ReadMiss::RelationshipDefinition",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "relationship_definition_not_found",
+      "exit_code": 3
+    },
+    {
+      "source": "SubmissionErrorKind::UnsupportedPlatform",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "SubmissionErrorKind::InsecureProjectionPath",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "insecure_projection_path",
+      "exit_code": 4
+    },
+    {
+      "source": "SubmissionErrorKind::SubmissionLaneCorrupt",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "submission_lane_corrupt",
+      "exit_code": 1
+    },
+    {
+      "source": "SubmissionErrorKind::ArchiveRpcUnavailable",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "SubmissionErrorKind::ArchiveHistoryUnavailable",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_history_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "SubmissionErrorKind::DeploymentMismatch",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "deployment_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "SubmissionErrorKind::RuntimeMismatch",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "SubmissionErrorKind::DevSignerUnavailable",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "dev_signer_unavailable",
+      "exit_code": 1
+    },
+    {
+      "source": "SubmissionErrorKind::ArithmeticOverflow",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "runtime_mismatch",
+      "exit_code": 4
+    },
+    {
+      "source": "SubmissionErrorKind::AcknowledgementUnavailable",
+      "disposition": "operational_failure_after_stdout_flush",
+      "outcome": null,
+      "code": null,
+      "exit_code": 1,
+      "stderr": "cubikan-local: failed to acknowledge durable submission response\n"
+    }
+  ],
+  "private_proc_discovery_mappings": [
+    {
+      "source": "ProcDiscovery::NonLinux",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "ProcDiscovery::UnreadableRoot",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "unsupported_platform",
+      "exit_code": 4
+    },
+    {
+      "source": "ProcDiscovery::ZeroSuccessfulArchiveProcesses",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProcDiscovery::MultipleSuccessfulArchiveProcesses",
+      "disposition": "modeled_error",
+      "outcome": "error",
+      "code": "archive_rpc_unavailable",
+      "exit_code": 4
+    },
+    {
+      "source": "ProcDiscovery::ExactlyOneSuccessfulArchiveProcess",
+      "disposition": "continue",
+      "outcome": null,
+      "code": null,
+      "exit_code": null
+    }
+  ]
+}

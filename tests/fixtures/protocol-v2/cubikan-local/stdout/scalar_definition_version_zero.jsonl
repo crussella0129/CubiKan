@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"error","error":{"code":"invalid_definition_version","message":"definition version must be canonical nonzero unsigned decimal text within u64","field":"/operation/definition/version"}}

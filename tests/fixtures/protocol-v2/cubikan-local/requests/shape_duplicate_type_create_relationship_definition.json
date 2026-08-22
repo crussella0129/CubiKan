@@ -1,0 +1,1 @@
+{"protocol_version":2,"operation":{"type":"create_relationship_definition","type":"create_relationship_definition","definition":{"id":"depends_on","version":"7"},"source_species":"task","target_species":"task","self_policy":"reject","cycle_policy":"reject"}}

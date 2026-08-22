@@ -1,0 +1,1 @@
+{"protocol_version":2,"outcome":"submission_rejected","operation":"complete_intent_unit","error":{"code":"insufficient_balance","message":"canonical signer balance cannot pay the transaction"}}

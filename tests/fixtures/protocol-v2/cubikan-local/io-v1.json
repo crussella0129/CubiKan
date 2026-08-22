@@ -1,0 +1,214 @@
+{
+  "fixture_schema_version": 1,
+  "hash_algorithm": "sha256",
+  "cases": [
+    {
+      "id": "request_read_failure",
+      "operation_kind": "read",
+      "fault": "request_read",
+      "modeled_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_get_intent_unit.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "emitted_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/process/empty.bin",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stderr-read_request.txt",
+        "bytes": 60,
+        "sha256": "e0f0d8a045bc9e1c93020d3e7f06b76c76676e84ed8d3c9a50daebb41149a51e"
+      },
+      "exit_code": 1,
+      "response_body_attempts": 0,
+      "newline_attempts": 0,
+      "flush_attempts": 0,
+      "acknowledge_attempts": 0,
+      "durable_journal_state": "not_applicable"
+    },
+    {
+      "id": "read_response_body_failure",
+      "operation_kind": "read",
+      "fault": "body_after_17_bytes",
+      "modeled_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_get_intent_unit.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "emitted_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stdout-read_body_prefix17.bin",
+        "bytes": 17,
+        "sha256": "a61bb4e91d2495fd3c07637048a755dba8abdecb2e2b07cc45e1ffa2e7fc5c4b"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stderr-body.txt",
+        "bytes": 67,
+        "sha256": "f895101053482ece5142ef527df93eee945959f7457800efac7aa6a778352106"
+      },
+      "exit_code": 1,
+      "response_body_attempts": 1,
+      "newline_attempts": 0,
+      "flush_attempts": 0,
+      "acknowledge_attempts": 0,
+      "durable_journal_state": "not_applicable"
+    },
+    {
+      "id": "read_response_newline_failure",
+      "operation_kind": "read",
+      "fault": "newline_before_write",
+      "modeled_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_get_intent_unit.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "emitted_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stdout-read_body.bin",
+        "bytes": 1276,
+        "sha256": "930ca9d9010a2ad7a0ae039b48ed0d576cb933fd6621da5befb56446f31f2c4b"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stderr-newline.txt",
+        "bytes": 73,
+        "sha256": "86b0bbb7ec850a9ccb3923999586b047efd99c5904390d691dff2a149f068d04"
+      },
+      "exit_code": 1,
+      "response_body_attempts": 1,
+      "newline_attempts": 1,
+      "flush_attempts": 0,
+      "acknowledge_attempts": 0,
+      "durable_journal_state": "not_applicable"
+    },
+    {
+      "id": "read_response_flush_failure",
+      "operation_kind": "read",
+      "fault": "flush",
+      "modeled_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_get_intent_unit.jsonl",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "emitted_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stdout-read_line.bin",
+        "bytes": 1277,
+        "sha256": "3a1f09f13d5e7881caf73877f0e64fc0521952f0a77a8b9b54816516cfb89c04"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stderr-flush.txt",
+        "bytes": 63,
+        "sha256": "242909a650c6cb03d2986d8156231b6869056703316071281237fc1226626600"
+      },
+      "exit_code": 1,
+      "response_body_attempts": 1,
+      "newline_attempts": 1,
+      "flush_attempts": 1,
+      "acknowledge_attempts": 0,
+      "durable_journal_state": "not_applicable"
+    },
+    {
+      "id": "mutation_response_body_failure",
+      "operation_kind": "mutation",
+      "fault": "body_after_17_bytes",
+      "modeled_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_complete_intent_unit.jsonl",
+        "bytes": 696,
+        "sha256": "997f741acbfe3d576e56fd2728d5c086fe34117f80a31e9b00a0d68b27b1bf8c"
+      },
+      "emitted_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stdout-mutation_body_prefix17.bin",
+        "bytes": 17,
+        "sha256": "a61bb4e91d2495fd3c07637048a755dba8abdecb2e2b07cc45e1ffa2e7fc5c4b"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stderr-body.txt",
+        "bytes": 67,
+        "sha256": "f895101053482ece5142ef527df93eee945959f7457800efac7aa6a778352106"
+      },
+      "exit_code": 1,
+      "response_body_attempts": 1,
+      "newline_attempts": 0,
+      "flush_attempts": 0,
+      "acknowledge_attempts": 0,
+      "durable_journal_state": "resolved_retained"
+    },
+    {
+      "id": "mutation_response_newline_failure",
+      "operation_kind": "mutation",
+      "fault": "newline_before_write",
+      "modeled_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_complete_intent_unit.jsonl",
+        "bytes": 696,
+        "sha256": "997f741acbfe3d576e56fd2728d5c086fe34117f80a31e9b00a0d68b27b1bf8c"
+      },
+      "emitted_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stdout-mutation_body.bin",
+        "bytes": 695,
+        "sha256": "2cea3d592308658da30fc1fd9f1450aab6d31acb41613f0b41b2b65bd531675b"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stderr-newline.txt",
+        "bytes": 73,
+        "sha256": "86b0bbb7ec850a9ccb3923999586b047efd99c5904390d691dff2a149f068d04"
+      },
+      "exit_code": 1,
+      "response_body_attempts": 1,
+      "newline_attempts": 1,
+      "flush_attempts": 0,
+      "acknowledge_attempts": 0,
+      "durable_journal_state": "resolved_retained"
+    },
+    {
+      "id": "mutation_response_flush_failure",
+      "operation_kind": "mutation",
+      "fault": "flush",
+      "modeled_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_complete_intent_unit.jsonl",
+        "bytes": 696,
+        "sha256": "997f741acbfe3d576e56fd2728d5c086fe34117f80a31e9b00a0d68b27b1bf8c"
+      },
+      "emitted_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stdout-mutation_line.bin",
+        "bytes": 696,
+        "sha256": "997f741acbfe3d576e56fd2728d5c086fe34117f80a31e9b00a0d68b27b1bf8c"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stderr-flush.txt",
+        "bytes": 63,
+        "sha256": "242909a650c6cb03d2986d8156231b6869056703316071281237fc1226626600"
+      },
+      "exit_code": 1,
+      "response_body_attempts": 1,
+      "newline_attempts": 1,
+      "flush_attempts": 1,
+      "acknowledge_attempts": 0,
+      "durable_journal_state": "resolved_retained"
+    },
+    {
+      "id": "mutation_acknowledgement_failure",
+      "operation_kind": "mutation",
+      "fault": "acknowledge_after_flush",
+      "modeled_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/stdout/success_complete_intent_unit.jsonl",
+        "bytes": 696,
+        "sha256": "997f741acbfe3d576e56fd2728d5c086fe34117f80a31e9b00a0d68b27b1bf8c"
+      },
+      "emitted_stdout": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stdout-mutation_line.bin",
+        "bytes": 696,
+        "sha256": "997f741acbfe3d576e56fd2728d5c086fe34117f80a31e9b00a0d68b27b1bf8c"
+      },
+      "stderr": {
+        "path": "tests/fixtures/protocol-v2/cubikan-local/io/stderr-acknowledge.txt",
+        "bytes": 65,
+        "sha256": "f54a145a74fe5da95f1c200f28e7d111e025577029e9c09a4a666a78952d3c3a"
+      },
+      "exit_code": 1,
+      "response_body_attempts": 1,
+      "newline_attempts": 1,
+      "flush_attempts": 1,
+      "acknowledge_attempts": 1,
+      "durable_journal_state": "resolved_retained"
+    }
+  ]
+}
