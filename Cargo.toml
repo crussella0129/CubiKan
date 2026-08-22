@@ -27,7 +27,7 @@ subxt = { version = "=0.50.2", default-features = false, features = ["jsonrpsee"
 subxt-signer = { version = "=0.50.2", default-features = false, features = ["sr25519", "subxt"] }
 tokio = { version = "=1.47.1", default-features = false, features = ["rt", "macros", "time", "sync"] }
 url = { version = "=2.5.8", default-features = false, features = ["std"] }
-uuid = { version = "=1.24.0", features = ["serde", "v4"] }
+uuid = { version = "=1.24.1", features = ["serde", "v4"] }
 
 [patch.crates-io]
 rusqlite = { path = "vendor/rusqlite-0.40.2-cubikan" }
