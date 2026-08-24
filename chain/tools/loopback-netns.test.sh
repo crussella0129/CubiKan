@@ -24,9 +24,15 @@ readonly SHARED_TMP_ROOT="$TOOL_DIR/../.cache"
 tmpdir="$(/usr/bin/mktemp -d "$SHARED_TMP_ROOT/loopback-netns.test.XXXXXX")"
 host_socket_pids=()
 host_socket_paths=()
+namespace_supervisor_pids=()
 
 cleanup() {
     local pid socket_path
+    for pid in "${namespace_supervisor_pids[@]}"; do
+        [[ "$pid" =~ ^[1-9][0-9]*$ ]] || continue
+        kill -KILL "$pid" 2>/dev/null || true
+        wait "$pid" 2>/dev/null || true
+    done
     for pid in "${host_socket_pids[@]}"; do
         kill "$pid" 2>/dev/null || true
         wait "$pid" 2>/dev/null || true
@@ -171,7 +177,7 @@ swap_status=0
 # The internal token is intentionally forgeable as data.  It cannot authorize
 # execution: outside the new namespace, the independent identity proof fails.
 forged_child_sentinel="$tmpdir/forged-child-ran"
-if "$WRAPPER" "$INTERNAL_NETNS_TOKEN" 0:0 0:0 0:0 - - -- /usr/bin/bash --noprofile --norc -c \
+if "$WRAPPER" "$INTERNAL_NETNS_TOKEN" 0:0 0:0 0:0 0:0 - - -- /usr/bin/bash --noprofile --norc -c \
     'printf ran >"$1"' _ "$forged_child_sentinel" >/dev/null 2>&1; then
     fail "a forged internal token bypassed the namespace proof"
 fi
@@ -181,12 +187,25 @@ fi
 # integration assertions cannot run.  The forged-token assertion above still
 # proves that proof failure cannot dispatch the requested child.
 capability_sentinel="$tmpdir/capability-child-ran"
-if ! /usr/bin/unshare --user --map-root-user --net --mount --ipc --propagation private \
+if ! /usr/bin/unshare --user --map-root-user --net --mount --ipc \
+    --pid --fork --kill-child=KILL --mount-proc --propagation private \
     /usr/bin/bash --noprofile --norc -c '
+        [[ $$ -eq 1 && $BASHPID -eq 1 ]]
+        [[ "$(/usr/bin/stat -fLc %T -- /proc)" == proc ]]
+        [[ "$(/usr/bin/gawk '\''
+            $1 == "Pid:" { pid = $2; pid_count++ }
+            $1 == "PPid:" { ppid = $2; ppid_count++ }
+            $1 == "NSpid:" { if (NF != 2) exit 1; nspid = $2; nspid_count++ }
+            END {
+                if (pid_count != 1 || ppid_count != 1 || nspid_count != 1) exit 1
+                printf "%s:%s:%s\n", pid, ppid, nspid
+            }
+        '\'' /proc/1/status)" == 1:0:1 ]]
         /usr/bin/mount -t tmpfs -o nodev,nosuid,noexec,mode=1777,size=64M cubikan-private-tmp /tmp
         /usr/bin/mount -t tmpfs -o nodev,nosuid,noexec,mode=0755,size=16M cubikan-private-run /run
         /usr/bin/mkdir -m 0700 /run/cubikan-exec
         /usr/bin/mount -t tmpfs -o nodev,nosuid,mode=0700,size=2G cubikan-private-exec /run/cubikan-exec
+        /usr/bin/mount -t devpts -o newinstance,nodev,nosuid,noexec,mode=0620,ptmxmode=0666 devpts /dev/pts
         /usr/bin/ip link set dev lo up
     ' >/dev/null 2>"$tmpdir/capability-preflight.err"; then
     if "$WRAPPER" -- /usr/bin/bash --noprofile --norc -c \
@@ -194,7 +213,7 @@ if ! /usr/bin/unshare --user --map-root-user --net --mount --ipc --propagation p
         fail "wrapper dispatched a child although namespace creation was unavailable"
     fi
     [[ ! -e "$capability_sentinel" ]] || fail "child ran after namespace creation or proof failed"
-    printf '%s\n' 'loopback-netns integration tests skipped: user/network namespaces unavailable' >&2
+    printf '%s\n' 'loopback-netns integration tests skipped: user/network/PID namespaces unavailable' >&2
     printf '%s\n' 'loopback-netns fail-closed tests passed'
     exit 0
 fi
@@ -204,6 +223,106 @@ if ! "$WRAPPER" -- /usr/bin/bash --noprofile --norc -c \
     fail "wrapper failed despite an available user/network namespace capability"
 fi
 [[ -e "$capability_sentinel" ]] || fail "capability probe reported success without running its child"
+
+# The exact wrapper continuation must own PID 1 in a fresh procfs. A later
+# assertion runs as an ordinary child yet must prove membership in that same
+# private PID namespace and its exact namespace-init identity.
+if ! "$WRAPPER" -- /usr/bin/bash --noprofile --norc -c '
+    [[ $$ -eq 1 && $BASHPID -eq 1 ]]
+    [[ "$(/usr/bin/stat -fLc %T -- /proc)" == proc ]]
+    [[ "$(/usr/bin/gawk '\''
+        $1 == "Pid:" { pid = $2; pid_count++ }
+        $1 == "PPid:" { ppid = $2; ppid_count++ }
+        $1 == "NSpid:" { if (NF != 2) exit 1; nspid = $2; nspid_count++ }
+        END {
+            if (pid_count != 1 || ppid_count != 1 || nspid_count != 1) exit 1
+            printf "%s:%s:%s\n", pid, ppid, nspid
+        }
+    '\'' /proc/1/status)" == 1:0:1 ]]
+    "$1" --assert-current-isolated
+' _ "$WRAPPER" >"$tmpdir/pid-identity.out" 2>"$tmpdir/pid-identity.err"; then
+    /usr/bin/sed -n '1,120p' "$tmpdir/pid-identity.err" >&2
+    fail "wrapper did not establish and reassert its private PID namespace"
+fi
+/usr/bin/grep -Fq 'pid-namespace=isolated procfs=fresh namespace-init=owned' \
+    "$tmpdir/pid-identity.err" || fail "PID namespace reassertion omitted its exact marker"
+/usr/bin/grep -Fq 'namespace-launcher-pid=1' "$tmpdir/pid-identity.err" ||
+    fail "namespace launch omitted its exact PID 1 marker"
+
+# Exiting namespace PID 1 must kernel-kill a session-escaped descendant that
+# ignores catchable signals and retains both the wrapper pipes and a file lock.
+normal_lock="$tmpdir/pid-normal-exit.lock"
+normal_ready="$tmpdir/pid-normal-exit.ready"
+if ! /usr/bin/timeout --signal=KILL 15s "$WRAPPER" -- \
+    /usr/bin/bash --noprofile --norc -c '
+        /usr/bin/setsid /usr/bin/flock -x "$1" \
+            /usr/bin/bash --noprofile --norc -c '\''
+                printf ready >"$1"
+                trap "" HUP INT TERM
+                while :; do /usr/bin/sleep 60; done
+            '\'' _ "$2" &
+        for attempt in {1..500}; do
+            [[ -e "$2" ]] && exit 0
+            /usr/bin/sleep 0.01
+        done
+        exit 91
+    ' _ "$normal_lock" "$normal_ready" \
+    >"$tmpdir/pid-normal-exit.out" 2>"$tmpdir/pid-normal-exit.err"; then
+    /usr/bin/sed -n '1,120p' "$tmpdir/pid-normal-exit.err" >&2
+    fail "PID namespace did not bound an escaped descendant on normal PID 1 exit"
+fi
+[[ -e "$normal_ready" ]] || fail "normal-exit descendant never acquired its lock"
+/usr/bin/flock -n "$normal_lock" /usr/bin/true ||
+    fail "normal PID 1 exit left an ignored-signal descendant alive"
+
+# Killing the host-side unshare supervisor must exercise --kill-child=KILL;
+# killing namespace PID 1 then kernel-kills the same escaped descendant.
+killed_lock="$tmpdir/pid-supervisor-kill.lock"
+killed_ready="$tmpdir/pid-supervisor-kill.ready"
+"$WRAPPER" -- /usr/bin/bash --noprofile --norc -c '
+    /usr/bin/setsid /usr/bin/flock -x "$1" \
+        /usr/bin/bash --noprofile --norc -c '\''
+            printf ready >"$1"
+            trap "" HUP INT TERM
+            while :; do /usr/bin/sleep 60; done
+        '\'' _ "$2" &
+    for attempt in {1..500}; do
+        [[ -e "$2" ]] && break
+        /usr/bin/sleep 0.01
+    done
+    [[ -e "$2" ]]
+    trap "" HUP INT TERM
+    while :; do /usr/bin/sleep 60; done
+' _ "$killed_lock" "$killed_ready" \
+    >"$tmpdir/pid-supervisor-kill.out" 2>"$tmpdir/pid-supervisor-kill.err" &
+supervisor_pid=$!
+namespace_supervisor_pids+=("$supervisor_pid")
+for attempt in {1..500}; do
+    [[ -e "$killed_ready" ]] && break
+    /usr/bin/sleep 0.01
+done
+[[ -e "$killed_ready" ]] || fail "supervisor-kill descendant never acquired its lock"
+for attempt in {1..500}; do
+    supervisor_executable="$(/usr/bin/readlink -- "/proc/$supervisor_pid/exe" 2>/dev/null || true)"
+    [[ "$supervisor_executable" == /usr/bin/unshare ]] && break
+    /usr/bin/sleep 0.01
+done
+[[ "$supervisor_executable" == /usr/bin/unshare ]] ||
+    fail "background wrapper never became the exact unshare supervisor"
+/usr/bin/kill -KILL -- "$supervisor_pid"
+if wait "$supervisor_pid" 2>/dev/null; then
+    fail "SIGKILLed unshare supervisor reported success"
+fi
+namespace_supervisor_pids[-1]=''
+for attempt in {1..500}; do
+    if /usr/bin/flock -n "$killed_lock" /usr/bin/true; then
+        killed_lock_released=1
+        break
+    fi
+    /usr/bin/sleep 0.01
+done
+[[ "${killed_lock_released:-0}" == 1 ]] ||
+    fail "unshare supervisor death left namespace PID 1 or its descendant alive"
 
 # Exercise the finalized literal child shape through both namespace hops. The
 # wrapper must bind the canonical verifier file, carry that FD through
@@ -271,7 +390,7 @@ argv_output="$tmpdir/argv.out"
 /usr/bin/grep -q 'external-connect-probe=denied' "$tmpdir/argv.err" || fail "external-connect denial was not proved"
 /usr/bin/grep -q 'loopback-connect-probe=succeeded' "$tmpdir/argv.err" || fail "loopback connectivity was not proved"
 /usr/bin/grep -q 'non-loopback-interfaces=0 non-loopback-routes=0' "$tmpdir/argv.err" || fail "network inventory was not proved"
-/usr/bin/grep -q 'private-runtime-mounts=/tmp,/run,/run/cubikan-exec mount-namespace=isolated ipc-namespace=isolated' "$tmpdir/argv.err" || fail "private runtime mounts were not proved"
+/usr/bin/grep -q 'private-runtime-mounts=/tmp,/run,/run/cubikan-exec,/dev/pts mount-namespace=isolated ipc-namespace=isolated' "$tmpdir/argv.err" || fail "private runtime mounts were not proved"
 
 # Conventional host pathname sockets are hidden by the private /tmp and /run
 # mounts.  The shared workspace remains visible, so place its sentinels there.
@@ -292,6 +411,7 @@ done
     [[ "$(/usr/bin/stat -fLc %T -- /tmp)" == tmpfs ]]
     [[ "$(/usr/bin/stat -fLc %T -- /run)" == tmpfs ]]
     [[ "$(/usr/bin/stat -fLc %T -- /run/cubikan-exec)" == tmpfs ]]
+    [[ "$(/usr/bin/stat -fLc %T -- /dev/pts)" == devpts ]]
     [[ "$(/usr/bin/stat -Lc %a -- /run/cubikan-exec)" == 700 ]]
     /usr/bin/gawk '\''
         $5 == "/run/cubikan-exec" {

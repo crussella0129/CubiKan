@@ -15,25 +15,49 @@ node_key=1111111111111111111111111111111111111111111111111111111111111111
 relay=(
     --name relay-a --node-key "$node_key" --chain /tmp/relay.json
     --base-path /tmp/relay-a --listen-addr /ip4/0.0.0.0/tcp/1/ws
-    --port 1 --rpc-port 2 --prometheus-port 3 --validator
+    --port 1 --rpc-port 2 --prometheus-port 3
+    --rpc-cors all --rpc-methods unsafe --validator
+    --workers-path /run/cubikan-exec/pvf-workers
+    --execute-workers-max-num 1 --prepare-workers-soft-max-num 1
+    --prepare-workers-hard-max-num 1
     --unsafe-rpc-external --prometheus-external
 )
 
+relay+=(--bootnodes /ip4/127.0.0.1/tcp/30334/ws/p2p/12D3KooWLockedPeer)
+
 mapfile -d '' -t normalized < <("$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay[@]}")
 joined=" ${normalized[*]} "
-[[ "$joined" == *' --rpc-port 9944 '* ]]
-[[ "$joined" == *' --port 30333 '* ]]
+[[ "$joined" == *' --experimental-rpc-endpoint listen-addr=127.0.0.1:9944,methods=unsafe,cors=all '* ]]
+[[ "$joined" != *' --port '* ]]
 [[ "$joined" == *' --prometheus-port 9615 '* ]]
 [[ "$joined" == *' /ip4/127.0.0.1/tcp/30333/ws '* ]]
+[[ "$joined" == *' --bootnodes /ip4/127.0.0.1/tcp/30334/ws/p2p/12D3KooWLockedPeer '* ]]
+[[ "$joined" == *' --workers-path /run/cubikan-exec/pvf-workers '* ]]
+[[ "$joined" == *' --execute-workers-max-num 1 --prepare-workers-soft-max-num 1 --prepare-workers-hard-max-num 1 '* ]]
 [[ "$joined" != *'external'* ]]
 [[ "$joined" != *' --ws-port '* ]]
-[[ "$(grep -o -- '--rpc-port' <<<"$joined" | wc -l)" -eq 1 ]]
+[[ "$joined" != *' --rpc-port '* ]]
+[[ "$joined" != *' --rpc-cors '* ]]
+[[ "$joined" != *' --rpc-methods '* ]]
+[[ "$(grep -o -- '--experimental-rpc-endpoint' <<<"$joined" | wc -l)" -eq 1 ]]
+[[ "$(grep -o -- '--no-hardware-benchmarks' <<<"$joined" | wc -l)" -eq 1 ]]
+
+if "$NORMALIZER" --role relay-a --print0 --verify-workers -- \
+    "$POLKADOT" "${relay[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a missing private PVF worker mount' >&2
+    exit 1
+fi
+if "$NORMALIZER" --role relay-a --verify-workers -- \
+    "$POLKADOT" "${relay[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted worker verification outside print-only mode' >&2
+    exit 1
+fi
 
 relay_ws=("${relay[@]}")
 relay_ws[12]=--ws-port
 mapfile -d '' -t normalized < <("$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay_ws[@]}")
 joined=" ${normalized[*]} "
-[[ "$joined" == *' --rpc-port 9944 '* ]]
+[[ "$joined" == *' --experimental-rpc-endpoint listen-addr=127.0.0.1:9944,methods=unsafe,cors=all '* ]]
 [[ "$joined" != *' --ws-port '* ]]
 
 collator=(
@@ -42,19 +66,28 @@ collator=(
     --port 1 --rpc-port 2 --prometheus-port 3 --collator
     --blocks-pruning archive --state-pruning archive
     --unsafe-rpc-external --prometheus-external
+    --rpc-cors all --rpc-methods unsafe
     --
     --chain /tmp/relay.json --execution wasm --port 4 --rpc-port 5
     --prometheus-port 6 --rpc-external
+    --workers-path /run/cubikan-exec/pvf-workers
+    --execute-workers-max-num 1 --prepare-workers-soft-max-num 1
+    --prepare-workers-hard-max-num 1
 )
 mapfile -d '' -t normalized < <("$NORMALIZER" --role collator-a --print0 -- "$OMNI" "${collator[@]}")
 joined=" ${normalized[*]} "
-[[ "$joined" == *' --rpc-port 9988 '* ]]
-[[ "$joined" == *' --port 30335 '* ]]
+[[ "$joined" == *' --experimental-rpc-endpoint listen-addr=127.0.0.1:9988,methods=unsafe,cors=all '* ]]
 [[ "$joined" == *' --prometheus-port 9617 '* ]]
-[[ "$joined" == *' --rpc-port 9990 '* ]]
-[[ "$joined" == *' --port 30337 '* ]]
+[[ "$joined" == *' --experimental-rpc-endpoint listen-addr=127.0.0.1:9990,methods=unsafe,cors=all '* ]]
 [[ "$joined" == *' --prometheus-port 9619 '* ]]
+[[ "$joined" == *' --workers-path /run/cubikan-exec/pvf-workers '* ]]
+[[ "$joined" != *' --port '* ]]
 [[ "$joined" != *'external'* ]]
+[[ "$joined" != *' --rpc-port '* ]]
+[[ "$joined" != *' --rpc-cors '* ]]
+[[ "$joined" != *' --rpc-methods '* ]]
+[[ "$(grep -o -- '--experimental-rpc-endpoint' <<<"$joined" | wc -l)" -eq 2 ]]
+[[ "$(grep -o -- '--no-hardware-benchmarks' <<<"$joined" | wc -l)" -eq 2 ]]
 
 if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay[@]}" --mystery >/dev/null 2>&1; then
     printf '%s\n' 'normalizer accepted an unknown flag' >&2
@@ -68,8 +101,92 @@ if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay[@]}" --ws-port 
     printf '%s\n' 'normalizer accepted both RPC flag spellings' >&2
     exit 1
 fi
-if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay[@]}" --bootnodes /ip4/203.0.113.1/tcp/30333/p2p/12D3KooWBad >/dev/null 2>&1; then
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay[@]}" \
+    --experimental-rpc-endpoint listen-addr=127.0.0.1:9944,methods=unsafe,cors=all \
+    >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a caller-supplied structured RPC endpoint' >&2
+    exit 1
+fi
+relay_bad_cors=("${relay[@]}")
+for index in "${!relay_bad_cors[@]}"; do
+    if [[ "${relay_bad_cors[$index]}" == --rpc-cors ]]; then
+        relay_bad_cors[$((index + 1))]=https://example.invalid
+        break
+    fi
+done
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay_bad_cors[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a noncanonical generated RPC CORS policy' >&2
+    exit 1
+fi
+relay_without_cors=("${relay[@]}")
+for index in "${!relay_without_cors[@]}"; do
+    if [[ "${relay_without_cors[$index]}" == --rpc-cors ]]; then
+        unset "relay_without_cors[$index]" "relay_without_cors[$((index + 1))]"
+        break
+    fi
+done
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay_without_cors[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a primary without generated RPC CORS policy' >&2
+    exit 1
+fi
+relay_bad_methods=("${relay[@]}")
+for index in "${!relay_bad_methods[@]}"; do
+    if [[ "${relay_bad_methods[$index]}" == --rpc-methods ]]; then
+        relay_bad_methods[$((index + 1))]=safe
+        break
+    fi
+done
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay_bad_methods[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a noncanonical generated RPC method policy' >&2
+    exit 1
+fi
+relay_without_methods=("${relay[@]}")
+for index in "${!relay_without_methods[@]}"; do
+    if [[ "${relay_without_methods[$index]}" == --rpc-methods ]]; then
+        unset "relay_without_methods[$index]" "relay_without_methods[$((index + 1))]"
+        break
+    fi
+done
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay_without_methods[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a primary without generated RPC method policy' >&2
+    exit 1
+fi
+collator_with_relay_cors=("${collator[@]}" --rpc-cors all)
+if "$NORMALIZER" --role collator-a --print0 -- "$OMNI" "${collator_with_relay_cors[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a primary-only RPC policy on the embedded relay side' >&2
+    exit 1
+fi
+relay_without_workers=("${relay[@]}")
+for index in "${!relay_without_workers[@]}"; do
+    if [[ "${relay_without_workers[$index]}" == --workers-path ]]; then
+        unset "relay_without_workers[$index]" "relay_without_workers[$((index + 1))]"
+        break
+    fi
+done
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay_without_workers[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a relay without its pinned PVF workers path' >&2
+    exit 1
+fi
+relay_wrong_worker_path=("${relay[@]}")
+for index in "${!relay_wrong_worker_path[@]}"; do
+    if [[ "${relay_wrong_worker_path[$index]}" == --workers-path ]]; then
+        relay_wrong_worker_path[$((index + 1))]=/tmp/workers
+        break
+    fi
+done
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${relay_wrong_worker_path[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a noncanonical PVF workers path' >&2
+    exit 1
+fi
+nonloopback_relay=("${relay[@]}")
+nonloopback_relay[${#nonloopback_relay[@]}-1]=/ip4/203.0.113.1/tcp/30333/ws/p2p/12D3KooWBad
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${nonloopback_relay[@]}" >/dev/null 2>&1; then
     printf '%s\n' 'normalizer accepted a non-loopback bootnode' >&2
+    exit 1
+fi
+plain_bootnode_relay=("${relay[@]:0:${#relay[@]}-2}" --bootnodes /ip4/127.0.0.1/tcp/30334/p2p/12D3KooWLockedPeer)
+if "$NORMALIZER" --role relay-a --print0 -- "$POLKADOT" "${plain_bootnode_relay[@]}" >/dev/null 2>&1; then
+    printf '%s\n' 'normalizer accepted a bootnode transport that differs from its WebSocket listener' >&2
     exit 1
 fi
 
@@ -165,7 +282,7 @@ self_swap_padding=$((self_swap_size - $(/usr/bin/stat -Lc '%s' -- "$self_swap_mu
     "$(/usr/bin/stat -Lc '%s' -- "$self_swap")" == "$self_swap_size" ]]
 self_swap_output="$(CUBIKAN_NORMALIZER_SANITIZED=1 /usr/bin/bash --noprofile --norc -p -c "$self_swap_content" "$self_swap" \
     __cubikan_normalizer_bound_memory_v1__ "$self_swap" "$self_swap_digest" "$self_swap_content" --verify-grammar)"
-[[ "$self_swap_output" == 112655c95fcf0b1fe535d0e6b209883374bb650b40ecd9f3383d4378dd1b88b4 ]]
+[[ "$self_swap_output" == 64be27a9c5ff19b56adbd009e087c0fae059e667a2cf817cba5c6115fd019498 ]]
 [[ ! -e "$self_swap_sentinel" ]] || {
     printf '%s\n' 'alternate normalizer pathname bytes executed' >&2
     exit 1

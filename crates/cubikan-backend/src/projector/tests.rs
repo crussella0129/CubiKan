@@ -695,11 +695,11 @@ fn assert_fixture_seals_and_fault_inventory() {
     for (path, expected) in [
         (
             "manifest-v1.json",
-            "90d969339a2b08d4872b7a9e4fa65d010a3c61bae6129c12a31462890bb03b71",
+            "91368782f7f03e9950e1ab430410eb40706ad298a86a3b5a76a31e79e338684d",
         ),
         (
             "inventory-v1.json",
-            "feea5b6a39c0204dfb2d4be9c7cd12dc73060c6e1ca3db78809663d140885a63",
+            "34065e8f8f570adeca6c27327795d26bea73af90bb214d24a3f3bc5f8284facb",
         ),
         (
             "fault-cases-v1.json",

@@ -27,8 +27,8 @@ fn test_local_schema_and_fixture_hashes_are_independent() {
             "cases=96 io_cases=4\n",
             "verified cubikan-local protocol v2: ",
             "schema=869d30e3865cbaf80af60616fdf13d0e4b848997bb36f4bcc68f0e7cc2d7d4ff ",
-            "manifest=09cb8615098c7d38ca0b2420d554b21b758267e1f2d2c4089025610b25148e70 ",
-            "inventory=b22d2a457e2082c736128718431531dec2acf83162319c6c12d54d2870ee8e5e ",
+            "manifest=b19ff73569f612cb3b365d2af83284e99e1cb2b7cc529685aa58267ea23289cc ",
+            "inventory=1e74987aef0a03cdf3cf2039402ce6c361363f6cb5a710fc3a008b590d834b9a ",
             "cases=281 semantic=94 structural=187 process_cases=72 io_cases=8 ",
             "source_cells=153 files=703\n",
         )

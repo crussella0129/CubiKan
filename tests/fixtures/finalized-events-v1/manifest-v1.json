@@ -10,7 +10,7 @@
     "path": "inventory-v1.json",
     "entry_count": 29,
     "size": 8101,
-    "sha256": "feea5b6a39c0204dfb2d4be9c7cd12dc73060c6e1ca3db78809663d140885a63"
+    "sha256": "34065e8f8f570adeca6c27327795d26bea73af90bb214d24a3f3bc5f8284facb"
   },
   "documents": {
     "scale_reasoning": {
@@ -21,7 +21,7 @@
     "rpc_preflight": {
       "path": "rpc-preflight-v1.json",
       "size": 8985,
-      "sha256": "04a3d9e8dca2e10d435edf69be0b14626d184dd7c4acd11fb261dc388b12a8bb"
+      "sha256": "0a056c5b964dcea880135ccdb4697a91928e44eab02cbe414f1aac87f4b8dea6"
     },
     "valid_stream": {
       "path": "valid-stream-v1.json",
@@ -31,7 +31,7 @@
     "expected_projection": {
       "path": "expected-projection-v1.json",
       "size": 17579,
-      "sha256": "0ea41a2a4dd9477446d6491a00504b6ad7cfc6fa93e57b3b391af4519489aeef"
+      "sha256": "cb4c0dd400105312c8d9aba69c8c2999ec91fa58291c12b08345de267aa9d809"
     },
     "fault_cases": {
       "path": "fault-cases-v1.json",
@@ -43,7 +43,7 @@
     "deployment_anchor": {
       "path": "chain/artifacts/local-deployment-anchor-v1.json",
       "size": 5868,
-      "sha256": "38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7"
+      "sha256": "aa58c83fb0cfcb27be160aa8ca150f78ee3fff1cfc3868dbd073c92581c69887"
     },
     "metadata": {
       "path": "chain/metadata/cubikan-runtime-v1.scale",

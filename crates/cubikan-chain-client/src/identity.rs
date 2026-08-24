@@ -1,9 +1,14 @@
+use std::{error::Error, fmt, io, num::NonZeroU32};
+
+#[cfg(target_os = "linux")]
 use std::{
-    error::Error,
-    fmt,
     fs::{self, File},
-    io::{self, Read},
-    num::NonZeroU32,
+    io::{Read, Seek, SeekFrom},
+    os::{
+        fd::AsRawFd,
+        unix::{ffi::OsStrExt, fs::MetadataExt},
+    },
+    path::{Path, PathBuf},
 };
 
 use serde_json::Value;
@@ -18,13 +23,25 @@ const RUNTIME_WASM_BYTES: &[u8] =
 
 const DEPLOYMENT_ANCHOR_SIZE: usize = 5_868;
 const DEPLOYMENT_ANCHOR_SHA256: &str =
-    "38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7";
+    "aa58c83fb0cfcb27be160aa8ca150f78ee3fff1cfc3868dbd073c92581c69887";
 const METADATA_SIZE: usize = 63_327;
 const METADATA_SHA256: &str = "171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302";
 const RUNTIME_WASM_SIZE: usize = 637_930;
 const RUNTIME_WASM_SHA256: &str =
     "640cc616674fe7393fc93928904f0fd92d77571209c8200f08b8da6290c6a275";
+#[cfg(target_os = "linux")]
 const MAX_PROC_CMDLINE_BYTES: u64 = 65_536;
+#[cfg(target_os = "linux")]
+const MAX_PROC_STAT_BYTES: u64 = 4_096;
+#[cfg(target_os = "linux")]
+const POLKADOT_OMNI_NODE_SIZE: u64 = 158_034_760;
+#[cfg(target_os = "linux")]
+const POLKADOT_OMNI_NODE_SHA256: &str =
+    "ff8e5253e8a3e30b421c83d938a3245bdc5de222d807aaf3648575ae029faece";
+#[cfg(target_os = "linux")]
+const POLKADOT_OMNI_NODE_BASENAME: &[u8] = b"polkadot-omni-node";
+#[cfg(target_os = "linux")]
+const SEALED_NODE_EXECUTABLE_LINK: &[u8] = b"/memfd:cubikan-sealed-exec-v1 (deleted)";
 
 /// A canonical, explicit-port WebSocket URL bound to loopback.
 ///
@@ -179,18 +196,86 @@ impl Error for LoopbackUrlError {
 
 /// Process-backed proof that the selected local node was started in archive mode.
 ///
-/// This authenticates the executable basename, bounded `/proc/<pid>/cmdline`
-/// bytes, exact pruning pairs, and the primary `--rpc-port` value. Listener
-/// ownership is additionally checked by the Sprint 11 network harness.
+/// This pins the Linux process and executable objects, authenticates the exact
+/// reviewed executable bytes (and the launcher's complete memfd seal set when
+/// applicable), reads bounded `/proc/<pid>/cmdline` bytes, and requires exact
+/// pruning pairs plus one exact IPv4-only primary RPC endpoint. Legacy/global
+/// RPC listener flags are rejected. Listener ownership is additionally checked
+/// by the Sprint 11 network harness.
 #[derive(Debug)]
 pub struct ArchiveNodeEvidence {
     pid: NonZeroU32,
     endpoint: StrictLoopbackWsUrl,
+    #[cfg(target_os = "linux")]
+    _process: AuthenticatedNodeProcess,
 }
 
+#[cfg(target_os = "linux")]
+#[derive(Debug)]
+struct AuthenticatedNodeProcess {
+    // Holding all three descriptors prevents the authenticated kernel objects
+    // from being substituted while the evidence is consumed.
+    _pidfd: rustix::fd::OwnedFd,
+    _proc_directory: File,
+    _executable: File,
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum NodeExecutableKind {
+    Pathname,
+    SealedMemfd,
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+struct KernelFileIdentity {
+    device: u64,
+    inode: u64,
+    size: u64,
+    mode: u32,
+    modified_seconds: i64,
+    modified_nanoseconds: i64,
+    changed_seconds: i64,
+    changed_nanoseconds: i64,
+}
+
+#[cfg(target_os = "linux")]
+impl KernelFileIdentity {
+    fn from_metadata(metadata: &fs::Metadata) -> Self {
+        Self {
+            device: metadata.dev(),
+            inode: metadata.ino(),
+            size: metadata.len(),
+            mode: metadata.mode(),
+            modified_seconds: metadata.mtime(),
+            modified_nanoseconds: metadata.mtime_nsec(),
+            changed_seconds: metadata.ctime(),
+            changed_nanoseconds: metadata.ctime_nsec(),
+        }
+    }
+
+    fn same_object(self, other: Self) -> bool {
+        self.device == other.device && self.inode == other.inode
+    }
+}
+
+#[cfg(target_os = "linux")]
+#[derive(Clone, Copy)]
+struct ExpectedExecutable<'a> {
+    size: u64,
+    sha256: &'a str,
+}
+
+#[cfg(target_os = "linux")]
+const PINNED_OMNI_NODE: ExpectedExecutable<'static> = ExpectedExecutable {
+    size: POLKADOT_OMNI_NODE_SIZE,
+    sha256: POLKADOT_OMNI_NODE_SHA256,
+};
+
 impl ArchiveNodeEvidence {
-    /// Reads a Linux process command line once and requires each exact archive
-    /// flag exactly once, with no contradictory spelling.
+    /// Authenticates a stable Linux process/executable pair and requires each
+    /// exact archive flag once, with no contradictory spelling.
     pub fn from_proc_pid(
         pid: u32,
         endpoint: &StrictLoopbackWsUrl,
@@ -203,34 +288,11 @@ impl ArchiveNodeEvidence {
         }
         #[cfg(target_os = "linux")]
         {
-            let executable = fs::read_link(format!("/proc/{pid}/exe")).map_err(|source| {
-                NodeEvidenceError::Io {
-                    operation: "read archive node executable link",
-                    source,
-                }
-            })?;
-            if executable.file_name().and_then(|name| name.to_str()) != Some("polkadot-omni-node") {
-                return Err(NodeEvidenceError::Executable);
-            }
-            let path = format!("/proc/{pid}/cmdline");
-            let file = File::open(&path).map_err(|source| NodeEvidenceError::Io {
-                operation: "open",
-                source,
-            })?;
-            let mut bytes = Vec::new();
-            file.take(MAX_PROC_CMDLINE_BYTES + 1)
-                .read_to_end(&mut bytes)
-                .map_err(|source| NodeEvidenceError::Io {
-                    operation: "read",
-                    source,
-                })?;
-            if bytes.len() as u64 > MAX_PROC_CMDLINE_BYTES {
-                return Err(NodeEvidenceError::OverBound);
-            }
-            verify_archive_cmdline(&bytes, endpoint.port())?;
+            let process = authenticate_node_process(pid, endpoint)?;
             Ok(Self {
                 pid,
                 endpoint: endpoint.clone(),
+                _process: process,
             })
         }
     }
@@ -243,6 +305,292 @@ impl ArchiveNodeEvidence {
 
     pub(crate) fn endpoint(&self) -> &StrictLoopbackWsUrl {
         &self.endpoint
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn authenticate_node_process(
+    pid: NonZeroU32,
+    endpoint: &StrictLoopbackWsUrl,
+) -> Result<AuthenticatedNodeProcess, NodeEvidenceError> {
+    let raw_pid = i32::try_from(pid.get()).map_err(|_| NodeEvidenceError::Executable)?;
+    let rustix_pid = rustix::process::Pid::from_raw(raw_pid).ok_or(NodeEvidenceError::ZeroPid)?;
+
+    let proc_path = PathBuf::from(format!("/proc/{pid}"));
+    let proc_directory = File::open(&proc_path).map_err(|source| NodeEvidenceError::Io {
+        operation: "open process evidence directory",
+        source,
+    })?;
+    let proc_metadata = proc_directory
+        .metadata()
+        .map_err(|source| NodeEvidenceError::Io {
+            operation: "inspect process evidence directory",
+            source,
+        })?;
+    if !proc_metadata.is_dir()
+        || rustix::fs::fstatfs(&proc_directory)
+            .map_err(|source| NodeEvidenceError::Io {
+                operation: "inspect process evidence filesystem",
+                source: source.into(),
+            })?
+            .f_type
+            != rustix::fs::PROC_SUPER_MAGIC
+    {
+        return Err(NodeEvidenceError::Executable);
+    }
+    let proc_identity = KernelFileIdentity::from_metadata(&proc_metadata);
+    let pidfd = rustix::process::pidfd_open(rustix_pid, rustix::process::PidfdFlags::empty())
+        .map_err(|source| NodeEvidenceError::Io {
+            operation: "open stable process descriptor",
+            source: source.into(),
+        })?;
+    require_same_proc_object(&proc_path, proc_identity)?;
+
+    let proc_descriptor_path =
+        PathBuf::from(format!("/proc/self/fd/{}", proc_directory.as_raw_fd()));
+    let stat_path = proc_descriptor_path.join("stat");
+    let start_time = read_process_start_time(&stat_path, pid)?;
+    let executable_path = proc_descriptor_path.join("exe");
+    let executable_link =
+        fs::read_link(&executable_path).map_err(|source| NodeEvidenceError::Io {
+            operation: "read archive node executable link",
+            source,
+        })?;
+    let executable_kind = classify_executable_link(&executable_link)?;
+    let executable = File::open(&executable_path).map_err(|source| NodeEvidenceError::Io {
+        operation: "open archive node executable",
+        source,
+    })?;
+    let executable_identity =
+        KernelFileIdentity::from_metadata(&executable.metadata().map_err(|source| {
+            NodeEvidenceError::Io {
+                operation: "inspect archive node executable",
+                source,
+            }
+        })?);
+    require_same_file_object(&executable_path, executable_identity)?;
+
+    let command_line = read_bounded_proc_file(
+        &proc_descriptor_path.join("cmdline"),
+        MAX_PROC_CMDLINE_BYTES,
+    )?;
+    verify_archive_cmdline(&command_line, endpoint.port())?;
+    authenticate_executable(&executable, executable_kind, PINNED_OMNI_NODE)?;
+
+    let after_executable_identity =
+        KernelFileIdentity::from_metadata(&executable.metadata().map_err(|source| {
+            NodeEvidenceError::Io {
+                operation: "reinspect archive node executable",
+                source,
+            }
+        })?);
+    if after_executable_identity != executable_identity
+        || read_process_start_time(&stat_path, pid)? != start_time
+        || fs::read_link(&executable_path).map_err(|source| NodeEvidenceError::Io {
+            operation: "reread archive node executable link",
+            source,
+        })? != executable_link
+    {
+        return Err(NodeEvidenceError::Executable);
+    }
+    require_same_file_object(&executable_path, executable_identity)?;
+    require_same_proc_object(&proc_path, proc_identity)?;
+    let after_proc_identity =
+        KernelFileIdentity::from_metadata(&proc_directory.metadata().map_err(|source| {
+            NodeEvidenceError::Io {
+                operation: "reinspect process evidence directory",
+                source,
+            }
+        })?);
+    if !after_proc_identity.same_object(proc_identity) {
+        return Err(NodeEvidenceError::Executable);
+    }
+
+    Ok(AuthenticatedNodeProcess {
+        _pidfd: pidfd,
+        _proc_directory: proc_directory,
+        _executable: executable,
+    })
+}
+
+#[cfg(target_os = "linux")]
+fn require_same_proc_object(
+    proc_path: &Path,
+    expected: KernelFileIdentity,
+) -> Result<(), NodeEvidenceError> {
+    let actual = fs::metadata(proc_path)
+        .map(|metadata| KernelFileIdentity::from_metadata(&metadata))
+        .map_err(|source| NodeEvidenceError::Io {
+            operation: "reinspect process identity",
+            source,
+        })?;
+    if actual.same_object(expected) {
+        Ok(())
+    } else {
+        Err(NodeEvidenceError::Executable)
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn require_same_file_object(
+    path: &Path,
+    expected: KernelFileIdentity,
+) -> Result<(), NodeEvidenceError> {
+    let actual = fs::metadata(path)
+        .map(|metadata| KernelFileIdentity::from_metadata(&metadata))
+        .map_err(|source| NodeEvidenceError::Io {
+            operation: "reinspect executable identity",
+            source,
+        })?;
+    if actual == expected {
+        Ok(())
+    } else {
+        Err(NodeEvidenceError::Executable)
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn read_bounded_proc_file(path: &Path, limit: u64) -> Result<Vec<u8>, NodeEvidenceError> {
+    let file = File::open(path).map_err(|source| NodeEvidenceError::Io {
+        operation: "open process evidence",
+        source,
+    })?;
+    let mut bytes = Vec::new();
+    file.take(limit + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|source| NodeEvidenceError::Io {
+            operation: "read process evidence",
+            source,
+        })?;
+    if bytes.len() as u64 > limit {
+        Err(NodeEvidenceError::OverBound)
+    } else {
+        Ok(bytes)
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn read_process_start_time(path: &Path, pid: NonZeroU32) -> Result<u64, NodeEvidenceError> {
+    let bytes = match read_bounded_proc_file(path, MAX_PROC_STAT_BYTES) {
+        Err(NodeEvidenceError::OverBound) => return Err(NodeEvidenceError::Executable),
+        result => result?,
+    };
+    parse_process_start_time(&bytes, pid).ok_or(NodeEvidenceError::Executable)
+}
+
+#[cfg(target_os = "linux")]
+fn parse_process_start_time(bytes: &[u8], expected_pid: NonZeroU32) -> Option<u64> {
+    if bytes.is_empty() || bytes.contains(&0) {
+        return None;
+    }
+    let open_parenthesis = bytes.windows(2).position(|pair| pair == b" (")?;
+    if bytes[..open_parenthesis] != expected_pid.get().to_string().as_bytes()[..] {
+        return None;
+    }
+    let close_parenthesis = bytes.iter().rposition(|byte| *byte == b')')?;
+    if close_parenthesis <= open_parenthesis + 1 || bytes.get(close_parenthesis + 1) != Some(&b' ')
+    {
+        return None;
+    }
+    // The suffix starts at field 3 (`state`); starttime is Linux stat field 22.
+    let start_time = bytes[close_parenthesis + 2..]
+        .split(|byte| byte.is_ascii_whitespace())
+        .filter(|field| !field.is_empty())
+        .nth(19)?;
+    std::str::from_utf8(start_time).ok()?.parse().ok()
+}
+
+#[cfg(target_os = "linux")]
+fn classify_executable_link(path: &Path) -> Result<NodeExecutableKind, NodeEvidenceError> {
+    let bytes = path.as_os_str().as_bytes();
+    if bytes == SEALED_NODE_EXECUTABLE_LINK {
+        return Ok(NodeExecutableKind::SealedMemfd);
+    }
+    if path.is_absolute()
+        && path
+            .file_name()
+            .is_some_and(|name| name.as_bytes() == POLKADOT_OMNI_NODE_BASENAME)
+    {
+        Ok(NodeExecutableKind::Pathname)
+    } else {
+        Err(NodeEvidenceError::Executable)
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn authenticate_executable(
+    file: &File,
+    kind: NodeExecutableKind,
+    expected: ExpectedExecutable<'_>,
+) -> Result<(), NodeEvidenceError> {
+    let before = KernelFileIdentity::from_metadata(&file.metadata().map_err(|source| {
+        NodeEvidenceError::Io {
+            operation: "inspect executable bytes",
+            source,
+        }
+    })?);
+    if before.size != expected.size
+        || !file
+            .metadata()
+            .map_err(|source| NodeEvidenceError::Io {
+                operation: "inspect executable type",
+                source,
+            })?
+            .is_file()
+    {
+        return Err(NodeEvidenceError::Executable);
+    }
+    if kind == NodeExecutableKind::SealedMemfd {
+        let required = rustix::fs::SealFlags::SEAL
+            | rustix::fs::SealFlags::SHRINK
+            | rustix::fs::SealFlags::GROW
+            | rustix::fs::SealFlags::WRITE;
+        let actual =
+            rustix::fs::fcntl_get_seals(file).map_err(|_| NodeEvidenceError::Executable)?;
+        if actual != required {
+            return Err(NodeEvidenceError::Executable);
+        }
+    }
+
+    let mut reader = file;
+    reader
+        .seek(SeekFrom::Start(0))
+        .map_err(|source| NodeEvidenceError::Io {
+            operation: "seek executable bytes",
+            source,
+        })?;
+    let mut digest = Sha256::new();
+    let mut total = 0_u64;
+    let mut buffer = [0_u8; 64 * 1024];
+    loop {
+        let count = reader
+            .read(&mut buffer)
+            .map_err(|source| NodeEvidenceError::Io {
+                operation: "hash executable bytes",
+                source,
+            })?;
+        if count == 0 {
+            break;
+        }
+        total = total
+            .checked_add(u64::try_from(count).map_err(|_| NodeEvidenceError::Executable)?)
+            .ok_or(NodeEvidenceError::Executable)?;
+        if total > expected.size {
+            return Err(NodeEvidenceError::Executable);
+        }
+        digest.update(&buffer[..count]);
+    }
+    let after = KernelFileIdentity::from_metadata(&file.metadata().map_err(|source| {
+        NodeEvidenceError::Io {
+            operation: "reinspect executable bytes",
+            source,
+        }
+    })?);
+    if total != expected.size || hex_lower(&digest.finalize()) != expected.sha256 || after != before
+    {
+        Err(NodeEvidenceError::Executable)
+    } else {
+        Ok(())
     }
 }
 
@@ -261,8 +609,8 @@ pub(crate) fn verify_archive_cmdline(
     }
     let mut blocks = 0_u8;
     let mut state = 0_u8;
-    let mut rpc_port = 0_u8;
-    let expected_port = expected_port.to_string();
+    let mut primary_rpc_endpoint = 0_u8;
+    let mut relay_rpc_endpoints = 0_u8;
     let mut index = 1_usize;
     let mut after_separator = false;
     while index < arguments.len() {
@@ -301,24 +649,71 @@ pub(crate) fn verify_archive_cmdline(
             index += 2;
             continue;
         }
-        if argument.starts_with(b"--rpc-port") || argument.starts_with(b"--ws-port") {
-            if after_separator
-                || argument != b"--rpc-port"
-                || arguments.get(index + 1).copied() != Some(expected_port.as_bytes())
-            {
+        if [
+            b"--rpc-port".as_slice(),
+            b"--ws-port".as_slice(),
+            b"--rpc-cors".as_slice(),
+            b"--rpc-methods".as_slice(),
+            b"--rpc-external".as_slice(),
+            b"--unsafe-rpc-external".as_slice(),
+            b"--ws-external".as_slice(),
+            b"--unsafe-ws-external".as_slice(),
+        ]
+        .iter()
+        .any(|prefix| argument.starts_with(prefix))
+        {
+            return Err(NodeEvidenceError::RpcPort);
+        }
+        if argument.starts_with(b"--experimental-rpc-endpoint") {
+            if argument != b"--experimental-rpc-endpoint" {
                 return Err(NodeEvidenceError::RpcPort);
             }
-            rpc_port = rpc_port.checked_add(1).ok_or(NodeEvidenceError::RpcPort)?;
+            let value = arguments
+                .get(index + 1)
+                .copied()
+                .ok_or(NodeEvidenceError::RpcPort)?;
+            if after_separator {
+                if !is_exact_loopback_rpc_endpoint(value, None) {
+                    return Err(NodeEvidenceError::RpcPort);
+                }
+                relay_rpc_endpoints = relay_rpc_endpoints
+                    .checked_add(1)
+                    .ok_or(NodeEvidenceError::RpcPort)?;
+            } else {
+                if !is_exact_loopback_rpc_endpoint(value, Some(expected_port)) {
+                    return Err(NodeEvidenceError::RpcPort);
+                }
+                primary_rpc_endpoint = primary_rpc_endpoint
+                    .checked_add(1)
+                    .ok_or(NodeEvidenceError::RpcPort)?;
+            }
             index += 2;
             continue;
         }
         index += 1;
     }
-    if blocks == 1 && state == 1 && rpc_port == 1 {
+    if blocks == 1 && state == 1 && primary_rpc_endpoint == 1 && relay_rpc_endpoints <= 1 {
         Ok(())
     } else {
         Err(NodeEvidenceError::ArchiveFlags)
     }
+}
+
+fn is_exact_loopback_rpc_endpoint(value: &[u8], expected_port: Option<u16>) -> bool {
+    let Ok(value) = std::str::from_utf8(value) else {
+        return false;
+    };
+    let Some(port) = value
+        .strip_prefix("listen-addr=127.0.0.1:")
+        .and_then(|value| value.strip_suffix(",methods=unsafe,cors=all"))
+    else {
+        return false;
+    };
+    port.parse::<u16>().ok().is_some_and(|parsed| {
+        parsed != 0
+            && parsed.to_string() == port
+            && expected_port.is_none_or(|expected| parsed == expected)
+    })
 }
 
 /// Failure to obtain exact archive-mode evidence from a local node process.
@@ -345,18 +740,18 @@ impl fmt::Display for NodeEvidenceError {
             }
             Self::ZeroPid => formatter.write_str("archive node PID must be nonzero"),
             Self::Io { operation, source } => {
-                write!(formatter, "could not {operation} archive node command line: {source}")
+                write!(formatter, "could not {operation} for archive node evidence: {source}")
             }
             Self::OverBound => formatter.write_str("archive node command line exceeds 65536 bytes"),
             Self::MalformedCmdline => formatter.write_str("archive node command line is malformed"),
-            Self::Executable => {
-                formatter.write_str("archive node executable must be polkadot-omni-node")
-            }
+            Self::Executable => formatter.write_str(
+                "archive node executable does not match the pinned polkadot-omni-node process identity",
+            ),
             Self::ArchiveFlags => formatter.write_str(
                 "archive node command line must contain exact unique archive pruning argv pairs before its separator",
             ),
             Self::RpcPort => formatter.write_str(
-                "archive node command line must contain one primary --rpc-port matching the endpoint",
+                "archive node command line must contain one exact IPv4-only primary RPC endpoint and no legacy/global RPC listener flags",
             ),
         }
     }
@@ -808,6 +1203,9 @@ impl Error for IdentityError {
 mod tests {
     use super::*;
 
+    #[cfg(target_os = "linux")]
+    use std::io::Write;
+
     fn preflight() -> Value {
         serde_json::from_str(include_str!(
             "../../../tests/fixtures/finalized-events-v1/rpc-preflight-v1.json"
@@ -837,23 +1235,192 @@ mod tests {
     #[test]
     fn archive_flags_are_exact_unique_and_bounded() {
         assert!(verify_archive_cmdline(
-            b"polkadot-omni-node\0--rpc-port\09988\0--blocks-pruning\0archive\0--state-pruning\0archive\0",
+            b"polkadot-omni-node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--blocks-pruning\0archive\0--state-pruning\0archive\0",
+            9988,
+        )
+        .is_ok());
+        assert!(verify_archive_cmdline(
+            b"polkadot-omni-node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--blocks-pruning\0archive\0--state-pruning\0archive\0--\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9990,methods=unsafe,cors=all\0",
             9988,
         )
         .is_ok());
         for bytes in [
-            b"node\0--rpc-port\09988\0--blocks-pruning=archive\0--state-pruning\0archive\0"
+            b"node\0--rpc-port\09988\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
                 .as_slice(),
-            b"node\0--rpc-port\09988\0--blocks-pruning\0archive\0".as_slice(),
-            b"node\0--rpc-port\09989\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
+            b"node\0--experimental-rpc-endpoint\0listen-addr=[::1]:9988,methods=unsafe,cors=all\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
                 .as_slice(),
-            b"node\0--rpc-port\09988\0--\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
+            b"node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9989,methods=unsafe,cors=all\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
                 .as_slice(),
-            b"node\0--rpc-port\09988\0--blocks-pruning\0archive\0--state-pruning\0archive"
+            b"node\0--experimental-rpc-endpoint=listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
+                .as_slice(),
+            b"node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--rpc-cors\0all\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
+                .as_slice(),
+            b"node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--blocks-pruning=archive\0--state-pruning\0archive\0"
+                .as_slice(),
+            b"node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--blocks-pruning\0archive\0"
+                .as_slice(),
+            b"node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
+                .as_slice(),
+            b"node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--blocks-pruning\0archive\0--state-pruning\0archive"
                 .as_slice(),
         ] {
             assert!(verify_archive_cmdline(bytes, 9988).is_err());
         }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn executable_link_classification_is_closed() {
+        assert_eq!(
+            classify_executable_link(Path::new("/memfd:cubikan-sealed-exec-v1 (deleted)"))
+                .expect("exact launcher memfd spelling should be accepted"),
+            NodeExecutableKind::SealedMemfd
+        );
+        assert_eq!(
+            classify_executable_link(Path::new("/reviewed/bin/polkadot-omni-node"))
+                .expect("exact absolute pathname basename should be accepted"),
+            NodeExecutableKind::Pathname
+        );
+        for rejected in [
+            "polkadot-omni-node",
+            "/reviewed/bin/polkadot-omni-node (deleted)",
+            "/reviewed/bin/not-polkadot-omni-node",
+            "memfd:cubikan-sealed-exec-v1 (deleted)",
+            "/memfd:cubikan-sealed-exec-v1",
+            "/memfd:cubikan-sealed-exec-v1 (deleted) ",
+        ] {
+            assert!(
+                classify_executable_link(Path::new(rejected)).is_err(),
+                "link spelling {rejected:?} must fail closed"
+            );
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn process_start_time_parser_binds_pid_and_handles_parentheses() {
+        let pid = NonZeroU32::new(42).expect("fixture PID is nonzero");
+        let mut stat = String::from("42 (worker ) name) R");
+        for value in 4..=21 {
+            stat.push(' ');
+            stat.push_str(&value.to_string());
+        }
+        stat.push_str(" 998877 23 24\n");
+        assert_eq!(
+            parse_process_start_time(stat.as_bytes(), pid),
+            Some(998_877)
+        );
+        assert_eq!(
+            parse_process_start_time(
+                stat.as_bytes(),
+                NonZeroU32::new(41).expect("fixture PID is nonzero")
+            ),
+            None
+        );
+        assert_eq!(parse_process_start_time(b"42 (worker) R 1 2", pid), None);
+        assert_eq!(
+            parse_process_start_time(b"42 (worker) R 1 2\0 3", pid),
+            None
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn executable_authentication_requires_exact_bytes_and_complete_seals() {
+        let bytes = b"\x7fELFsmall deterministic executable fixture";
+        let digest = hex_lower(&Sha256::digest(bytes));
+        let expected = ExpectedExecutable {
+            size: u64::try_from(bytes.len()).expect("fixture length fits u64"),
+            sha256: &digest,
+        };
+
+        let sealed = fixture_memfd(bytes, true);
+        authenticate_executable(&sealed, NodeExecutableKind::SealedMemfd, expected)
+            .expect("exact sealed bytes must authenticate");
+
+        let unsealed = fixture_memfd(bytes, false);
+        assert!(
+            authenticate_executable(&unsealed, NodeExecutableKind::SealedMemfd, expected).is_err()
+        );
+        authenticate_executable(&unsealed, NodeExecutableKind::Pathname, expected)
+            .expect("an exact regular pathname executable does not require memfd seals");
+
+        let incomplete = fixture_memfd(bytes, false);
+        rustix::fs::fcntl_add_seals(
+            &incomplete,
+            rustix::fs::SealFlags::SHRINK
+                | rustix::fs::SealFlags::GROW
+                | rustix::fs::SealFlags::WRITE,
+        )
+        .expect("fixture memfd should accept an incomplete seal set");
+        assert!(
+            authenticate_executable(&incomplete, NodeExecutableKind::SealedMemfd, expected)
+                .is_err()
+        );
+
+        let wrong_digest = ExpectedExecutable {
+            size: expected.size,
+            sha256: "0000000000000000000000000000000000000000000000000000000000000000",
+        };
+        assert!(
+            authenticate_executable(&sealed, NodeExecutableKind::SealedMemfd, wrong_digest)
+                .is_err()
+        );
+        let wrong_size = ExpectedExecutable {
+            size: expected.size + 1,
+            sha256: expected.sha256,
+        };
+        assert!(
+            authenticate_executable(&sealed, NodeExecutableKind::SealedMemfd, wrong_size).is_err()
+        );
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn production_executable_identity_matches_the_pin_manifest() {
+        let pins = include_str!("../../../chain/pins.toml");
+        let section = pins
+            .split_once("[assets.polkadot-omni-node]")
+            .expect("pin manifest should contain the omni-node table")
+            .1
+            .split("\n[")
+            .next()
+            .expect("omni-node table should have a bounded section");
+        assert!(section.contains(&format!("size = \"{}\"", PINNED_OMNI_NODE.size)));
+        assert!(section.contains(&format!("sha256 = \"{}\"", PINNED_OMNI_NODE.sha256)));
+    }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn unrelated_current_process_cannot_mint_node_evidence() {
+        let endpoint = StrictLoopbackWsUrl::parse("ws://127.0.0.1:9988/")
+            .expect("fixture endpoint is canonical");
+        assert!(matches!(
+            ArchiveNodeEvidence::from_proc_pid(std::process::id(), &endpoint),
+            Err(NodeEvidenceError::Executable)
+        ));
+    }
+
+    #[cfg(target_os = "linux")]
+    fn fixture_memfd(bytes: &[u8], seal: bool) -> File {
+        let descriptor = rustix::fs::memfd_create(
+            "cubikan-sealed-exec-v1",
+            rustix::fs::MemfdFlags::ALLOW_SEALING,
+        )
+        .expect("test kernel should support sealable memfds");
+        let mut file = File::from(descriptor);
+        file.write_all(bytes).expect("fixture bytes should write");
+        if seal {
+            rustix::fs::fcntl_add_seals(
+                &file,
+                rustix::fs::SealFlags::SEAL
+                    | rustix::fs::SealFlags::SHRINK
+                    | rustix::fs::SealFlags::GROW
+                    | rustix::fs::SealFlags::WRITE,
+            )
+            .expect("fixture memfd should accept the complete seal set");
+        }
+        file
     }
 
     #[test]

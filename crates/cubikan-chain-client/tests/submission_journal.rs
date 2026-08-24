@@ -170,7 +170,7 @@ fn assert_locked_fixture_identity() {
     for (bytes, expected) in [
         (
             FIXTURE_MANIFEST,
-            "ef3241ee5cb7d1cda3f12c628aae1f0533fd3fb673ffeecae0dc0626c15f942c",
+            "6f95367d7aaab896b20a7451a8f0e73214e53bbfff321c67bcf90c3e8b99ef1a",
         ),
         (
             FIXTURE_INVENTORY,
@@ -178,7 +178,7 @@ fn assert_locked_fixture_identity() {
         ),
         (
             FIXTURE_VERIFIER,
-            "a39a121c51f902df02b7a317df25a69e57f7f6965f4709f4c3ddb707ebedfce7",
+            "13e3d6d00c0bcf9cc209c8e27e54b0ba6130be1d68a4dfc83a91a99c53f74a04",
         ),
         (
             JOURNAL_VECTOR_FIXTURE.as_bytes(),

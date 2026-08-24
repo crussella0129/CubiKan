@@ -87,8 +87,152 @@ readonly AWK=/usr/bin/gawk
 readonly UNAME=/usr/lib/cargo/bin/coreutils/uname
 readonly STAT=/usr/lib/cargo/bin/coreutils/stat
 readonly MOUNT=/usr/bin/mount
+readonly PYTHON=/usr/bin/python3.14
+readonly SETPRIV=/usr/bin/setpriv
 readonly INTERNAL_NETNS_TOKEN=__cubikan_loopback_netns_child_v1__
 readonly ISOLATION_OUTSIDE_STATUS=125
+readonly T1115_OUTPUT_LIMIT=1048576
+readonly T1115_OUTPUT_MEDIATOR_PROGRAM='import os
+import re
+import signal
+import subprocess
+import sys
+import threading
+
+stdout_limit = int(sys.argv[1])
+stderr_limit = int(sys.argv[2])
+if sys.argv[3] != "--" or len(sys.argv) < 5:
+    raise SystemExit(126)
+command = sys.argv[4:]
+fixed_failure = b"loopback-netns: mediated child output rejected\n"
+forbidden_environment = re.compile(
+    rb"(?:^|[^A-Z0-9_])(?:AWS_SECRET_ACCESS_KEY|GIT_ASKPASS|GIT_CONFIG_GLOBAL|GIT_CONFIG_SYSTEM|SSH_AUTH_SOCK|HTTP_PROXY|HTTPS_PROXY|ALL_PROXY|NO_PROXY)=",
+    re.IGNORECASE,
+)
+forbidden_secret = re.compile(
+    rb"(?:^|[,{])[ \t\r\n]*\x22(?:credential|credentials|mnemonic|passphrase|password|private_key|private_locator|prompt|provider_secret|secret|seed|source_body|token|transcript)\x22[ \t\r\n]*:|(?:^|[^a-z0-9_])(?:credential|credentials|mnemonic|passphrase|password|private_key|private_locator|prompt|provider_secret|secret|seed|source_body|token|transcript)[ \t]*[:=]",
+    re.IGNORECASE,
+)
+public_url = re.compile(rb"(?:git\+ssh|https?|wss?|ssh|git)://", re.IGNORECASE)
+
+def write_all(fd, payload):
+    remaining = memoryview(payload)
+    while remaining:
+        written = os.write(fd, remaining)
+        if written <= 0:
+            raise OSError("short output write")
+        remaining = remaining[written:]
+
+class Capture:
+    def __init__(self, pipe, limit):
+        self.pipe = pipe
+        self.limit = limit
+        self.chunks = []
+        self.total = 0
+        self.overflowed = False
+        self.fault = False
+
+    def drain(self):
+        try:
+            while True:
+                chunk = os.read(self.pipe.fileno(), 65_536)
+                if not chunk:
+                    return
+                self.total += len(chunk)
+                if self.total > self.limit:
+                    self.overflowed = True
+                elif not self.overflowed:
+                    self.chunks.append(chunk)
+        except BaseException:
+            self.fault = True
+
+    def accepted(self):
+        if self.fault or self.overflowed:
+            return None
+        data = b"".join(self.chunks)
+        try:
+            data.decode("ascii", "strict")
+        except UnicodeDecodeError:
+            return None
+        if any(byte not in (0x09, 0x0A) and not 0x20 <= byte <= 0x7E for byte in data):
+            return None
+        if forbidden_environment.search(data) or forbidden_secret.search(data) or public_url.search(data):
+            return None
+        return data
+
+def run():
+    child = subprocess.Popen(
+        command,
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        close_fds=True,
+        start_new_session=True,
+    )
+    pidfd = os.pidfd_open(child.pid, 0)
+    interrupted = [0]
+
+    def signal_child(signum):
+        try:
+            signal.pidfd_send_signal(pidfd, signum)
+        except ProcessLookupError:
+            pass
+
+    def handle_signal(signum, _frame):
+        interrupted[0] = signum
+        signal_child(signal.SIGTERM)
+
+    signal.signal(signal.SIGHUP, handle_signal)
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
+    stdout_capture = Capture(child.stdout, stdout_limit)
+    stderr_capture = Capture(child.stderr, stderr_limit)
+    stdout_thread = threading.Thread(target=stdout_capture.drain, daemon=True)
+    stderr_thread = threading.Thread(target=stderr_capture.drain, daemon=True)
+    stdout_thread.start()
+    stderr_thread.start()
+    timed_out = False
+    try:
+        child_status = child.wait(timeout=1900)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        signal_child(signal.SIGTERM)
+        try:
+            child_status = child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            signal_child(signal.SIGKILL)
+            child_status = child.wait(timeout=5)
+    stdout_thread.join(5)
+    stderr_thread.join(5)
+    retained_writer = stdout_thread.is_alive() or stderr_thread.is_alive()
+    stdout_payload = stdout_capture.accepted()
+    stderr_payload = stderr_capture.accepted()
+    child.stdout.close()
+    child.stderr.close()
+    os.close(pidfd)
+    if (
+        interrupted[0] != 0
+        or timed_out
+        or retained_writer
+        or stdout_payload is None
+        or stderr_payload is None
+    ):
+        write_all(2, fixed_failure)
+        return 128 + interrupted[0] if interrupted[0] != 0 else 126
+    write_all(1, stdout_payload)
+    write_all(2, stderr_payload)
+    return child_status if child_status >= 0 else 128 - child_status
+
+try:
+    raise SystemExit(run())
+except SystemExit:
+    raise
+except BaseException:
+    try:
+        write_all(2, fixed_failure)
+    except BaseException:
+        pass
+    raise SystemExit(126)'
 
 readonly SELF="$loopback_self_hint"
 readonly LOOPBACK_CONTENT_SHA256="$loopback_content_sha256"
@@ -264,7 +408,9 @@ canonicalize_child_bash() {
 
 namespace_identity() {
     local namespace_name=$1 identity
-    [[ "$namespace_name" == net || "$namespace_name" == mnt || "$namespace_name" == ipc ]] || die "unsupported namespace identity"
+    [[ "$namespace_name" == net || "$namespace_name" == mnt ||
+        "$namespace_name" == ipc || "$namespace_name" == pid ]] ||
+        die "unsupported namespace identity"
     [[ -e "/proc/self/ns/$namespace_name" ]] || die "$namespace_name namespace identity is unavailable"
     identity="$("$STAT" -Lc '%d:%i' -- "/proc/self/ns/$namespace_name")"
     [[ "$identity" =~ ^[0-9]+:[0-9]+$ ]] || die "$namespace_name namespace identity is invalid"
@@ -298,12 +444,59 @@ require_safe_working_directory() {
     esac
 }
 
-prove_host_init_mount_root_inaccessible() {
-    # A process that can traverse the host init mount tree can walk around the
-    # private /tmp and /run mounts.
-    if "$STAT" -Lc '%d:%i' -- /proc/1/root/tmp >/dev/null 2>&1; then
-        die "host init mount root remains traversable"
-    fi
+prove_private_pid_namespace() {
+    local self_pidns init_pidns pid1_status proc_mounts
+    [[ "$("$STAT" -fLc '%T' -- /proc)" == proc ]] ||
+        die "private PID namespace lacks procfs"
+    self_pidns="$(namespace_identity pid)"
+    init_pidns="$("$STAT" -Lc '%d:%i' -- /proc/1/ns/pid)" ||
+        die "PID namespace init identity is unavailable"
+    [[ "$self_pidns" == "$init_pidns" ]] ||
+        die "current process does not share PID namespace init identity"
+    pid1_status="$("$AWK" '
+        $1 == "Pid:" {
+            if (NF != 2) exit 1
+            pid = $2
+            pid_count++
+        }
+        $1 == "PPid:" {
+            if (NF != 2) exit 1
+            ppid = $2
+            ppid_count++
+        }
+        $1 == "NSpid:" {
+            if (NF != 2) exit 1
+            nspid = $2
+            nspid_count++
+        }
+        END {
+            if (pid_count != 1 || ppid_count != 1 || nspid_count != 1) exit 1
+            printf "%s:%s:%s\n", pid, ppid, nspid
+        }
+    ' /proc/1/status)" || die "PID namespace init status is malformed"
+    [[ "$pid1_status" == 1:0:1 ]] ||
+        die "private PID namespace does not own exact PID 1"
+    proc_mounts="$("$AWK" '
+        $5 == "/proc" {
+            for (i = 6; i <= NF; i++) {
+                if ($i == "-" && $(i + 1) == "proc") found++
+            }
+        }
+        END { print found + 0 }
+    ' /proc/self/mountinfo)"
+    [[ "$proc_mounts" =~ ^[1-9][0-9]*$ ]] ||
+        die "private procfs mount identity failed"
+    printf '%s\n' \
+        'loopback-netns: pid-namespace=isolated procfs=fresh namespace-init=owned' >&2
+}
+
+prove_new_pid_namespace_init() {
+    local launcher_pidns_identity=$1
+    prove_changed_namespace pid "$launcher_pidns_identity"
+    [[ $$ -eq 1 && $BASHPID -eq 1 ]] ||
+        die "namespace continuation is not PID 1"
+    prove_private_pid_namespace
+    printf '%s\n' 'loopback-netns: namespace-launcher-pid=1' >&2
 }
 
 prove_launcher_parent_mount_root_inaccessible() {
@@ -333,7 +526,7 @@ prove_clean_outside_launcher() {
     ((EUID >= uid_inside && EUID < uid_inside + uid_length)) || die "outside launcher uid is not covered by its mapping"
     ((current_gid >= gid_inside && current_gid < gid_inside + gid_length)) || die "outside launcher gid is not covered by its mapping"
 
-    for namespace_name in user net mnt ipc; do
+    for namespace_name in user net mnt ipc pid; do
         self_identity="$("$STAT" -Lc '%d:%i' -- "/proc/self/ns/$namespace_name")" ||
             die "outside launcher $namespace_name namespace identity is unavailable"
         parent_identity="$("$STAT" -Lc '%d:%i' -- "/proc/$PPID/ns/$namespace_name")" ||
@@ -355,9 +548,10 @@ prove_clean_outside_launcher() {
 mount_private_runtime_paths() {
     [[ -x "$MOUNT" && -x "$STAT" ]] || die "pinned mount proof executables are required"
 
-    local old_tmp_device old_run_device new_tmp_device new_run_device
+    local old_tmp_device old_run_device old_pts_device new_tmp_device new_run_device new_pts_device
     old_tmp_device="$("$STAT" -Lc '%d' -- /tmp)"
     old_run_device="$("$STAT" -Lc '%d' -- /run)"
+    old_pts_device="$("$STAT" -Lc '%d' -- /dev/pts)"
 
     "$MOUNT" -t tmpfs -o nodev,nosuid,noexec,mode=1777,size=64M \
         cubikan-private-tmp /tmp
@@ -366,30 +560,39 @@ mount_private_runtime_paths() {
     /usr/lib/cargo/bin/coreutils/mkdir -m 0700 -- /run/cubikan-exec
     "$MOUNT" -t tmpfs -o nodev,nosuid,mode=0700,size=2G \
         cubikan-private-exec /run/cubikan-exec
+    "$MOUNT" -t devpts -o newinstance,nodev,nosuid,noexec,mode=0620,ptmxmode=0666 \
+        devpts /dev/pts
 
     new_tmp_device="$("$STAT" -Lc '%d' -- /tmp)"
     new_run_device="$("$STAT" -Lc '%d' -- /run)"
+    new_pts_device="$("$STAT" -Lc '%d' -- /dev/pts)"
     [[ "$new_tmp_device" != "$old_tmp_device" ]] || die "/tmp did not enter a private mount"
     [[ "$new_run_device" != "$old_run_device" ]] || die "/run did not enter a private mount"
+    [[ "$new_pts_device" != "$old_pts_device" ]] || die "/dev/pts did not enter a private mount"
     prove_private_runtime_paths
     [[ -d "$WORKSPACE_ROOT/chain/tools" ]] || die "workspace became inaccessible after private mounts"
 
-    printf '%s\n' 'loopback-netns: private-runtime-mounts=/tmp,/run,/run/cubikan-exec mount-namespace=isolated ipc-namespace=isolated' >&2
+    printf '%s\n' 'loopback-netns: private-runtime-mounts=/tmp,/run,/run/cubikan-exec,/dev/pts mount-namespace=isolated ipc-namespace=isolated' >&2
 }
 
 prove_private_runtime_paths() {
-    local tmp_device run_device exec_device tmp_mounts run_mounts exec_mounts
+    local tmp_device run_device exec_device pts_device tmp_mounts run_mounts exec_mounts pts_mounts
     tmp_device="$("$STAT" -Lc '%d' -- /tmp)"
     run_device="$("$STAT" -Lc '%d' -- /run)"
     exec_device="$("$STAT" -Lc '%d' -- /run/cubikan-exec)"
-    [[ "$tmp_device" != "$run_device" && "$exec_device" != "$run_device" ]] || die "private runtime mounts unexpectedly share devices"
+    pts_device="$("$STAT" -Lc '%d' -- /dev/pts)"
+    [[ "$tmp_device" != "$run_device" && "$exec_device" != "$run_device" &&
+        "$pts_device" != "$tmp_device" && "$pts_device" != "$run_device" &&
+        "$pts_device" != "$exec_device" ]] || die "private runtime mounts unexpectedly share devices"
     [[ "$("$STAT" -fLc '%T' -- /tmp)" == tmpfs && "$("$STAT" -Lc '%a' -- /tmp)" == 1777 ]] || die "/tmp private tmpfs proof failed"
     [[ "$("$STAT" -fLc '%T' -- /run)" == tmpfs && "$("$STAT" -Lc '%a' -- /run)" == 755 ]] || die "/run private tmpfs proof failed"
     [[ "$("$STAT" -fLc '%T' -- /run/cubikan-exec)" == tmpfs && "$("$STAT" -Lc '%a' -- /run/cubikan-exec)" == 700 ]] || die "private executable tmpfs proof failed"
     tmp_mounts="$("$AWK" '$5 == "/tmp" { for (i = 6; i <= NF; i++) if ($i == "-" && $(i + 1) == "tmpfs" && $(i + 2) == "cubikan-private-tmp") found++ } END { print found + 0 }' /proc/self/mountinfo)"
     run_mounts="$("$AWK" '$5 == "/run" { for (i = 6; i <= NF; i++) if ($i == "-" && $(i + 1) == "tmpfs" && $(i + 2) == "cubikan-private-run") found++ } END { print found + 0 }' /proc/self/mountinfo)"
     exec_mounts="$("$AWK" '$5 == "/run/cubikan-exec" { ok = 0; for (i = 6; i <= NF; i++) if ($i == "-" && $(i + 1) == "tmpfs" && $(i + 2) == "cubikan-private-exec") { if ($6 ~ /(^|,)rw(,|$)/ && $6 ~ /(^|,)nosuid(,|$)/ && $6 ~ /(^|,)nodev(,|$)/ && $6 !~ /(^|,)noexec(,|$)/) ok = 1 } } END { print ok + 0 }' /proc/self/mountinfo)"
-    [[ "$tmp_mounts" == 1 && "$run_mounts" == 1 && "$exec_mounts" == 1 ]] || die "private runtime mount identity proof failed"
+    pts_mounts="$("$AWK" '$5 == "/dev/pts" { ok = 0; for (i = 6; i <= NF; i++) if ($i == "-" && $(i + 1) == "devpts") { if ($6 ~ /(^|,)rw(,|$)/ && $6 ~ /(^|,)nosuid(,|$)/ && $6 ~ /(^|,)noexec(,|$)/ && $(i + 3) ~ /(^|,)rw(,|$)/ && $(i + 3) ~ /(^|,)ptmxmode=666(,|$)/ && $(i + 3) ~ /(^|,)mode=620(,|$)/) ok = 1 } } END { print ok + 0 }' /proc/self/mountinfo)"
+    [[ "$tmp_mounts" == 1 && "$run_mounts" == 1 && "$exec_mounts" == 1 &&
+        "$pts_mounts" == 1 ]] || die "private runtime mount identity proof failed"
 }
 
 prove_network_boundary() {
@@ -439,7 +642,7 @@ assert_current_isolated() {
     [[ "$($UNAME -s)" == Linux ]] || die "Linux is required"
     prove_mapped_root_user_namespace
     require_safe_working_directory
-    prove_host_init_mount_root_inaccessible
+    prove_private_pid_namespace
     namespace_identity net >/dev/null
     namespace_identity mnt >/dev/null
     namespace_identity ipc >/dev/null
@@ -466,6 +669,9 @@ exec_clean_child() {
     canonicalize_child_bash child_argv
     authorize_verifier_continuation_fd child_argv
     close_fds_except "${PRESERVED_CHILD_FDS[@]}"
+    if is_t1115_mediated_child child_argv; then
+        prove_t1115_mediated_descriptors
+    fi
     if [[ "${child_argv[*]}" == *'__cubikan_verifier_bound_memory_v1__'* ]]; then
         exec "$ENV_BIN" -i CUBIKAN_VERIFIER_SANITIZED=1 HOME=/home/charles \
             CARGO_HOME="$WORKSPACE_ROOT/chain/.cache/cargo-home" \
@@ -482,23 +688,59 @@ exec_clean_child() {
         "${child_argv[@]}" </dev/null
 }
 
+prove_t1115_mediated_descriptors() {
+    local fd_path fd stdin_link stdout_link stderr_link
+    close_fds_except
+    local -a fd_paths=(/proc/$$/fd/*)
+    for fd_path in "${fd_paths[@]}"; do
+        fd=${fd_path##*/}
+        if [[ ! "$fd" =~ ^[0-2]$ ]]; then
+            # Globbing /proc/$$/fd can list the transient directory descriptor
+            # used by the glob itself. It is harmless only if it vanished
+            # before this liveness recheck.
+            [[ ! -e "$fd_path" && ! -L "$fd_path" ]] ||
+                die "T-1115 launch child retained a host descriptor"
+        fi
+    done
+    stdin_link="$(/usr/bin/readlink -- "/proc/$$/fd/0")" ||
+        die "T-1115 launch child stdin identity is unavailable"
+    stdout_link="$(/usr/bin/readlink -- "/proc/$$/fd/1")" ||
+        die "T-1115 launch child stdout identity is unavailable"
+    stderr_link="$(/usr/bin/readlink -- "/proc/$$/fd/2")" ||
+        die "T-1115 launch child stderr identity is unavailable"
+    [[ "$stdin_link" == /dev/null && "$stdout_link" =~ ^pipe:\[[1-9][0-9]*\]$ &&
+        "$stderr_link" =~ ^pipe:\[[1-9][0-9]*\]$ && "$stdout_link" != "$stderr_link" ]] ||
+        die "T-1115 launch child standard descriptors are not isolated pipes"
+    "$PYTHON" -I -S -c 'import errno
+import os
+try:
+    fd = os.open("/dev/tty", os.O_WRONLY | os.O_CLOEXEC)
+except OSError as error:
+    raise SystemExit(0 if error.errno == errno.ENXIO else 1)
+else:
+    os.close(fd)
+    raise SystemExit(2)' || die "T-1115 launch child retained a controlling terminal"
+    printf '%s\n' 'loopback-netns: t1115-output-boundary=host-mediated descriptors=pipe-only controlling-terminal=absent' >&2
+}
+
 run_inside() {
-    [[ $# -ge 7 && "$6" == -- ]] || die "internal argv boundary is invalid"
+    [[ $# -ge 8 && "$7" == -- ]] || die "internal argv boundary is invalid"
     local launcher_netns_identity=$1 launcher_mountns_identity=$2 launcher_ipcns_identity=$3
-    INTERNAL_VERIFIER_DIGEST=$4
-    INTERNAL_VERIFIER_CONTENT=$5
+    local launcher_pidns_identity=$4
+    INTERNAL_VERIFIER_DIGEST=$5
+    INTERNAL_VERIFIER_CONTENT=$6
     [[ "$INTERNAL_VERIFIER_DIGEST" == - || "$INTERNAL_VERIFIER_DIGEST" =~ ^[0-9a-f]{64}$ ]] ||
         die "internal verifier digest token is invalid"
     [[ "$INTERNAL_VERIFIER_CONTENT" == - || -n "$INTERNAL_VERIFIER_CONTENT" ]] ||
         die "internal verifier content token is invalid"
-    shift 6
+    shift 7
     [[ $# -gt 0 ]] || die "missing child argv"
 
     # The argv token is routing, never authorization: a forged token reaches
     # this same proof and is rejected outside the fresh namespace.
     prove_mapped_root_user_namespace
     require_safe_working_directory
-    prove_host_init_mount_root_inaccessible
+    prove_new_pid_namespace_init "$launcher_pidns_identity"
     prove_launcher_parent_mount_root_inaccessible
     prove_changed_namespace mnt "$launcher_mountns_identity"
     prove_changed_namespace ipc "$launcher_ipcns_identity"
@@ -507,21 +749,52 @@ run_inside() {
     exec_clean_child "$@"
 }
 
+is_t1115_mediated_child() {
+    local -n argv_ref=$1
+    [[ ${#argv_ref[@]} -eq 9 &&
+        "${argv_ref[0]}" == /usr/bin/bash &&
+        "${argv_ref[1]}" == chain/tools/run-zombienet-e2e.sh &&
+        "${argv_ref[2]}" == --config &&
+        "${argv_ref[3]}" == chain/config/zombienet.toml &&
+        "${argv_ref[4]}" == --relay-validators && "${argv_ref[5]}" == 2 &&
+        "${argv_ref[6]}" == --collators && "${argv_ref[7]}" == 2 &&
+        "${argv_ref[8]}" == --loopback-only ]]
+}
+
 exec_namespace_child() {
     local -a child_argv=("$@")
-    local launcher_netns_identity launcher_mountns_identity launcher_ipcns_identity
+    local launcher_netns_identity launcher_mountns_identity launcher_ipcns_identity launcher_pidns_identity
     canonicalize_child_bash child_argv
     launcher_netns_identity="$(namespace_identity net)"
     launcher_mountns_identity="$(namespace_identity mnt)"
     launcher_ipcns_identity="$(namespace_identity ipc)"
+    launcher_pidns_identity="$(namespace_identity pid)"
     authorize_verifier_continuation_fd child_argv
     close_fds_except "${PRESERVED_CHILD_FDS[@]}"
     export CUBIKAN_LOOPBACK_SANITIZED=1
-    exec "$UNSHARE" --user --map-root-user --net --mount --ipc --propagation private \
+    if is_t1115_mediated_child child_argv; then
+        ((${#PRESERVED_CHILD_FDS[@]} == 0)) ||
+            die "T-1115 output mediation forbids inherited continuation descriptors"
+        exec "$PYTHON" -I -S -c "$T1115_OUTPUT_MEDIATOR_PROGRAM" \
+            "$T1115_OUTPUT_LIMIT" "$T1115_OUTPUT_LIMIT" -- \
+            "$SETPRIV" --pdeathsig KILL -- \
+            "$UNSHARE" --user --map-root-user --net --mount --ipc \
+            --pid --fork --kill-child=KILL --mount-proc --propagation private \
+            /usr/bin/bash --noprofile --norc -p -c "$LOOPBACK_CONTENT" "$SELF" \
+            "$LOOPBACK_BOUND_TOKEN" "$SELF" "$LOOPBACK_CONTENT_SHA256" "$LOOPBACK_CONTENT" __cubikan_loopback_clean_entry_v1__ \
+            "$INTERNAL_NETNS_TOKEN" \
+            "$launcher_netns_identity" "$launcher_mountns_identity" "$launcher_ipcns_identity" \
+            "$launcher_pidns_identity" \
+            "${INTERNAL_VERIFIER_DIGEST:--}" "${INTERNAL_VERIFIER_CONTENT:--}" \
+            -- "${child_argv[@]}"
+    fi
+    exec "$UNSHARE" --user --map-root-user --net --mount --ipc \
+        --pid --fork --kill-child=KILL --mount-proc --propagation private \
         /usr/bin/bash --noprofile --norc -p -c "$LOOPBACK_CONTENT" "$SELF" \
         "$LOOPBACK_BOUND_TOKEN" "$SELF" "$LOOPBACK_CONTENT_SHA256" "$LOOPBACK_CONTENT" __cubikan_loopback_clean_entry_v1__ \
         "$INTERNAL_NETNS_TOKEN" \
         "$launcher_netns_identity" "$launcher_mountns_identity" "$launcher_ipcns_identity" \
+        "$launcher_pidns_identity" \
         "${INTERNAL_VERIFIER_DIGEST:--}" "${INTERNAL_VERIFIER_CONTENT:--}" \
         -- "${child_argv[@]}" </dev/null
 }

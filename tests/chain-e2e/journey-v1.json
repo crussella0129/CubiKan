@@ -1,0 +1,1172 @@
+{
+  "format": "cubikan-chain-e2e-journey-v1",
+  "version": 1,
+  "launcher": {
+    "path": "chain/tools/run-four-node-journey.sh",
+    "success_stdout": "verified cubikan four-node journey v1\n",
+    "evidence_format": "cubikan-chain-e2e-evidence-v1",
+    "timeout_seconds": 1740,
+    "kill_after_seconds": 20,
+    "max_evidence_bytes": 16777216,
+    "bootstrap_log_max_bytes": 1048576,
+    "genesis_head_decoded_size": 98,
+    "genesis_head_decoded_sha256": "a5712144e8320d7ede466cbb02f05c62b8bc5167312b50358f5ce601d5790113",
+    "materialized_toolchain_root": "/run/cubikan-exec/toolchain",
+    "materialized_toolchain_mode": "0700",
+    "materialized_toolchain_filesystem_magic": "1021994",
+    "materialized_toolchain_write_probe_errno": "EROFS",
+    "materialized_toolchain_mount_flags": ["bind", "ro", "nodev", "nosuid", "exec"],
+    "materialized_node_path": "/run/cubikan-exec/toolchain/node/bin/node",
+    "node_executable_size": 124835376,
+    "node_executable_sha256": "93956de2e59480474a7b46571da1651180b1a050cdf32641ebec4ce6e478e068"
+  },
+  "pinned_inputs": [
+    {
+      "path": "/usr/lib/cargo/bin/coreutils/sha256sum",
+      "size": 11352352,
+      "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"
+    },
+    {
+      "path": "/usr/lib/cargo/bin/coreutils/stat",
+      "size": 11352352,
+      "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"
+    },
+    {
+      "path": "/usr/lib/cargo/bin/coreutils/timeout",
+      "size": 11352352,
+      "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"
+    },
+    {"path": "/usr/lib/cargo/bin/coreutils/env", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/dd", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/chmod", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/dirname", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/mkdir", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/sort", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/uname", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/home/charles/.rustup/toolchains/1.93.0-x86_64-unknown-linux-gnu/bin/cargo", "size": 40753664, "sha256": "9548937d530bf439ff1ba47a3b2bd26eeb9c3aff1961c20c01798613de922578"},
+    {"path": "/usr/bin/bash", "size": 1540520, "sha256": "3efccc187bafa75ff1e37d246270ab3e7aa559f242c7a52bf3ec2a1b5450bdbd"},
+    {"path": "/usr/bin/cmp", "size": 43592, "sha256": "c4025c49347874bb631d0d213f5d8eea8fab5e9968d7aa596de64c05406c4fba"},
+    {"path": "/usr/lib/cargo/bin/coreutils/false", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/bin/find", "size": 216632, "sha256": "efe4843f166525b02f328f0c456a884d6a597f32d2c78cd615b6be0b64279bcf"},
+    {"path": "/usr/bin/gawk", "size": 901712, "sha256": "a695aa25fdd3f207ece8b3628514c6506c45216ce5486f63d293a83e12dc9798"},
+    {"path": "/usr/bin/git", "size": 4547768, "sha256": "5516c9f362c29376ab9a499a33082f9f611941d8c75930c880e30ad109e39c9a"},
+    {"path": "/usr/bin/grep", "size": 191056, "sha256": "4874cbc734792ae29aa38cd7978aedf1e646563af9e8ee0d5dab59ecb6406417"},
+    {"path": "/usr/bin/iconv", "size": 68104, "sha256": "443e7542d1ff6cbdc8c5cc4a9f5d2efdaa6833074ad24ad22db33e78c7aa185b"},
+    {"path": "/usr/bin/ip", "size": 808000, "sha256": "19d7990bf9e818121a7423179611ac59be9d37b3f21b3cb9249c048072a06a08"},
+    {"path": "/usr/lib/cargo/bin/coreutils/mkfifo", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/mktemp", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/bin/mount", "size": 51664, "sha256": "b6246da54de227cbf5e06443ab66595790c2470f2178fb37ae2bee7c98098edc"},
+    {"path": "/usr/bin/gnumv", "size": 133744, "sha256": "3a56b5e8f9b40ca7fb484bb00ba048c705f6520c7a9092b45394a9c916ba0b9b"},
+    {"path": "/usr/bin/nc.openbsd", "size": 39160, "sha256": "de49cac83b4645476865e1faa39ac6c9e833baa1ea26fde02ec8045ec71a160d"},
+    {"path": "/usr/bin/python3.14", "size": 7481192, "sha256": "b8d8288faefdd300201f43fcf00f6f539a27218eeed3a3dff5ab10b9c4c99700"},
+    {"path": "/usr/lib/cargo/bin/coreutils/readlink", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/realpath", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/bin/gnurm", "size": 64096, "sha256": "175a15a35617f84bb86692b50a3e21b41d8e21fdea242e952b31f1e2e80b1a54"},
+    {"path": "/usr/lib/cargo/bin/coreutils/rmdir", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/lib/cargo/bin/coreutils/sleep", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/bin/ss", "size": 136072, "sha256": "f5ffd4dc63629851af8552ba7109189ecbaf98f73849bab724023a112cee32b4"},
+    {"path": "/usr/bin/umount", "size": 39376, "sha256": "49e35c5126d064e49403bcf27dd856d55101359b97556da3e1b714cc1ccd649a"},
+    {"path": "/usr/bin/unshare", "size": 47800, "sha256": "978a4aec5a404ad0a05faac981df501d4b7eb0c5a3ad9c1a7b929a0bfd84f6c8"},
+    {"path": "/usr/lib/cargo/bin/coreutils/wc", "size": 11352352, "sha256": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0"},
+    {"path": "/usr/bin/setpriv", "size": 47576, "sha256": "9e0d70d26a02c1cb4b984ab6f49a582b7a2c3508b1063ac23adc60073292ae7e"},
+    {
+      "path": "/usr/bin/setsid",
+      "size": 14800,
+      "sha256": "ade4a0f0c5df4627b456ab19a1869670e7a58a34b04d817e8703c0fa7b852478"
+    },
+    {
+      "path": "/usr/bin/kill",
+      "size": 22992,
+      "sha256": "a69ef60bd986f87f10b84e6b1648d5d52b50ce6dab4213687a7286a835b442f3"
+    },
+    {
+      "path": "/usr/bin/ps",
+      "size": 146576,
+      "sha256": "40b2b15f65edfaadc0e3f5d3644e6699db3bdf658399831901cc05c11642ea5c"
+    },
+    {
+      "path": "chain/pins.toml",
+      "size": 17859,
+      "sha256": "641a3b8f325dcd20cf40831c4ed0f7969a912f0647fbd716bf12c33dba6d5383"
+    },
+    {
+      "path": "chain/tools/verify-pins.sh",
+      "size": 96805,
+      "sha256": "3d80aa791bb2b986409ac9f9ee630698ae4d02a43b9be5e51f6f8f34cf8b6e2f"
+    },
+    {
+      "path": "chain/tools/loopback-netns.sh",
+      "size": 38972,
+      "sha256": "8c5a8bc685888c506ea189f32205810c80c6c58170dca0ffcbcc914efd2ecb36"
+    },
+    {"path": "chain/tools/loopback-netns.test.sh", "size": 24769, "sha256": "51688ec332321342581cc51035e49f142af3793c09c595ba618f1950a1f59d0a"},
+    {
+      "path": "chain/tools/sealed-exec.py",
+      "size": 5880,
+      "sha256": "b3cd068ac20123ca2971aca6dff5f6718778090323e14c3d3156669bc1c1f672"
+    },
+    {
+      "path": "chain/tools/node-argv-grammar-v1.txt",
+      "size": 4529,
+      "sha256": "64be27a9c5ff19b56adbd009e087c0fae059e667a2cf817cba5c6115fd019498"
+    },
+    {
+      "path": "chain/tools/normalize-node-argv.sh",
+      "size": 26089,
+      "sha256": "41662d4f05c8f1a875d1b2901bda52c82478046403451e261c33de658e20a1d2"
+    },
+    {"path": "chain/tools/normalize-node-argv.test.sh", "size": 14606, "sha256": "7d9efe41b41d3e1d1b6450a0893760315da2e5a0c95f46491cbbd4f79c51bd02"},
+    {"path": "chain/config/zombienet.toml", "size": 3853, "sha256": "44b958a80baed64a177ee76f59f0f7f91a7411175a49e76ca507afccb2b2380d"},
+    {"path": "chain/tools/materialize-zombienet.sh", "size": 25450, "sha256": "e73a4a3fe39b8a02efbfdfcb5d9b4caa3d06b14547ee4c0497236c2b3ea9121c"},
+    {"path": "chain/tools/zombienet-node-launcher.sh", "size": 30928, "sha256": "da6f005f0d7281c7985dedeec16d70edcc19451c21c57846aa693d9904715df9"},
+    {"path": "chain/tools/zombienet-t1115.test.sh", "size": 109952, "sha256": "2e50f5c26b6a7f26b0856ece4f3ebcf67760e2b4214c8705fa067211e3b62134"},
+    {"path": "chain/tools/run-four-node-journey.sh", "size": 38510, "sha256": "bf87afbb5cfc6b8ccf150b4512006d82103449ab96a4104c2f359d7d00b62e00"},
+    {"path": "chain/tools/run-zombienet-e2e.sh", "size": 4020, "sha256": "cc6774229d54f944879af0256d1dd46726f850b1f04955ba41d9d4b8a237a135"},
+    {"path": "tests/chain-e2e/driver.mjs", "size": 290936, "sha256": "15e12ea6dd4882faa7c4f96c381b316b44324dc38f12f8abcb2b8f87bf26cdd6"},
+    {
+      "path": "chain/config/cubikan-local.json",
+      "size": 1278643,
+      "sha256": "dc7945fbeed5b18d21c1839f8f4f5ab13a1660ca956a3513b8a9946bab6334c7"
+    },
+    {
+      "path": "chain/artifacts/local-deployment-anchor-v1.json",
+      "size": 5868,
+      "sha256": "aa58c83fb0cfcb27be160aa8ca150f78ee3fff1cfc3868dbd073c92581c69887"
+    },
+    {
+      "path": "chain/artifacts/cubikan-runtime-v1.compact.compressed.wasm",
+      "size": 637930,
+      "sha256": "640cc616674fe7393fc93928904f0fd92d77571209c8200f08b8da6290c6a275"
+    },
+    {
+      "path": "chain/.cache/downloads/zombienet-a7c434271f094320d17cf94f7a2f95fdef417379.tar.gz",
+      "size": 13578426,
+      "sha256": "cf46203b6c32c219d8d546d30a9069944b800d3daf4f19787dca72e5300b21e2"
+    },
+    {"path": "chain/.cache/downloads/node-v22.23.1-linux-x64.tar.xz", "size": 31068444, "sha256": "9749e988f437343b7fa832c69ded82a312e41a03116d766797ac14f6f9eee578"},
+    {"path": "chain/.cache/downloads/polkadot-sdk-8ae9775dc43c0d8cdd0f6d87700596e14278b1e1.tar.gz", "size": 67106841, "sha256": "1c9429022987918fe9ebada76ba028cd8da2a5ffb85768cf2a7e0cefe1d98f5e"},
+    {
+      "path": "chain/.cache/downloads/polkadot",
+      "size": 115861192,
+      "sha256": "53c9f450f619d680578dbeed6685de102a9632db7b134631650450b84ea83567"
+    },
+    {
+      "path": "chain/.cache/downloads/polkadot-parachain",
+      "size": 184042352,
+      "sha256": "d6766a9aae23be8a9099fe34b18a0c3ef68a0944abd193153e2aac744c6fea7d"
+    },
+    {
+      "path": "chain/.cache/downloads/polkadot-omni-node",
+      "size": 158034760,
+      "sha256": "ff8e5253e8a3e30b421c83d938a3245bdc5de222d807aaf3648575ae029faece"
+    },
+    {"path": "chain/.cache/downloads/polkadot-prepare-worker", "size": 21387400, "sha256": "5e67a05516e24d5e9b9616bacb3a2d58235beb3392de14dfbe51ff6914244267"},
+    {"path": "chain/.cache/downloads/polkadot-execute-worker", "size": 19463336, "sha256": "cc642041ef2582d972071cd4f7122e9803703bc7775e8d432b2d7626f5011b21"},
+    {
+      "path": "tests/fixtures/git/recorded-association-v1.json",
+      "size": 217,
+      "sha256": "ab5e568c937254e1848e31d35203ce60f34ea6bb8029b988d167fedee24d7dcd"
+    }
+  ],
+  "topology": {
+    "orchestrator_count": 1,
+    "node_count": 4,
+    "nodes": [
+      {
+        "role": "relay-a",
+        "kind": "relay-validator",
+        "binary": "chain/.cache/downloads/polkadot",
+        "generated_name": "alice",
+        "dev_seed": "Alice",
+        "node_key": "2bd806c97f0e00af1a1fc3328fa763a9269723c8db8fac4f93af71db186d6e90",
+        "peer_id": "12D3KooWQCkBm1BYtkHpocxCwMgR8yjitEeHGx8spzcDLGt2gkBm",
+        "primary_bootnodes": [
+          "/ip4/127.0.0.1/tcp/30334/ws/p2p/12D3KooWRkZhiRhsqmrQ28rt73K7V3aCBpqKrLGSXmZ99PTcTZby"
+        ],
+        "relay_side_bootnodes": [],
+        "primary_spec_bootnodes": [],
+        "relay_side_spec_bootnodes": [],
+        "listeners": [
+          "127.0.0.1:9944",
+          "127.0.0.1:30333",
+          "127.0.0.1:9615"
+        ],
+        "archive": false,
+        "relay_side": false
+      },
+      {
+        "role": "relay-b",
+        "kind": "relay-validator",
+        "binary": "chain/.cache/downloads/polkadot",
+        "generated_name": "bob",
+        "dev_seed": "Bob",
+        "node_key": "81b637d8fcd2c6da6359e6963113a1170de795e4b725b84d1e0b4cfd9ec58ce9",
+        "peer_id": "12D3KooWRkZhiRhsqmrQ28rt73K7V3aCBpqKrLGSXmZ99PTcTZby",
+        "primary_bootnodes": [
+          "/ip4/127.0.0.1/tcp/30333/ws/p2p/12D3KooWQCkBm1BYtkHpocxCwMgR8yjitEeHGx8spzcDLGt2gkBm"
+        ],
+        "relay_side_bootnodes": [],
+        "primary_spec_bootnodes": [],
+        "relay_side_spec_bootnodes": [],
+        "listeners": [
+          "127.0.0.1:9945",
+          "127.0.0.1:30334",
+          "127.0.0.1:9616"
+        ],
+        "archive": false,
+        "relay_side": false
+      },
+      {
+        "role": "collator-a",
+        "kind": "parachain-collator",
+        "binary": "chain/.cache/downloads/polkadot-omni-node",
+        "generated_name": "alice-1",
+        "dev_seed": "Alice",
+        "node_key": "a42ac5108869b599bcbac21069f63fb47f07452fcc4b87e89b3c06a945612d0b",
+        "peer_id": "12D3KooWHhaSXEhWFi3LibWRNgF9PezoqB9Xeae4fS3dxCowJEg3",
+        "primary_bootnodes": [
+          "/ip4/127.0.0.1/tcp/30336/ws/p2p/12D3KooWDV1yAeEGiye3t2CQpW7MJ5TJV3TTKpTUUxv4xtaggSnA"
+        ],
+        "relay_side_bootnodes": [
+          "/ip4/127.0.0.1/tcp/30333/ws/p2p/12D3KooWQCkBm1BYtkHpocxCwMgR8yjitEeHGx8spzcDLGt2gkBm"
+        ],
+        "primary_spec_bootnodes": [],
+        "relay_side_spec_bootnodes": [],
+        "listeners": [
+          "127.0.0.1:9988",
+          "127.0.0.1:30335",
+          "127.0.0.1:9617",
+          "127.0.0.1:9990",
+          "127.0.0.1:30337",
+          "127.0.0.1:9619"
+        ],
+        "archive": true,
+        "relay_side": true
+      },
+      {
+        "role": "collator-b",
+        "kind": "parachain-collator",
+        "binary": "chain/.cache/downloads/polkadot-omni-node",
+        "generated_name": "bob-1",
+        "dev_seed": "Bob",
+        "node_key": "a5fc3eac9107fe9b449965916d54b334233b8077a37f782d9b59e6e98e04def8",
+        "peer_id": "12D3KooWDV1yAeEGiye3t2CQpW7MJ5TJV3TTKpTUUxv4xtaggSnA",
+        "primary_bootnodes": [
+          "/ip4/127.0.0.1/tcp/30335/ws/p2p/12D3KooWHhaSXEhWFi3LibWRNgF9PezoqB9Xeae4fS3dxCowJEg3"
+        ],
+        "relay_side_bootnodes": [
+          "/ip4/127.0.0.1/tcp/30333/ws/p2p/12D3KooWQCkBm1BYtkHpocxCwMgR8yjitEeHGx8spzcDLGt2gkBm"
+        ],
+        "primary_spec_bootnodes": [],
+        "relay_side_spec_bootnodes": [],
+        "listeners": [
+          "127.0.0.1:9989",
+          "127.0.0.1:30336",
+          "127.0.0.1:9618",
+          "127.0.0.1:9991",
+          "127.0.0.1:30338",
+          "127.0.0.1:9620"
+        ],
+        "archive": true,
+        "relay_side": true
+      }
+    ],
+    "runtime_equal_groups": [
+      [
+        "relay-a.primary",
+        "relay-b.primary",
+        "collator-a.relay-side",
+        "collator-b.relay-side"
+      ],
+      [
+        "collator-a.primary",
+        "collator-b.primary"
+      ]
+    ],
+    "runtime_distinct_groups": [
+      [
+        "relay-a.primary",
+        "collator-a.primary"
+      ]
+    ],
+    "normalizer_rejection_cases": [
+      "grammar-hash-mismatch",
+      "unexpected-positional",
+      "unknown-flag-primary",
+      "unknown-flag-relay-side",
+      "duplicate-value-flag-primary",
+      "duplicate-value-flag-relay-side",
+      "duplicate-switch-primary",
+      "duplicate-switch-relay-side",
+      "both-rpc-spellings-primary",
+      "both-rpc-spellings-relay-side",
+      "generated-structured-rpc-endpoint",
+      "missing-value-primary",
+      "missing-value-relay-side",
+      "missing-primary-rpc-cors",
+      "missing-primary-rpc-methods",
+      "wrong-primary-rpc-methods",
+      "primary-rpc-policy-on-relay-side",
+      "missing-required-primary",
+      "missing-required-relay-side",
+      "nonloopback-bootnode-primary",
+      "nonloopback-bootnode-relay-side",
+      "relay-separator-on-validator",
+      "missing-relay-separator-on-collator",
+      "missing-blocks-pruning-archive",
+      "missing-state-pruning-archive",
+      "missing-worker-path",
+      "wrong-worker-path",
+      "missing-execute-worker-cap",
+      "wrong-soft-worker-cap",
+      "duplicate-hard-worker-cap",
+      "missing-relay-side-workers",
+      "wrong-relay-side-worker-cap",
+      "worker-path-on-collator-primary",
+      "unsafe-chain-path",
+      "unsafe-base-path",
+      "substituted-node-path",
+      "nonregular-node-asset"
+    ]
+  },
+  "pvf_workers": {
+    "root": "/run/cubikan-exec/pvf-workers",
+    "filesystem_magic": "1021994",
+    "directory_mode": "0500",
+    "write_probe_errno": "EROFS",
+    "mount_flags": ["bind", "ro", "nodev", "nosuid", "exec"],
+    "workers_path_flag": "--workers-path",
+    "pool_caps": {
+      "--execute-workers-max-num": "1",
+      "--prepare-workers-soft-max-num": "1",
+      "--prepare-workers-hard-max-num": "1"
+    },
+    "execution_sides": [
+      "relay-a.primary",
+      "relay-b.primary",
+      "collator-a.relay-side",
+      "collator-b.relay-side"
+    ],
+    "host_path_prefix": "/tmp/pvf-host-",
+    "node_impl_version": "1.24.1",
+    "database_backend": "rocksdb",
+    "database_path_components": ["db", "full"],
+    "nested_namespace_capability_mask": "000001ffffffffff",
+    "maximum_supervisors_per_role_kind": 1,
+    "maximum_job_children_per_supervisor": 1,
+    "maximum_total_worker_processes": 16,
+    "monitor_interval_milliseconds": 100,
+    "maximum_observed_generations": 64,
+    "maximum_observed_host_paths": 256,
+    "maximum_observed_unix_sockets": 256,
+    "assets": [
+      {
+        "name": "polkadot-execute-worker",
+        "cache_path": "chain/.cache/downloads/polkadot-execute-worker",
+        "materialized_path": "/run/cubikan-exec/pvf-workers/polkadot-execute-worker",
+        "size": 19463336,
+        "sha256": "cc642041ef2582d972071cd4f7122e9803703bc7775e8d432b2d7626f5011b21",
+        "mode": "0500"
+      },
+      {
+        "name": "polkadot-prepare-worker",
+        "cache_path": "chain/.cache/downloads/polkadot-prepare-worker",
+        "materialized_path": "/run/cubikan-exec/pvf-workers/polkadot-prepare-worker",
+        "size": 21387400,
+        "sha256": "5e67a05516e24d5e9b9616bacb3a2d58235beb3392de14dfbe51ff6914244267",
+        "mode": "0500"
+      }
+    ]
+  },
+  "endpoints": {
+    "collator-a": "ws://127.0.0.1:9988/",
+    "collator-b": "ws://127.0.0.1:9989/"
+  },
+  "checkpoints": {
+    "pre_mutation_readiness": {
+      "para_id": 1000,
+      "minimum_finalized_number": 1,
+      "required_progress_blocks": 1,
+      "expected_scheduler_cores": 1,
+      "expected_distinct_aura_authorities": 2,
+      "maximum_best_finalized_gap": 8,
+      "timeout_milliseconds": 180000,
+      "rpc_timeout_milliseconds": 10000,
+      "poll_interval_milliseconds": 250
+    },
+    "catch_up": "C",
+    "final": "F",
+    "stop_role": "collator-b",
+    "survivor_role": "collator-a",
+    "before_c_last_mutation": "m07",
+    "after_c_first_mutation": "m08",
+    "final_mutation": "m21",
+    "stability_interval_milliseconds": 12000,
+    "stability_interval_count": 2
+  },
+  "exact_recorded_association": {
+    "fixture_path": "tests/fixtures/git/recorded-association-v1.json",
+    "fixture_size": 217,
+    "fixture_sha256": "ab5e568c937254e1848e31d35203ce60f34ea6bb8029b988d167fedee24d7dcd",
+    "trailing_byte": 10,
+    "core_json": "{\"unit_id\":\"01890f47-0ed1-7c68-a7c5-02f69b5a5fe3\",\"subject\":{\"kind\":\"revision\",\"revision\":7},\"reference\":{\"namespace\":\"git.commit.sha1\",\"scope\":\"workspace/cubikan\",\"value\":\"15f37f16e70096c2624ca92fed9d55750640ec88\"}}",
+    "unit_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+    "subject_kind": "revision",
+    "subject_revision": 7,
+    "namespace": "git.commit.sha1",
+    "scope": "workspace/cubikan",
+    "value": "15f37f16e70096c2624ca92fed9d55750640ec88",
+    "required_evidence_sources": [
+      "fresh-a",
+      "fresh-b",
+      "rebuild-a",
+      "rebuild-b"
+    ]
+  },
+  "mutations": [
+    {
+      "id": "m01",
+      "phase": "before-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "create_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "create_intent_unit",
+          "intent_unit": {
+            "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+            "origin": {
+              "namespace": "book.intent",
+              "scope": "sprint-11",
+              "value": "INT-0008"
+            },
+            "species": "task"
+          },
+          "workflow": {
+            "id": "t1115-primary-v1",
+            "phases": [
+              "p0",
+              "p1",
+              "p2",
+              "p3",
+              "p4",
+              "p5",
+              "p6",
+              "p7",
+              "p8"
+            ],
+            "initial_phase": "p0",
+            "edges": [
+              { "from": "p0", "to": "p1" },
+              { "from": "p1", "to": "p2" },
+              { "from": "p2", "to": "p3" },
+              { "from": "p3", "to": "p4" },
+              { "from": "p4", "to": "p5" },
+              { "from": "p5", "to": "p6" },
+              { "from": "p6", "to": "p7" },
+              { "from": "p7", "to": "p8" }
+            ],
+            "completion_phases": ["p8"]
+          }
+        }
+      }
+    },
+    {
+      "id": "m02",
+      "phase": "before-c",
+      "signer": "dave",
+      "endpoint": "collator-b",
+      "work_category": "lifecycle",
+      "operation": "create_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "create_intent_unit",
+          "intent_unit": {
+            "id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4",
+            "origin": {
+              "namespace": "book.intent",
+              "scope": "sprint-11",
+              "value": "INT-0014"
+            },
+            "species": "task"
+          },
+          "workflow": {
+            "id": "t1115-secondary-v1",
+            "phases": ["queued", "done"],
+            "initial_phase": "queued",
+            "edges": [
+              { "from": "queued", "to": "done" }
+            ],
+            "completion_phases": ["done"]
+          }
+        }
+      }
+    },
+    {
+      "id": "m03",
+      "phase": "before-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "relationship",
+      "operation": "create_relationship_definition",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "create_relationship_definition",
+          "definition": { "id": "depends_on", "version": "1" },
+          "source_species": "task",
+          "target_species": "task",
+          "self_policy": "reject",
+          "cycle_policy": "reject"
+        }
+      }
+    },
+    {
+      "id": "m04",
+      "phase": "before-c",
+      "signer": "dave",
+      "endpoint": "collator-b",
+      "work_category": "relationship",
+      "operation": "create_relationship",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "create_relationship",
+          "relationship": {
+            "definition": { "id": "depends_on", "version": "1" },
+            "source_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+            "target_id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4"
+          }
+        }
+      }
+    },
+    {
+      "id": "m05",
+      "phase": "before-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "target": "p1",
+          "expected_revision": "0"
+        }
+      }
+    },
+    {
+      "id": "m06",
+      "phase": "before-c",
+      "signer": "dave",
+      "endpoint": "collator-b",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "target": "p2",
+          "expected_revision": "1"
+        }
+      }
+    },
+    {
+      "id": "m07",
+      "phase": "before-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "target": "p3",
+          "expected_revision": "2"
+        }
+      }
+    },
+    {
+      "id": "m08",
+      "phase": "after-c",
+      "signer": "dave",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "target": "p4",
+          "expected_revision": "3"
+        }
+      }
+    },
+    {
+      "id": "m09",
+      "phase": "after-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "target": "p5",
+          "expected_revision": "4"
+        }
+      }
+    },
+    {
+      "id": "m10",
+      "phase": "after-c",
+      "signer": "dave",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "target": "p6",
+          "expected_revision": "5"
+        }
+      }
+    },
+    {
+      "id": "m11",
+      "phase": "after-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "target": "p7",
+          "expected_revision": "6"
+        }
+      }
+    },
+    {
+      "id": "m12",
+      "phase": "after-c",
+      "signer": "dave",
+      "endpoint": "collator-a",
+      "work_category": "provenance-git",
+      "operation": "record_association",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "record_association",
+          "association": {
+            "unit_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+            "subject": { "type": "revision", "revision": "7" },
+            "reference": {
+              "namespace": "git.commit.sha1",
+              "scope": "workspace/cubikan",
+              "value": "15f37f16e70096c2624ca92fed9d55750640ec88"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "m13",
+      "phase": "after-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "target": "p8",
+          "expected_revision": "7"
+        }
+      }
+    },
+    {
+      "id": "m14",
+      "phase": "after-c",
+      "signer": "dave",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "complete_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "complete_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "expected_revision": "8"
+        }
+      }
+    },
+    {
+      "id": "m15",
+      "phase": "after-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "transition_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "transition_intent_unit",
+          "id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4",
+          "target": "done",
+          "expected_revision": "0"
+        }
+      }
+    },
+    {
+      "id": "m16",
+      "phase": "after-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "provenance-git",
+      "operation": "record_association",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "record_association",
+          "association": {
+            "unit_id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4",
+            "subject": { "type": "revision", "revision": "1" },
+            "reference": {
+              "namespace": "git.commit.sha1",
+              "scope": "workspace/cubikan",
+              "value": "15f37f16e70096c2624ca92fed9d55750640ec88"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "m17",
+      "phase": "after-c",
+      "signer": "dave",
+      "endpoint": "collator-a",
+      "work_category": "lifecycle",
+      "operation": "complete_intent_unit",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "complete_intent_unit",
+          "id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4",
+          "expected_revision": "1"
+        }
+      }
+    },
+    {
+      "id": "m18",
+      "phase": "after-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "relationship",
+      "operation": "delete_relationship",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "delete_relationship",
+          "relationship": {
+            "definition": { "id": "depends_on", "version": "1" },
+            "source_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+            "target_id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4"
+          }
+        }
+      }
+    },
+    {
+      "id": "m19",
+      "phase": "after-c",
+      "signer": "dave",
+      "endpoint": "collator-a",
+      "work_category": "relationship",
+      "operation": "create_relationship",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "create_relationship",
+          "relationship": {
+            "definition": { "id": "depends_on", "version": "1" },
+            "source_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+            "target_id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4"
+          }
+        }
+      }
+    },
+    {
+      "id": "m20",
+      "phase": "after-c",
+      "signer": "charlie",
+      "endpoint": "collator-a",
+      "work_category": "provenance-git",
+      "operation": "revoke_association",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "revoke_association",
+          "association": {
+            "unit_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+            "subject": { "type": "revision", "revision": "7" },
+            "reference": {
+              "namespace": "git.commit.sha1",
+              "scope": "workspace/cubikan",
+              "value": "15f37f16e70096c2624ca92fed9d55750640ec88"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "m21",
+      "phase": "after-c",
+      "signer": "dave",
+      "endpoint": "collator-a",
+      "work_category": "provenance-git",
+      "operation": "record_association",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "record_association",
+          "association": {
+            "unit_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+            "subject": { "type": "revision", "revision": "7" },
+            "reference": {
+              "namespace": "git.commit.sha1",
+              "scope": "workspace/cubikan",
+              "value": "15f37f16e70096c2624ca92fed9d55750640ec88"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "reads": [
+    {
+      "id": "get-primary",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "get_intent_unit",
+          "id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3"
+        }
+      }
+    },
+    {
+      "id": "get-secondary",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "get_intent_unit",
+          "id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4"
+        }
+      }
+    },
+    {
+      "id": "list-units-page-1",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "list_intent_units",
+          "filters": {},
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "list-units-page-2",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "list_intent_units",
+          "filters": {},
+          "limit": 1,
+          "after": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3"
+        }
+      }
+    },
+    {
+      "id": "get-definition",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "get_relationship_definition",
+          "definition": { "id": "depends_on", "version": "1" }
+        }
+      }
+    },
+    {
+      "id": "list-relationships",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "list_relationships",
+          "definition": { "id": "depends_on", "version": "1" },
+          "source_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "project-completed-page-1",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "project_intent_units_v1",
+          "query_version": 1,
+          "filters": { "status": "completed" },
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "project-completed-page-2",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "project_intent_units_v1",
+          "query_version": 1,
+          "filters": { "status": "completed" },
+          "limit": 1,
+          "after": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3"
+        }
+      }
+    },
+    {
+      "id": "associations-primary",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "list_associations_by_unit",
+          "unit_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+          "subject": { "type": "revision", "revision": "7" },
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "associations-secondary",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "list_associations_by_unit",
+          "unit_id": "11890f47-0ed1-7c68-a7c5-02f69b5a5fe4",
+          "subject": { "type": "revision", "revision": "1" },
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "associations-reference-page-1",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "list_associations_by_reference",
+          "reference": {
+            "namespace": "git.commit.sha1",
+            "scope": "workspace/cubikan",
+            "value": "15f37f16e70096c2624ca92fed9d55750640ec88"
+          },
+          "limit": 1
+        }
+      }
+    },
+    {
+      "id": "associations-reference-page-2",
+      "request": {
+        "protocol_version": 2,
+        "operation": {
+          "type": "list_associations_by_reference",
+          "reference": {
+            "namespace": "git.commit.sha1",
+            "scope": "workspace/cubikan",
+            "value": "15f37f16e70096c2624ca92fed9d55750640ec88"
+          },
+          "limit": 1,
+          "after": {
+            "unit_id": "01890f47-0ed1-7c68-a7c5-02f69b5a5fe3",
+            "subject": { "type": "revision", "revision": "7" },
+            "reference": {
+              "namespace": "git.commit.sha1",
+              "scope": "workspace/cubikan",
+              "value": "15f37f16e70096c2624ca92fed9d55750640ec88"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "archive_probe": {
+    "range_start": 0,
+    "methods_per_block": [
+      "chain_getBlockHash",
+      "chain_getHeader",
+      "chain_getBlock",
+      "state_getStorage:System.Events",
+      "state_getStorage::code"
+    ],
+    "system_events_storage_key": "0x26aa394eea5630e07c48ae0c9558cef780d41e5e16056765bc8461851072c9d7",
+    "runtime_code_storage_key": "0x3a636f6465"
+  },
+  "semantic_projection": {
+    "snapshot_contracts": [
+      {
+        "label": "uninterrupted",
+        "source_endpoint": "both",
+        "read_endpoint": "collator-a",
+        "fresh_database": false,
+        "database_deleted_before_build": false
+      },
+      {
+        "label": "fresh-a",
+        "source_endpoint": "collator-a",
+        "read_endpoint": "collator-a",
+        "fresh_database": true,
+        "database_deleted_before_build": false
+      },
+      {
+        "label": "fresh-b",
+        "source_endpoint": "collator-b",
+        "read_endpoint": "collator-b",
+        "fresh_database": true,
+        "database_deleted_before_build": false
+      },
+      {
+        "label": "rebuild-a",
+        "source_endpoint": "collator-a",
+        "read_endpoint": "collator-a",
+        "fresh_database": true,
+        "database_deleted_before_build": true
+      },
+      {
+        "label": "rebuild-b",
+        "source_endpoint": "collator-b",
+        "read_endpoint": "collator-b",
+        "fresh_database": true,
+        "database_deleted_before_build": true
+      }
+    ],
+    "section_counts": {
+      "units": 2,
+      "history": 11,
+      "origins": 2,
+      "definitions": 1,
+      "edges": 1,
+      "projections": 2,
+      "provenance": 2,
+      "pages": 12,
+      "coordinates": 6,
+      "checkpoint": 1
+    }
+  },
+  "audit": {
+    "chain_census": {
+      "range_start": 0,
+      "maximum_retained_bytes": 4194304,
+      "allowed_unsigned_calls": [
+        "parachainSystem.setValidationData",
+        "timestamp.set"
+      ],
+      "allowed_events": [
+        "balances.BurnedDebt",
+        "balances.Withdraw",
+        "cubikan.Accepted",
+        "system.ExtrinsicSuccess",
+        "transactionPayment.TransactionFeePaid"
+      ]
+    },
+    "relay_chain_census": {
+      "range_start": 0,
+      "maximum_retained_bytes": 4194304,
+      "minimum_session_rotation_count": 2,
+      "expected_initial_spot_price": 10000000,
+      "expected_grandpa_authorities": [
+        ["0x88dc3417d5058ec4b4503e0c12ea1a0a89be200fe98922423d4334014fa6b0ee", 1],
+        ["0xd17c2d7823ebf260fd138f2d7e27d114c0145d968b5ff5006125f2414fadae69", 1]
+      ],
+      "allowed_unsigned_calls": [
+        "timestamp.set",
+        "paraInherent.enter"
+      ],
+      "allowed_events": [
+        "onDemandAssignmentProvider.SpotPriceSet",
+        "system.ExtrinsicSuccess",
+        "paraInclusion.CandidateBacked",
+        "paraInclusion.CandidateIncluded",
+        "paraInclusion.CandidateTimedOut",
+        "session.NewSession",
+        "session.NewQueued",
+        "historical.RootStored",
+        "grandpa.NewAuthorities"
+      ]
+    },
+    "required_artifacts": [
+      {"kind": "action", "logical_path": "action/finalized-chain-census.json"},
+      {"kind": "action", "logical_path": "action/finalized-relay-chain-census.json"},
+      {"kind": "action", "logical_path": "action/reads.jsonl"},
+      {"kind": "action", "logical_path": "action/submissions.jsonl"},
+      {"kind": "config", "logical_path": "config/collator-a.raw.json"},
+      {"kind": "config", "logical_path": "config/collator-b.raw.json"},
+      {"kind": "config", "logical_path": "config/environment-inventory.json"},
+      {"kind": "config", "logical_path": "config/materialized-zombienet.toml"},
+      {"kind": "config", "logical_path": "config/process-inventory.json"},
+      {"kind": "config", "logical_path": "config/pvf-worker-inventory.json"},
+      {"kind": "config", "logical_path": "config/relay-a.raw.json"},
+      {"kind": "config", "logical_path": "config/relay-b.raw.json"},
+      {"kind": "fixture", "logical_path": "fixture/journey-v1.json"},
+      {"kind": "fixture", "logical_path": "fixture/recorded-association-v1.json"},
+      {"kind": "journal", "logical_path": "journal/archive-probes.jsonl"},
+      {"kind": "journal", "logical_path": "journal/finality.jsonl"},
+      {"kind": "journal", "logical_path": "journal/submission-lanes.json"},
+      {"kind": "log", "logical_path": "log/collator-a.log"},
+      {"kind": "log", "logical_path": "log/collator-b.log"},
+      {"kind": "log", "logical_path": "log/genesis-export.log"},
+      {"kind": "log", "logical_path": "log/materializer.log"},
+      {"kind": "log", "logical_path": "log/orchestrator.log"},
+      {"kind": "log", "logical_path": "log/relay-a.log"},
+      {"kind": "log", "logical_path": "log/relay-b.log"},
+      {"kind": "socket", "logical_path": "socket/listeners.txt"},
+      {"kind": "socket", "logical_path": "socket/pvf-unix-sockets.json"}
+    ],
+    "zero_count_keys": [
+      "allowlist_mutation",
+      "public_rpc",
+      "account_creation",
+      "key_import",
+      "faucet",
+      "transfer",
+      "para_id_registration",
+      "coretime",
+      "runtime_upload",
+      "deployment",
+      "release",
+      "governance",
+      "secret"
+    ],
+    "dev_signers": ["charlie", "dave"],
+    "dev_signer_accounts": {
+      "charlie": "0x90b5ab205c6974c9ea841be688864633dc9ca8a357843eeacf2314649965fe22",
+      "dave": "0x306721211d5404bd9da88e0204360a1a9ab8b87c66c1bc2fcdd37f3c2222cc20"
+    },
+    "synthetic_origins": ["INT-0008", "INT-0014"],
+    "allowed_hosts": ["127.0.0.1", "localhost", "::1"]
+  }
+}

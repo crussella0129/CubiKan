@@ -578,7 +578,7 @@ def verify_external_artifacts(manifest: dict[str, Any], preflight: dict[str, Any
         "deployment_anchor": (
             "chain/artifacts/local-deployment-anchor-v1.json",
             5868,
-            "38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7",
+            "aa58c83fb0cfcb27be160aa8ca150f78ee3fff1cfc3868dbd073c92581c69887",
         ),
         "metadata": (
             "chain/metadata/cubikan-runtime-v1.scale",
@@ -806,7 +806,7 @@ def verify_preflight(preflight: dict[str, Any]) -> None:
             "rpc_url": "ws://127.0.0.1:9944/",
             "method": "chain_getBlockHash",
             "params": [0],
-            "expected_hash": "eb2ada687ce553d3b9d695afd5d9d0a9c44a0b82e1f6eb823ac87e81638200f0",
+            "expected_hash": "2a682650fa14e635c7ec4c2b7e4f043017a08b58d586d0d2dc50a64e223a6d27",
         },
         {
             "role": "parachain",

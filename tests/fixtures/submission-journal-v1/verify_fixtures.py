@@ -430,7 +430,7 @@ def verify_manifest() -> tuple[dict[str, Any], dict[str, Any]]:
         "deployment_anchor": (
             "chain/artifacts/local-deployment-anchor-v1.json",
             5868,
-            "38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7",
+            "aa58c83fb0cfcb27be160aa8ca150f78ee3fff1cfc3868dbd073c92581c69887",
         ),
         "metadata": (
             "chain/metadata/cubikan-runtime-v1.scale",

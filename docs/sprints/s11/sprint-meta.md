@@ -13,6 +13,26 @@
 
 ## Build Checkpoint Blockages
 
+- **2026-08-24 — T-1115 checkpoint remains incomplete:** The checkpoint branch
+  preserves the current four-node Zombienet candidate and its supporting
+  chain-client, attestation, submission, pin, fixture, namespace, sealed-node,
+  PVF-worker, audit, and mutation-guard work for review. Fast verification is
+  green: `cargo fmt --all -- --check`, the focused release chain-E2E contract
+  tests (two passed, five intentionally ignored), warnings-denied focused
+  Clippy, JavaScript and Bash syntax checks, `git diff --check`, and the full
+  `chain/tools/zombienet-t1115.test.sh` static/mutation suite. Exact candidate
+  runs have progressed through the relay census and exposed successive raw-spec
+  audit-bound and PVF teardown-sampling defects; those discoveries are fixed or
+  narrowed in the checkpoint, but no uninterrupted exact run has yet completed.
+  Independent review found two remaining teardown-verifier races: post-stop
+  inventories must use typed, teardown-only retries for demonstrably exiting,
+  reparenting, or disappearing known objects, and success must require at least
+  two consecutive error-free empty process/path/socket censuses rather than the
+  first empty non-atomic scan. Behavioral transient-versus-persistent guards and
+  stronger post-node/listener-zero ordering guards must accompany that repair,
+  followed by the exact locked/offline namespace journey. This checkpoint does
+  not mark T-1115 complete, move it from `docs/work/tasks.md`, or unblock T-1116.
+
 - **2026-08-13 — T-1101 remains queued:** Foundation source, dependency,
   toolchain, rusqlite, static pin, mutation, Rust, and Wasm checks are green,
   but final E1/E3 evidence is incomplete. The current shell-tool and release-
@@ -205,3 +225,196 @@
   four-node journey and must compare the same immutable reference identity.
   Neither an in-memory vector replay nor caller-constructed read capability may
   stand in for finality or rebuild evidence.
+
+- **2026-08-22 — T-1115 sealed-node evidence scope omission resolved:** The
+  pinned argv normalizer executes the reviewed collator bytes from a sealed
+  memory file, so `/proc/<pid>/exe` is the deleted named memfd rather than the
+  `polkadot-omni-node` pathname that T-1107's archive-process evidence alone
+  admitted. That contradiction prevents every real chain-backed T-1115 read.
+  The minimal upstream repair in
+  `crates/cubikan-chain-client/src/identity.rs` accepts only the exact pinned
+  pathname identity or the launcher's exact named sealed memfd, requires the
+  pinned executable size and SHA-256 plus the complete seal set for memory
+  execution, and holds stable process, proc-directory, and executable
+  descriptors while rechecking PID start time and kernel file identity. It
+  adds no caller-minted RPC, finality, projection, or read-capability seam and
+  does not weaken the sealed launcher or deployment identity.
+
+- **2026-08-22 — T-1115 WebSocket bootnode pin contradiction resolved:** The
+  pinned argv normalizer forces every reviewed P2P listener to the exact
+  `/ip4/127.0.0.1/tcp/PORT/ws` transport, while its frozen bootnode grammar
+  admitted only the transport-incompatible `/tcp/PORT/p2p/PEER` spelling.
+  Pinned Zombienet correctly derives `/tcp/PORT/ws/p2p/PEER` from those live
+  listeners, so the valid four-node candidate otherwise fails before launch
+  or advertises a peer address on which no reviewed listener exists. The
+  minimal upstream repair in `chain/tools/node-argv-grammar-v1.txt`,
+  `chain/tools/normalize-node-argv.sh` and its test,
+  `chain/pins.toml`, and `chain/tools/verify-pins.sh` keeps the same closed
+  loopback port and peer-ID inventory but requires the exact `/ws/p2p`
+  transport marker, updates the repository-tool pins and bootstrap hash, and
+  adds positive/negative transport tests. It admits no non-loopback address,
+  new port, external bind, alternate executable, or caller authority.
+
+- **2026-08-22 — T-1115 process-lifecycle containment scope omission
+  resolved:** T-1115-E1 requires exact four-node and orchestrator cleanup under
+  a hard thirty-minute bound, but process-group cleanup alone cannot contain a
+  descendant that creates another session or outlives the Rust harness. The
+  minimal repair extends the existing loopback wrapper and its tests with one
+  fresh PID namespace and procfs, makes the exact candidate namespace PID 1,
+  and pins `unshare --pid --fork --kill-child=KILL --mount-proc`. Exiting PID 1
+  therefore makes the kernel kill every remaining namespace process, while
+  killing the host-side `unshare` supervisor first kills PID 1 and triggers the
+  same teardown. Launch and reassertion prove the PID-namespace/procfs identity,
+  and adversarial tests cover an ignored-signal, session-escaped descendant on
+  both normal PID-1 exit and supervisor `SIGKILL`. This changes no node argv,
+  network allowance, public API, finalized-chain authority, or projection
+  capability.
+
+- **2026-08-22 — T-1115 explicit-listener CLI contradiction resolved:** The
+  pinned Zombienet provider does not generate a primary `--port`, so the closed
+  config supplies that exact role-fixed allocation and the normalizer requires
+  it as input evidence. The pinned relay and omni-node CLIs, however, reject a
+  final argv containing both `--port` and the normalizer's explicit
+  `--listen-addr`; the literal four-node candidate therefore exits before any
+  socket binds. The minimal repair keeps requiring and validating every raw
+  `--port` allocation but omits it from the sealed final argv, where the exact
+  loopback WebSocket `--listen-addr` already fixes the same P2P port. Grammar,
+  launcher oracle, tests, and repository-tool hashes update atomically. It
+  admits no new input flag, port, address, executable, network route, or caller
+  authority.
+
+- **2026-08-22 — T-1115 sealed relay PVF-worker scope omission resolved:** The
+  pinned relay executable normally discovers its same-release prepare and
+  execute workers beside `/proc/self/exe`, but sealed-memory execution makes
+  that location a deleted memfd and prevents both validators from starting.
+  The minimal integration repair pins the two official stable2606-1 worker
+  assets by URL, size, SHA-256, version, and commit; copies their exact opened
+  bytes without following links into the fixed private
+  `/run/cubikan-exec/pvf-workers` directory; and exposes that exact two-file
+  tree through an executable `ro,nodev,nosuid` tmpfs bind. Every relay
+  execution side carries one exact workers path and three pool bounds fixed at
+  one; relay-validator bounds live in the immutable command prefix because the
+  pinned Zombienet release incorrectly deduplicates repeated scalar argument
+  values. The runner installs cleanup before mounting, unmounts and removes the
+  tree after the owned process group exits, and the PID namespace remains the
+  final lifecycle backstop. PVF workers are pinned subordinate processes—not
+  additional blockchain nodes—and remain inside the process, resource, Unix-
+  socket, and residue audits. This admits no alternate worker path, writable
+  binary store, unbounded pool, fifth chain node, external listener, or caller
+  authority.
+
+- **2026-08-22 — T-1115 IPv4-only RPC-listener contradiction resolved:** The
+  pinned node CLI's legacy `--rpc-port` path binds both `127.0.0.1` and `::1`,
+  while the locked journey permits one exact IPv4 loopback RPC endpoint per
+  relay execution side and collator primary. The config retains each
+  `rpc_port` only as Zombienet's orchestration allocation; the launcher and
+  normalizer validate and consume the provider's exact primary legacy
+  `--rpc-port`, `--rpc-cors all`, and `--rpc-methods unsafe` inputs. The pinned
+  provider generates only p2p, RPC, and metrics port allocations after the
+  collator separator, so the frozen role mapping rejects primary policy globals
+  there and supplies the same fixed policy inside one exact
+  `--experimental-rpc-endpoint`
+  `listen-addr=127.0.0.1:PORT,methods=unsafe,cors=all` on every primary and
+  embedded relay side. No final `--rpc-port`, `--ws-port`, `--rpc-cors`, or
+  `--rpc-methods` global survives. The chain-client process-identity boundary
+  authenticates that same exact primary endpoint and rejects the legacy/global
+  forms while admitting at most one exact embedded relay endpoint after the
+  omni separator. Pinned relay and omni-node parsing proves the structured
+  endpoint spelling, and the closed argv oracles cover all six fixed RPC
+  ports. This admits no IPv6 bind, public address, additional endpoint, new
+  port, executable, route, or caller authority.
+
+- **2026-08-22 — T-1115 npm Git-dependency and lifecycle-shell scope omission
+  resolved:** The pinned Zombienet lock resolves `toml` through one Git commit
+  without registry integrity metadata, while the materializer and shared pin
+  verifier previously trusted that checkout after `npm ci` and the verifier
+  still delegated its build to an npm lifecycle shell. The minimal repair pins
+  commit `5e17114f1af5b5b70e4f2ec10cd007623c928988` and the deterministic
+  installed-content tree hash, rejects a symbolic root plus every symbolic or
+  nonregular entry, and rechecks the tree immediately after each install and
+  after each direct build. Both npm boundaries authenticate canonical
+  `/usr/bin/git`, start from an empty environment with system/global Git
+  configuration, prompts, SSH/proxy helpers, replacement objects, lazy fetch,
+  and optional locking disabled, and use distinct empty regular user/global
+  npm configuration files under the private build home. Fresh-cache creation
+  admits one pinned HTTPS helper only in the explicit online phase, rewrites
+  only the exact `toml` repository away from its lockfile SSH spelling, and
+  disables credentials; the offline phase exposes no network helper or
+  protocol. The live materializer never gives npm the shared cache: it copies
+  that cache through no-follow descriptors into its private tmpfs home while
+  bounding entries, bytes, depth, and path length, rejects identity drift, and
+  verifies the private closure before and after npm can mutate it. The verifier
+  now mirrors the materializer's direct pinned Node, TypeScript compiler, and
+  Node filesystem build instead of invoking `npm run`; the pinned error-only
+  npm log level excludes advisory URLs from the retained E5 transcript while
+  preserving nonzero failures. Fresh-cache publication
+  remains atomic and a concurrent or malformed cache fails closed. This admits
+  no alternate Git revision, installed byte tree, package script, shell,
+  executable, network helper, npm configuration source, or caller authority.
+
+- **2026-08-22 — T-1115 derived-toolchain immutability and
+  bootstrap-evidence scope omission resolved:** The pinned Zombienet and Node
+  archives, lockfile, npm closure, and materializer authenticate derivation
+  inputs, but the derived JavaScript/module tree previously remained writable
+  under the ext4 work root after materialization; mapped-root consumers also
+  retained mount capability, the offline install mutated the shared npm cache,
+  and materializer/genesis stderr could be deleted outside the E5 audit. The
+  minimal integration repair materializes the actual toolchain in the private
+  mount-namespace-only `/run/cubikan-exec` tmpfs, uses a private verified
+  snapshot of the shared npm cache, and lets only the runner self-bind/remount
+  the completed tree executable `ro,nodev,nosuid`. Canonical pinned
+  `/usr/bin/setpriv` launches materialization, genesis export, the orchestrator,
+  and all nodes with no-new-privileges and empty inheritable, permitted,
+  effective, bounding, and ambient capability sets; PVF entrypoints inherit
+  that posture before applying the pinned worker sandbox described below.
+  Retained `/proc` evidence and pre/post mount identity, flags, EROFS probes,
+  and exact unmount/removal prove the boundary. Bounded materializer and genesis logs
+  become required hash-bound E5 artifacts and undergo the same
+  public/helper/secret scan. The narrowly necessary `chain/pins.toml` and
+  `chain/tools/verify-pins.sh` updates pin the new host executable/cache
+  contract outside T-1115's original Touches without changing runtime,
+  endpoint, signer, finality, projection, or caller authority.
+
+- **2026-08-22 — T-1115 host curl patch-level pin drift resolved:** The
+  unattended host upgrade from Ubuntu's curl `8.18.0-1ubuntu2.3` package to
+  `8.18.0-1ubuntu2.4` changed `/usr/bin/curl` after the sprint foundation was
+  frozen, so every locked or static pin check failed before reaching the local
+  journey. The minimal environment repair refreshes only that executable's
+  SHA-256 after confirming the installed package and unchanged closed HTTPS
+  fetch invocation. No URL, fetched artifact identity, network phase, command
+  argument, or runtime authority changes.
+
+- **2026-08-23 — T-1115 PVF nested-sandbox evidence contradiction resolved:**
+  The pinned stable2606-1 prepare and execute workers intentionally call
+  `unshare(CLONE_NEWUSER | CLONE_NEWNS)`. Linux then gives that same process a
+  full capability mask scoped only to the new user namespace, even though its
+  parent entered with an empty bounding set; requiring every observed worker
+  capability field to remain zero therefore rejected the real pinned sandbox.
+  The minimal evidence repair keeps the zero-capability requirement unchanged
+  for the orchestrator, four nodes, and any worker still in their outer
+  namespaces, while separately admitting only the exact nested posture:
+  no-new-privileges remains set; inheritable and ambient capabilities remain
+  zero; permitted, effective, and bounding equal the independently fixed host
+  mask; user and mount namespace identities are distinct and stable; and both
+  UID and GID maps are stably empty. A sampled worker must demonstrate that
+  nested posture. Runtime-monitor maxima remain explicitly observed samples;
+  exact pool authority comes from the sealed argv caps and fail-closed sampled
+  violations, not a claim that polling observes every transient process. This
+  adds no host-namespace, mount, executable, network, signer, finality,
+  projection, or caller authority.
+
+- **2026-08-23 — T-1115 failure-output isolation scope omission resolved:**
+  A scanner inside the fresh PID namespace could not be the final disclosure
+  boundary because a same-namespace descendant could address an ancestor's
+  inherited host-output descriptor through `/proc`, and a shared host PTY
+  could provide another output path. The loopback wrapper now retains the only
+  real host stdout/stderr descriptors in a host-side bounded mediator. The
+  exact T-1115 launch child and every inner descendant receive only distinct
+  anonymous pipe writers plus `/dev/null` input, start without a controlling
+  terminal, and see a private `devpts` instance. Both streams are fully drained
+  and classified together: safe bounded bytes are replayed atomically, while
+  an unsafe byte, secret/helper/public URL, overflow, scanner failure, or
+  retained writer discards both and emits one fixed failure. PID-namespace
+  teardown and descriptor proofs remain mandatory. This changes no successful
+  transcript, test topology, endpoint, executable, network route, or caller
+  authority.

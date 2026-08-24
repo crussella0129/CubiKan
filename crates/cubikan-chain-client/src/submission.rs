@@ -56,6 +56,13 @@ const EVENT_SCHEMA_VERSION: u16 = 1;
 const MORTAL_PERIOD: u64 = 64;
 const DEFAULT_FINALITY_WAIT: Duration = Duration::from_secs(120);
 const CUBIKAN_PALLET: &str = "Cubikan";
+const TRANSACTION_VALIDATION_RUNTIME_API: &str = "TaggedTransactionQueue_validate_transaction";
+const TRANSACTION_VALIDATION_RUNTIME_API_ID_HEX: &str = "0xd2bc9897eed08f15";
+const TRANSACTION_VALIDATION_RUNTIME_API_VERSION: u32 = 3;
+const MAX_TRANSACTION_VALIDATION_REQUEST_BYTES: usize = 1_048_576;
+const MAX_TRANSACTION_VALIDATION_RESPONSE_BYTES: usize = 65_536;
+const MAX_TRANSACTION_VALIDITY_TAGS: u32 = 64;
+const MAX_TRANSACTION_VALIDITY_TAG_BYTES: u32 = 256;
 const EXACT_EXTENSION_NAMES: [&str; 9] = [
     "CheckNonZeroSender",
     "CheckSpecVersion",
@@ -890,7 +897,7 @@ impl From<FinalizedBlock> for SubmissionBlock {
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-enum DryRunOutcome {
+enum ValidationOutcome {
     Valid,
     Invalid(SubmissionFailureCode),
 }
@@ -941,7 +948,11 @@ trait SubmissionChain: Send + Sync {
         extrinsic_index: u32,
     ) -> ChainFuture<'a, FinalizedDispatchEvidence>;
     fn storage(&self, key: Vec<u8>, at: [u8; 32]) -> ChainFuture<'_, Option<Vec<u8>>>;
-    fn dry_run(&self, extrinsic: Vec<u8>, at: [u8; 32]) -> ChainFuture<'_, DryRunOutcome>;
+    fn validate_transaction(
+        &self,
+        extrinsic: Vec<u8>,
+        at: [u8; 32],
+    ) -> ChainFuture<'_, ValidationOutcome>;
     fn submit_and_watch(
         &self,
         extrinsic: Vec<u8>,
@@ -952,7 +963,6 @@ trait SubmissionChain: Send + Sync {
 struct RealSubmissionChain<'a> {
     verified: &'a VerifiedArchiveClient,
     rpc: LegacyRpcMethods<RpcConfigFor<CubiKanConfig>>,
-    metadata: subxt::ArcMetadata,
     identity: ChainIdentity,
 }
 
@@ -968,18 +978,28 @@ impl<'a> RealSubmissionChain<'a> {
                 )
             })?;
         let deployment = verified.identity();
+        if deployment
+            .runtime_apis()
+            .iter()
+            .find(|(id, _)| id == TRANSACTION_VALIDATION_RUNTIME_API_ID_HEX)
+            .map(|(_, version)| *version)
+            != Some(TRANSACTION_VALIDATION_RUNTIME_API_VERSION)
+        {
+            return Err(SubmissionError::without_source(
+                SubmissionErrorKind::RuntimeMismatch,
+                "TaggedTransactionQueue runtime API identity differs from the pinned v3 contract",
+            ));
+        }
         let identity = ChainIdentity {
             deployment_id: *deployment.deployment_id(),
             genesis_hash: *deployment.parachain_genesis_hash(),
             spec_version: deployment.runtime_spec_version(),
             transaction_version: deployment.runtime_transaction_version(),
         };
-        let metadata = Arc::new(pinned_metadata()?);
         let _ = offline_client(&identity)?;
         Ok(Self {
             verified,
             rpc: LegacyRpcMethods::new(rpc_client),
-            metadata,
             identity,
         })
     }
@@ -1064,15 +1084,25 @@ impl SubmissionChain for RealSubmissionChain<'_> {
         })
     }
 
-    fn dry_run(&self, extrinsic: Vec<u8>, at: [u8; 32]) -> ChainFuture<'_, DryRunOutcome> {
+    fn validate_transaction(
+        &self,
+        extrinsic: Vec<u8>,
+        at: [u8; 32],
+    ) -> ChainFuture<'_, ValidationOutcome> {
         Box::pin(async move {
+            let parameters = transaction_validation_parameters(&extrinsic, at)
+                .map_err(|error| ChainFailure::new("encode transaction validation", error))?;
             let response = self
                 .rpc
-                .dry_run(&extrinsic, Some(H256::from(at)))
+                .state_call(
+                    TRANSACTION_VALIDATION_RUNTIME_API,
+                    Some(&parameters),
+                    Some(H256::from(at)),
+                )
                 .await
-                .map_err(|error| ChainFailure::new("dry-run signed extrinsic", error))?;
-            decode_dry_run(&response.0, self.metadata.clone())
-                .map_err(|error| ChainFailure::new("decode dry-run", error))
+                .map_err(|error| ChainFailure::new("validate signed extrinsic", error))?;
+            decode_transaction_validation(&response)
+                .map_err(|error| ChainFailure::new("decode transaction validation", error))
         })
     }
 
@@ -1302,12 +1332,12 @@ async fn submit_with_chain(
         .map_err(chain_error_before_send)?;
     let prepared = prepare_submission(chain, signer, &mutation, head).await?;
     match chain
-        .dry_run(prepared.encoded.clone(), head.hash)
+        .validate_transaction(prepared.encoded.clone(), head.hash)
         .await
         .map_err(chain_error_before_send)?
     {
-        DryRunOutcome::Valid => {}
-        DryRunOutcome::Invalid(error) => {
+        ValidationOutcome::Valid => {}
+        ValidationOutcome::Invalid(error) => {
             return Ok(result_without_ack(
                 SubmissionOutcomeDetail::SubmissionRejected { operation, error },
             ));
@@ -2194,72 +2224,145 @@ const fn operation_call_name(operation: MutationOperation) -> &'static str {
     }
 }
 
-fn decode_dry_run(
-    bytes: &[u8],
-    metadata: subxt::ArcMetadata,
-) -> Result<DryRunOutcome, StaticFailure> {
-    let Some((&outer, rest)) = bytes.split_first() else {
-        return Err(StaticFailure("empty system_dryRun response"));
-    };
-    match outer {
-        // ApplyExtrinsicResult::Ok(DispatchOutcome). A dispatch error is still
-        // valid for inclusion, so submission proceeds and its finalized
-        // System event supplies the authoritative terminal rejection.
-        0 => match rest.split_first() {
-            Some((&0, [])) => Ok(DryRunOutcome::Valid),
-            Some((&1, dispatch_bytes)) if !dispatch_bytes.is_empty() => {
-                let type_id = metadata
-                    .dispatch_error_ty()
-                    .ok_or(StaticFailure("pinned metadata has no DispatchError type"))?;
-                let mut input = dispatch_bytes;
-                decode_as_type(&mut input, type_id, metadata.types())
-                    .map_err(|_| StaticFailure("malformed dry-run DispatchError"))?;
-                if !input.is_empty() {
-                    return Err(StaticFailure("dry-run DispatchError has trailing bytes"));
-                }
-                Ok(DryRunOutcome::Valid)
-            }
-            _ => Err(StaticFailure("malformed dry-run DispatchOutcome")),
-        },
-        // ApplyExtrinsicResult::Err(TransactionValidityError). These pinned
-        // enums have only unit variants plus Custom(u8); consume their exact
-        // shape so truncation or trailing bytes fail closed.
-        1 => {
-            let Some((&validity_kind, validity)) = rest.split_first() else {
-                return Err(StaticFailure("truncated transaction-validity error"));
-            };
-            let Some((&variant, fields)) = validity.split_first() else {
-                return Err(StaticFailure("truncated transaction-validity variant"));
-            };
-            let valid_shape = match validity_kind {
-                // InvalidTransaction::Custom is variant 7 and carries one u8.
-                0 => match variant {
-                    0..=6 | 8..=12 => fields.is_empty(),
-                    7 => fields.len() == 1,
-                    _ => false,
-                },
-                // UnknownTransaction::Custom is variant 2 and carries one u8.
-                1 => match variant {
-                    0..=1 => fields.is_empty(),
-                    2 => fields.len() == 1,
-                    _ => false,
-                },
-                _ => false,
-            };
-            if !valid_shape {
-                return Err(StaticFailure(
-                    "malformed or trailing transaction-validity error",
-                ));
-            }
-            let code = match (validity_kind, variant) {
-                (0, 1) => SubmissionFailureCode::InsufficientBalance,
-                (0, 2 | 3) => SubmissionFailureCode::NonceConflict,
-                _ => SubmissionFailureCode::TransactionInvalid,
-            };
-            Ok(DryRunOutcome::Invalid(code))
-        }
-        _ => Err(StaticFailure("invalid system_dryRun Result variant")),
+fn transaction_validation_parameters(
+    extrinsic: &[u8],
+    at: [u8; 32],
+) -> Result<Vec<u8>, StaticFailure> {
+    let encoded_size = extrinsic.len().checked_add(33).ok_or(StaticFailure(
+        "transaction validation request size overflow",
+    ))?;
+    if encoded_size > MAX_TRANSACTION_VALIDATION_REQUEST_BYTES {
+        return Err(StaticFailure(
+            "transaction validation request exceeds bound",
+        ));
     }
+    let mut parameters = Vec::with_capacity(encoded_size);
+    // TransactionSource::External is the pinned SCALE variant 2. The full
+    // encoded extrinsic already contains its own compact length prefix.
+    2_u8.encode_to(&mut parameters);
+    parameters.extend_from_slice(extrinsic);
+    at.encode_to(&mut parameters);
+    if parameters.len() != encoded_size {
+        return Err(StaticFailure(
+            "transaction validation request shape drifted",
+        ));
+    }
+    Ok(parameters)
+}
+
+fn decode_transaction_validation(bytes: &[u8]) -> Result<ValidationOutcome, StaticFailure> {
+    if bytes.len() > MAX_TRANSACTION_VALIDATION_RESPONSE_BYTES {
+        return Err(StaticFailure(
+            "transaction validation response exceeds bound",
+        ));
+    }
+    let Some((&result_variant, result)) = bytes.split_first() else {
+        return Err(StaticFailure("empty transaction validation response"));
+    };
+    match result_variant {
+        0 => {
+            decode_valid_transaction(result)?;
+            Ok(ValidationOutcome::Valid)
+        }
+        1 => decode_transaction_validity_error(result).map(ValidationOutcome::Invalid),
+        _ => Err(StaticFailure(
+            "invalid transaction validation Result variant",
+        )),
+    }
+}
+
+fn decode_valid_transaction(mut input: &[u8]) -> Result<(), StaticFailure> {
+    u64::decode(&mut input)
+        .map_err(|_| StaticFailure("truncated transaction validation priority"))?;
+    decode_transaction_validity_tags(&mut input)?;
+    if decode_transaction_validity_tags(&mut input)? == 0 {
+        return Err(StaticFailure(
+            "valid transaction response has no provided tag",
+        ));
+    }
+    u64::decode(&mut input)
+        .map_err(|_| StaticFailure("truncated transaction validation longevity"))?;
+    bool::decode(&mut input)
+        .map_err(|_| StaticFailure("invalid transaction validation propagation flag"))?;
+    if !input.is_empty() {
+        return Err(StaticFailure(
+            "valid transaction response has trailing bytes",
+        ));
+    }
+    Ok(())
+}
+
+fn decode_transaction_validity_tags(input: &mut &[u8]) -> Result<u32, StaticFailure> {
+    let count = decode_canonical_compact_u32(input)?;
+    if count > MAX_TRANSACTION_VALIDITY_TAGS {
+        return Err(StaticFailure(
+            "transaction validity tag count exceeds bound",
+        ));
+    }
+    for _ in 0..count {
+        let length = decode_canonical_compact_u32(input)?;
+        if length > MAX_TRANSACTION_VALIDITY_TAG_BYTES {
+            return Err(StaticFailure("transaction validity tag exceeds bound"));
+        }
+        let length = usize::try_from(length)
+            .map_err(|_| StaticFailure("transaction validity tag length overflow"))?;
+        if input.len() < length {
+            return Err(StaticFailure("truncated transaction validity tag"));
+        }
+        *input = &input[length..];
+    }
+    Ok(count)
+}
+
+fn decode_canonical_compact_u32(input: &mut &[u8]) -> Result<u32, StaticFailure> {
+    let original = *input;
+    let value = Compact::<u32>::decode(input)
+        .map_err(|_| StaticFailure("malformed transaction validity compact integer"))?
+        .0;
+    let consumed = original
+        .len()
+        .checked_sub(input.len())
+        .ok_or(StaticFailure("transaction validity compact cursor drifted"))?;
+    if Compact(value).encode().as_slice() != &original[..consumed] {
+        return Err(StaticFailure(
+            "noncanonical transaction validity compact integer",
+        ));
+    }
+    Ok(value)
+}
+
+fn decode_transaction_validity_error(bytes: &[u8]) -> Result<SubmissionFailureCode, StaticFailure> {
+    let Some((&validity_kind, validity)) = bytes.split_first() else {
+        return Err(StaticFailure("truncated transaction-validity error"));
+    };
+    let Some((&variant, fields)) = validity.split_first() else {
+        return Err(StaticFailure("truncated transaction-validity variant"));
+    };
+    let valid_shape = match validity_kind {
+        // InvalidTransaction::Custom is variant 7 and carries one u8.
+        0 => match variant {
+            0..=6 | 8..=12 => fields.is_empty(),
+            7 => fields.len() == 1,
+            _ => false,
+        },
+        // UnknownTransaction::Custom is variant 2 and carries one u8.
+        1 => match variant {
+            0..=1 => fields.is_empty(),
+            2 => fields.len() == 1,
+            _ => false,
+        },
+        _ => false,
+    };
+    if !valid_shape {
+        return Err(StaticFailure(
+            "malformed or trailing transaction-validity error",
+        ));
+    }
+    Ok(match (validity_kind, variant) {
+        (0, 1) => SubmissionFailureCode::InsufficientBalance,
+        (0, 2 | 3) => SubmissionFailureCode::NonceConflict,
+        _ => SubmissionFailureCode::TransactionInvalid,
+    })
 }
 
 async fn reconcile_existing(
@@ -3240,10 +3343,14 @@ fn journal_error(error: JournalError) -> SubmissionError {
 }
 
 fn chain_error_before_send(error: ChainFailure) -> SubmissionError {
-    let kind = if error.operation.contains("block") || error.operation.contains("storage") {
-        SubmissionErrorKind::ArchiveHistoryUnavailable
-    } else {
-        SubmissionErrorKind::ArchiveRpcUnavailable
+    let kind = match error.operation {
+        "encode transaction validation" | "decode transaction validation" => {
+            SubmissionErrorKind::RuntimeMismatch
+        }
+        operation if operation.contains("block") || operation.contains("storage") => {
+            SubmissionErrorKind::ArchiveHistoryUnavailable
+        }
+        _ => SubmissionErrorKind::ArchiveRpcUnavailable,
     };
     SubmissionError::with_source(
         kind,
@@ -3327,7 +3434,7 @@ mod tests {
         FinalizedBlockByHash([u8; 32]),
         FinalizedDispatchEvidence { block: u64, extrinsic_index: u32 },
         Storage { key: Vec<u8>, at: [u8; 32] },
-        DryRun { at: [u8; 32] },
+        ValidateTransaction { at: [u8; 32] },
         SubmitAndWatch { timeout: Duration },
     }
 
@@ -3355,7 +3462,8 @@ mod tests {
         blocks: BTreeMap<u64, SubmissionBlock>,
         account: Option<Vec<u8>>,
         exact_storage: FakeExactStorage,
-        dry_run: DryRunOutcome,
+        validation: ValidationOutcome,
+        validation_failure: Option<&'static str>,
         watch: FakeWatch,
         dispatch: FakeDispatch,
         trace: Vec<TraceCall>,
@@ -3382,7 +3490,8 @@ mod tests {
                     blocks: BTreeMap::new(),
                     account: Some(account_info(66_051)),
                     exact_storage: BTreeMap::new(),
-                    dry_run: DryRunOutcome::Valid,
+                    validation: ValidationOutcome::Valid,
+                    validation_failure: None,
                     watch: FakeWatch::Timeout,
                     dispatch: FakeDispatch::Success,
                     trace: Vec::new(),
@@ -3500,13 +3609,25 @@ mod tests {
             Box::pin(async move { Ok(value) })
         }
 
-        fn dry_run(&self, _extrinsic: Vec<u8>, at: [u8; 32]) -> ChainFuture<'_, DryRunOutcome> {
-            let outcome = {
+        fn validate_transaction(
+            &self,
+            _extrinsic: Vec<u8>,
+            at: [u8; 32],
+        ) -> ChainFuture<'_, ValidationOutcome> {
+            let (outcome, failure) = {
                 let mut state = self.state();
-                state.trace.push(TraceCall::DryRun { at });
-                state.dry_run
+                state.trace.push(TraceCall::ValidateTransaction { at });
+                (state.validation, state.validation_failure)
             };
-            Box::pin(async move { Ok(outcome) })
+            Box::pin(async move {
+                match failure {
+                    Some(operation) => Err(ChainFailure::new(
+                        operation,
+                        StaticFailure("injected validation failure"),
+                    )),
+                    None => Ok(outcome),
+                }
+            })
         }
 
         fn submit_and_watch(
@@ -3807,46 +3928,114 @@ mod tests {
             lower_hex(Sha256::digest(metadata_bytes())),
             "171a323b1e6bf0122e549eecd5f5932e672a3e0835f32edf0b8808cfefd97302"
         );
-        let metadata = Arc::new(pinned_metadata().expect("decode pinned dry-run metadata"));
+        let deployment_anchor: serde_json::Value = serde_json::from_slice(include_bytes!(
+            "../../../chain/artifacts/local-deployment-anchor-v1.json"
+        ))
+        .expect("decode pinned deployment anchor");
+        assert!(
+            deployment_anchor["runtime"]["apis"]
+                .as_array()
+                .expect("runtime API inventory is an array")
+                .iter()
+                .any(|api| {
+                    api[0] == TRANSACTION_VALIDATION_RUNTIME_API_ID_HEX
+                        && api[1] == TRANSACTION_VALIDATION_RUNTIME_API_VERSION
+                })
+        );
+        let mut valid_response = vec![0_u8];
+        7_u64.encode_to(&mut valid_response);
+        Compact(1_u32).encode_to(&mut valid_response);
+        Compact(2_u32).encode_to(&mut valid_response);
+        valid_response.extend_from_slice(&[0xaa, 0xbb]);
+        Compact(1_u32).encode_to(&mut valid_response);
+        Compact(3_u32).encode_to(&mut valid_response);
+        valid_response.extend_from_slice(&[0xcc, 0xdd, 0xee]);
+        63_u64.encode_to(&mut valid_response);
+        true.encode_to(&mut valid_response);
         assert_eq!(
-            decode_dry_run(&[0, 0], metadata.clone()).expect("exact dry-run success"),
-            DryRunOutcome::Valid
+            decode_transaction_validation(&valid_response)
+                .expect("exact transaction validation success"),
+            ValidationOutcome::Valid
         );
         assert_eq!(
-            decode_dry_run(&[0, 1, 2], metadata.clone())
-                .expect("exact dry-run BadOrigin dispatch outcome"),
-            DryRunOutcome::Valid
+            decode_transaction_validation(&[1, 0, 1]).expect("exact payment validity rejection"),
+            ValidationOutcome::Invalid(SubmissionFailureCode::InsufficientBalance)
         );
         assert_eq!(
-            decode_dry_run(&[0, 1, 14, 0], metadata.clone())
-                .expect("metadata-valid dry-run Trie dispatch outcome"),
-            DryRunOutcome::Valid
-        );
-        assert_eq!(
-            decode_dry_run(&[1, 0, 1], metadata.clone()).expect("exact payment validity rejection"),
-            DryRunOutcome::Invalid(SubmissionFailureCode::InsufficientBalance)
-        );
-        assert_eq!(
-            decode_dry_run(&[1, 0, 2], metadata.clone())
+            decode_transaction_validation(&[1, 0, 2])
                 .expect("exact future nonce validity rejection"),
-            DryRunOutcome::Invalid(SubmissionFailureCode::NonceConflict)
+            ValidationOutcome::Invalid(SubmissionFailureCode::NonceConflict)
         );
         assert_eq!(
-            decode_dry_run(&[1, 0, 12], metadata.clone())
+            decode_transaction_validation(&[1, 0, 12])
                 .expect("exact UnknownOrigin validity rejection"),
-            DryRunOutcome::Invalid(SubmissionFailureCode::TransactionInvalid)
+            ValidationOutcome::Invalid(SubmissionFailureCode::TransactionInvalid)
         );
+        for variant in [0_u8, 4, 5, 6, 8, 9, 10, 11, 12] {
+            assert_eq!(
+                decode_transaction_validation(&[1, 0, variant])
+                    .expect("decode exact unit InvalidTransaction variant"),
+                ValidationOutcome::Invalid(SubmissionFailureCode::TransactionInvalid)
+            );
+        }
+        for response in [[1_u8, 0, 7, 42], [1, 1, 2, 42]] {
+            assert_eq!(
+                decode_transaction_validation(&response)
+                    .expect("decode exact custom validity variant"),
+                ValidationOutcome::Invalid(SubmissionFailureCode::TransactionInvalid)
+            );
+        }
+        for variant in [0_u8, 1] {
+            assert_eq!(
+                decode_transaction_validation(&[1, 1, variant])
+                    .expect("decode exact unit UnknownTransaction variant"),
+                ValidationOutcome::Invalid(SubmissionFailureCode::TransactionInvalid)
+            );
+        }
+        let mut valid_with_trailing = valid_response.clone();
+        valid_with_trailing.push(0);
+        let mut zero_provides = vec![0_u8];
+        0_u64.encode_to(&mut zero_provides);
+        Compact(0_u32).encode_to(&mut zero_provides);
+        Compact(0_u32).encode_to(&mut zero_provides);
+        1_u64.encode_to(&mut zero_provides);
+        true.encode_to(&mut zero_provides);
+        let mut invalid_bool = valid_response.clone();
+        *invalid_bool
+            .last_mut()
+            .expect("valid response has propagation byte") = 2;
+        let mut overbound_count = vec![0_u8];
+        0_u64.encode_to(&mut overbound_count);
+        Compact(MAX_TRANSACTION_VALIDITY_TAGS + 1).encode_to(&mut overbound_count);
+        let mut overbound_tag = vec![0_u8];
+        0_u64.encode_to(&mut overbound_tag);
+        Compact(1_u32).encode_to(&mut overbound_tag);
+        Compact(MAX_TRANSACTION_VALIDITY_TAG_BYTES + 1).encode_to(&mut overbound_tag);
+        let mut truncated_tag = vec![0_u8];
+        0_u64.encode_to(&mut truncated_tag);
+        Compact(1_u32).encode_to(&mut truncated_tag);
+        Compact(2_u32).encode_to(&mut truncated_tag);
+        truncated_tag.push(0xaa);
+        let mut noncanonical_count = vec![0_u8];
+        0_u64.encode_to(&mut noncanonical_count);
+        noncanonical_count.extend_from_slice(&[1, 0]);
         for malformed in [
             &[][..],
-            &[0, 1][..],
-            &[0, 0, 0][..],
+            &[0][..],
             &[1, 0, 2, 0][..],
             &[1, 0, 13][..],
             &[1, 1, 3][..],
+            valid_with_trailing.as_slice(),
+            zero_provides.as_slice(),
+            invalid_bool.as_slice(),
+            overbound_count.as_slice(),
+            overbound_tag.as_slice(),
+            truncated_tag.as_slice(),
+            noncanonical_count.as_slice(),
         ] {
             assert!(
-                decode_dry_run(malformed, metadata.clone()).is_err(),
-                "malformed/trailing dry-run response must fail closed: {malformed:?}"
+                decode_transaction_validation(malformed).is_err(),
+                "malformed/trailing validation response must fail closed: {malformed:?}"
             );
         }
 
@@ -3856,6 +4045,34 @@ mod tests {
             .try_into()
             .expect("signature fixture has 64 bytes");
         let signed_extrinsic = decode_hex(EXTRINSIC_HEX);
+        let validation_parameters =
+            transaction_validation_parameters(&signed_extrinsic, ORACLE_SIGNING_HASH)
+                .expect("encode exact TaggedTransactionQueue request");
+        assert_eq!(validation_parameters[0], 2);
+        assert_eq!(
+            &validation_parameters[1..1 + signed_extrinsic.len()],
+            signed_extrinsic
+        );
+        assert_eq!(
+            &validation_parameters[1 + signed_extrinsic.len()..],
+            ORACLE_SIGNING_HASH
+        );
+        let mut maximum_request_extrinsic = vec![0; MAX_TRANSACTION_VALIDATION_REQUEST_BYTES - 33];
+        assert_eq!(
+            transaction_validation_parameters(&maximum_request_extrinsic, ORACLE_SIGNING_HASH,)
+                .expect("accept exact maximum transaction validation request")
+                .len(),
+            MAX_TRANSACTION_VALIDATION_REQUEST_BYTES
+        );
+        maximum_request_extrinsic.push(0);
+        assert!(
+            transaction_validation_parameters(&maximum_request_extrinsic, ORACLE_SIGNING_HASH,)
+                .is_err()
+        );
+        assert!(
+            decode_transaction_validation(&vec![0; MAX_TRANSACTION_VALIDATION_RESPONSE_BYTES + 1])
+                .is_err()
+        );
         let prepared_bytes = decode_hex(PREPARED_HEX);
         let identity = ChainIdentity {
             deployment_id: [0x30; 32],
@@ -4010,7 +4227,7 @@ mod tests {
         ));
         assert_eq!(
             state.trace[2],
-            TraceCall::DryRun {
+            TraceCall::ValidateTransaction {
                 at: ORACLE_SIGNING_HASH
             }
         );
@@ -4529,7 +4746,9 @@ mod tests {
         assert!(recovered.requires_acknowledgement());
         assert!(!recovery_chain.state().trace.iter().any(|call| matches!(
             call,
-            TraceCall::FinalizedHead | TraceCall::DryRun { .. } | TraceCall::SubmitAndWatch { .. }
+            TraceCall::FinalizedHead
+                | TraceCall::ValidateTransaction { .. }
+                | TraceCall::SubmitAndWatch { .. }
         )));
         recovered
             .acknowledge_response_durable()
@@ -4605,7 +4824,7 @@ mod tests {
         assert_eq!(retained.state(), JournalState::Prepared);
         assert!(!negative_chain.state().trace.iter().any(|call| matches!(
             call,
-            TraceCall::DryRun { .. } | TraceCall::SubmitAndWatch { .. }
+            TraceCall::ValidateTransaction { .. } | TraceCall::SubmitAndWatch { .. }
         )));
     }
 
@@ -5022,15 +5241,15 @@ mod tests {
             SubmissionOutcomeDetail::FinalizedInvariantFailed { .. }
         ));
 
-        let Some(rejection_directory) = TestDirectory::new("e4-dry-run-rejection") else {
+        let Some(rejection_directory) = TestDirectory::new("e4-validation-rejection") else {
             return;
         };
         let rejection_chain = FakeChain::new(ChainHead {
             number: 131,
             hash: ORACLE_SIGNING_HASH,
         });
-        rejection_chain.state().dry_run =
-            DryRunOutcome::Invalid(SubmissionFailureCode::NonceConflict);
+        rejection_chain.state().validation =
+            ValidationOutcome::Invalid(SubmissionFailureCode::NonceConflict);
         let rejected = submit_with_chain(
             &rejection_chain,
             rejection_directory.path(),
@@ -5039,7 +5258,7 @@ mod tests {
             DEFAULT_FINALITY_WAIT,
         )
         .await
-        .expect("return typed pre-send dry-run rejection");
+        .expect("return typed pre-send validation rejection");
         assert_eq!(
             rejected.outcome().kind(),
             SubmissionOutcomeKind::SubmissionRejected
@@ -5067,6 +5286,63 @@ mod tests {
                 .iter()
                 .any(|call| matches!(call, TraceCall::SubmitAndWatch { .. }))
         );
+
+        for (label, operation, expected_kind) in [
+            (
+                "e4-validation-contract-failure",
+                "decode transaction validation",
+                SubmissionErrorKind::RuntimeMismatch,
+            ),
+            (
+                "e4-validation-rpc-failure",
+                "validate signed extrinsic",
+                SubmissionErrorKind::ArchiveRpcUnavailable,
+            ),
+        ] {
+            let Some(failure_directory) = TestDirectory::new(label) else {
+                return;
+            };
+            let failure_chain = FakeChain::new(ChainHead {
+                number: 131,
+                hash: ORACLE_SIGNING_HASH,
+            });
+            failure_chain.state().validation_failure = Some(operation);
+            let failure = match submit_with_chain(
+                &failure_chain,
+                failure_directory.path(),
+                DevSigner::Charlie,
+                completion_mutation(),
+                DEFAULT_FINALITY_WAIT,
+            )
+            .await
+            {
+                Err(error) => error,
+                Ok(_) => panic!("{label} unexpectedly returned a submission outcome"),
+            };
+            assert_eq!(failure.kind(), expected_kind);
+            assert!(std::error::Error::source(&failure).is_some());
+            let failure_names = LaneNames::derive(
+                failure_directory.path(),
+                &failure_chain.identity.deployment_id,
+                &DevSigner::Charlie.account_id(),
+            )
+            .expect("derive validation-failure lane names");
+            assert!(
+                !failure_directory
+                    .path()
+                    .join(failure_names.journal())
+                    .exists(),
+                "{label} published a journal before validation completed"
+            );
+            assert!(
+                !failure_chain
+                    .state()
+                    .trace
+                    .iter()
+                    .any(|call| matches!(call, TraceCall::SubmitAndWatch { .. })),
+                "{label} submitted after validation failed"
+            );
+        }
 
         let Some(resolution_directory) = TestDirectory::new("e4-durable-resolution") else {
             return;
@@ -5198,7 +5474,7 @@ mod tests {
             assert!(!state.trace.iter().any(|call| matches!(
                 call,
                 TraceCall::Storage { .. }
-                    | TraceCall::DryRun { .. }
+                    | TraceCall::ValidateTransaction { .. }
                     | TraceCall::SubmitAndWatch { .. }
             )));
         }
@@ -5488,7 +5764,7 @@ mod tests {
             assert!(!state.trace.iter().any(|call| matches!(
                 call,
                 TraceCall::Storage { .. }
-                    | TraceCall::DryRun { .. }
+                    | TraceCall::ValidateTransaction { .. }
                     | TraceCall::SubmitAndWatch { .. }
             )));
         }
@@ -5583,7 +5859,7 @@ mod tests {
                 call,
                 TraceCall::FinalizedHead
                     | TraceCall::Storage { .. }
-                    | TraceCall::DryRun { .. }
+                    | TraceCall::ValidateTransaction { .. }
                     | TraceCall::SubmitAndWatch { .. }
             )));
         }
@@ -5702,7 +5978,7 @@ mod tests {
                 call,
                 TraceCall::FinalizedHead
                     | TraceCall::Storage { .. }
-                    | TraceCall::DryRun { .. }
+                    | TraceCall::ValidateTransaction { .. }
                     | TraceCall::SubmitAndWatch { .. }
             )));
         }
@@ -5819,7 +6095,7 @@ mod tests {
             assert!(!state.trace.iter().any(|call| matches!(
                 call,
                 TraceCall::Storage { .. }
-                    | TraceCall::DryRun { .. }
+                    | TraceCall::ValidateTransaction { .. }
                     | TraceCall::SubmitAndWatch { .. }
             )));
             assert_eq!(
@@ -5910,7 +6186,7 @@ mod tests {
             assert!(!negative_chain.state().trace.iter().any(|call| matches!(
                 call,
                 TraceCall::Storage { .. }
-                    | TraceCall::DryRun { .. }
+                    | TraceCall::ValidateTransaction { .. }
                     | TraceCall::SubmitAndWatch { .. }
             )));
         }

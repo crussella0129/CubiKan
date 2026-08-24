@@ -5,8 +5,8 @@ use cubikan_chain_client::{ArchiveError, VerifiedArchiveClient};
 use crate::{
     BackendError, FinalizedProjector, ProjectionCheckpoint, ProjectionError, VerifiedReadSnapshot,
     projector::{
-        PreparedArchive, fetch_prepared_archive_through, load_projection_checkpoint,
-        load_stored_projection_if_checkpoint,
+        PreparedArchive, fetch_prepared_archive, fetch_prepared_archive_through,
+        load_projection_checkpoint, load_stored_projection_if_checkpoint, synchronize_prepared,
     },
     sqlite::{ProjectionReaderConnection, VerifiedQueryStatement, open_projection_reader},
     verified_read::mint_attested_snapshot,
@@ -84,6 +84,52 @@ impl From<ProjectionError> for AttestationError {
     }
 }
 
+/// Failure while synchronizing one freshly fetched finalized archive and then
+/// attesting that exact archive against the resulting projection checkpoint.
+#[derive(Debug)]
+pub enum SynchronizeAttestationError {
+    /// Fetching, validating, or atomically projecting the finalized archive
+    /// failed before attestation could mint a read capability.
+    Projection(ProjectionError),
+    /// The exact archive projected by this operation failed the subsequent
+    /// pinned full-projection comparison.
+    Attestation(AttestationError),
+}
+
+impl fmt::Display for SynchronizeAttestationError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Projection(error) => error.fmt(formatter),
+            Self::Attestation(error) => error.fmt(formatter),
+        }
+    }
+}
+
+impl Error for SynchronizeAttestationError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            Self::Projection(error) => Some(error),
+            Self::Attestation(error) => Some(error),
+        }
+    }
+}
+
+/// Fetches and independently replays one fresh complete finalized archive,
+/// synchronizes the projection from it, then compares that same immutable
+/// archive to one newly pinned read transaction at its exact checkpoint before
+/// minting a single-use query capability.
+///
+/// The fresh archive's checkpoint defines candidate `C`; synchronization must
+/// reach `C`, and the pinned database transaction must still be exactly at `C`.
+/// The prepared archive remains private to this call. It cannot be cached or
+/// reused by callers for a later page, request, database, or RPC endpoint.
+pub async fn synchronize_and_attest_finalized_projection(
+    projector: &FinalizedProjector,
+    client: &VerifiedArchiveClient,
+) -> Result<VerifiedReadSnapshot, SynchronizeAttestationError> {
+    synchronize_and_attest_finalized_projection_from(projector, client, || Ok(())).await
+}
+
 /// Reads the current database candidate, fetches and independently replays the
 /// exact verified archive range `0..=candidate` outside SQLite, then compares
 /// all eight projection tables inside one newly pinned read transaction before
@@ -96,6 +142,8 @@ pub async fn attest_finalized_projection(
 }
 
 trait AttestationArchiveSource {
+    async fn fetch_prepared(&self) -> Result<PreparedArchive, ProjectionError>;
+
     async fn fetch_prepared_through(
         &self,
         block_number: u64,
@@ -103,12 +151,35 @@ trait AttestationArchiveSource {
 }
 
 impl AttestationArchiveSource for VerifiedArchiveClient {
+    async fn fetch_prepared(&self) -> Result<PreparedArchive, ProjectionError> {
+        fetch_prepared_archive(self).await
+    }
+
     async fn fetch_prepared_through(
         &self,
         block_number: u64,
     ) -> Result<PreparedArchive, ProjectionError> {
         fetch_prepared_archive_through(self, block_number).await
     }
+}
+
+async fn synchronize_and_attest_finalized_projection_from<S, F>(
+    projector: &FinalizedProjector,
+    source: &S,
+    before_pin: F,
+) -> Result<VerifiedReadSnapshot, SynchronizeAttestationError>
+where
+    S: AttestationArchiveSource,
+    F: FnOnce() -> Result<(), AttestationError>,
+{
+    let archive = source
+        .fetch_prepared()
+        .await
+        .map_err(SynchronizeAttestationError::Projection)?;
+    let candidate = synchronize_prepared(projector, &archive)
+        .map_err(SynchronizeAttestationError::Projection)?;
+    attest_prepared_projection_at_candidate(projector, &archive, candidate, before_pin)
+        .map_err(SynchronizeAttestationError::Attestation)
 }
 
 async fn attest_finalized_projection_from<S, F>(

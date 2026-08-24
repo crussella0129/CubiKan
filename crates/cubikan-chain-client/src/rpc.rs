@@ -1269,7 +1269,7 @@ mod tests {
         ),
     ];
     const PREFLIGHT_SHA256: &str =
-        "04a3d9e8dca2e10d435edf69be0b14626d184dd7c4acd11fb261dc388b12a8bb";
+        "0a056c5b964dcea880135ccdb4697a91928e44eab02cbe414f1aac87f4b8dea6";
 
     #[derive(Clone)]
     struct FixtureBlock {
@@ -1844,8 +1844,7 @@ mod tests {
                 .expect("runtime API inventory")
                 .len()
         );
-        let valid_argv =
-            b"polkadot-omni-node\0--rpc-port\09988\0--blocks-pruning\0archive\0--state-pruning\0archive\0";
+        let valid_argv = b"polkadot-omni-node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0--blocks-pruning\0archive\0--state-pruning\0archive\0";
         assert!(verify_archive_cmdline(valid_argv, 9988).is_ok());
         for rejected in preflight["connection"]["rejected_raw_argv_tokens"]
             .as_array()
@@ -1853,7 +1852,7 @@ mod tests {
         {
             let token = rejected.as_str().expect("rejected argv token");
             let cmdline = format!(
-                "polkadot-omni-node\0--rpc-port\09988\0{token}\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
+                "polkadot-omni-node\0--experimental-rpc-endpoint\0listen-addr=127.0.0.1:9988,methods=unsafe,cors=all\0{token}\0--blocks-pruning\0archive\0--state-pruning\0archive\0"
             );
             assert!(verify_archive_cmdline(cmdline.as_bytes(), 9988).is_err());
         }

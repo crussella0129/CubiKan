@@ -11,6 +11,8 @@ fn test_public_reads_are_uncallable_without_verified_snapshot() {
     assert!(LIB_SOURCE.contains(
         "pub use verified_read::{ProjectionCheckpoint, ReadError, VerifiedReadSnapshot}"
     ));
+    assert!(LIB_SOURCE.contains("synchronize_and_attest_finalized_projection"));
+    assert!(!LIB_SOURCE.contains("PreparedArchive"));
     assert!(SQLITE_SOURCE.contains("pub(crate) fn open_projection_reader"));
     assert!(!SQLITE_SOURCE.contains("pub fn open_projection_reader"));
     assert!(!LIB_SOURCE.contains("ProjectionReaderConnection"));

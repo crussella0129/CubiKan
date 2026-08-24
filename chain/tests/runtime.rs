@@ -953,7 +953,7 @@ fn test_post_genesis_manifest_traces_every_field_source() {
         ("/relay_genesis/block_number", json!(0)),
         (
             "/relay_genesis/hash",
-            json!("0xeb2ada687ce553d3b9d695afd5d9d0a9c44a0b82e1f6eb823ac87e81638200f0"),
+            json!("0x2a682650fa14e635c7ec4c2b7e4f043017a08b58d586d0d2dc50a64e223a6d27"),
         ),
         (
             "/relay_genesis/provenance/rpc_url",

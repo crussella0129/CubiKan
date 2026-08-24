@@ -1,0 +1,127 @@
+[settings]
+provider = "native"
+bootnode = false
+timeout = 1200
+node_spawn_timeout = 180
+local_ip = "127.0.0.1"
+telemetry = false
+prometheus = true
+enable_tracing = false
+polkadot_introspector = false
+backchannel = false
+node_verifier = "Metric"
+isolate_env = false
+
+[relaychain]
+default_image = "localhost/cubikan/pinned:local"
+default_command = "{{CUBIKAN_POLKADOT}}"
+default_substrate_cli_args_version = "2"
+chain = "rococo-local"
+# Zombienet's pinned default chain-spec template retains its internal chain-name
+# placeholder: the first pass resolves the named preset and the raw pass
+# resolves the already-customized plain file containing para 1000.
+# The rpc_port fields are Zombienet orchestration allocations only. The sealed
+# launcher consumes the provider's legacy RPC globals and emits one exact
+# IPv4-only structured endpoint per primary and embedded relay execution side.
+
+[[relaychain.nodes]]
+name = "alice"
+command = "exec {{CUBIKAN_ZOMBIENET_NODE_LAUNCHER}} --role relay-a -- --port 30333 --execute-workers-max-num 1 --prepare-workers-soft-max-num 1 --prepare-workers-hard-max-num 1"
+validator = true
+invulnerable = true
+rpc_port = 9944
+p2p_port = 30333
+prometheus_port = 9615
+args = [
+  "--bootnodes",
+  "/ip4/127.0.0.1/tcp/30334/ws/p2p/12D3KooWRkZhiRhsqmrQ28rt73K7V3aCBpqKrLGSXmZ99PTcTZby",
+  "--workers-path",
+  "{{CUBIKAN_POLKADOT_WORKERS_DIR}}",
+]
+
+[[relaychain.nodes]]
+name = "bob"
+command = "exec {{CUBIKAN_ZOMBIENET_NODE_LAUNCHER}} --role relay-b -- --port 30334 --execute-workers-max-num 1 --prepare-workers-soft-max-num 1 --prepare-workers-hard-max-num 1"
+validator = true
+invulnerable = true
+rpc_port = 9945
+p2p_port = 30334
+prometheus_port = 9616
+# The pinned native provider supplies Alice as Bob's one computed bootnode.
+# Adding a static value here would create a duplicate --bootnodes flag.
+args = [
+  "--workers-path",
+  "{{CUBIKAN_POLKADOT_WORKERS_DIR}}",
+]
+
+[[parachains]]
+id = 1000
+chain = "cubikan-local"
+chain_spec_path = "{{CUBIKAN_PARACHAIN_CHAIN_SPEC}}"
+chain_spec_command = "{{CUBIKAN_POLKADOT_OMNI_NODE}} build-spec --disable-default-bootnode"
+genesis_state_path = "{{CUBIKAN_PARACHAIN_GENESIS_HEAD}}"
+genesis_wasm_path = "{{CUBIKAN_PARACHAIN_GENESIS_WASM}}"
+default_substrate_cli_args_version = "2"
+cumulus_based = true
+add_to_genesis = true
+register_para = false
+onboard_as_parachain = true
+with_custom_props = false
+
+[[parachains.collators]]
+name = "alice"
+image = "localhost/cubikan/pinned:local"
+command = "exec {{CUBIKAN_ZOMBIENET_NODE_LAUNCHER}} --role collator-a -- --port 30335"
+validator = true
+invulnerable = true
+rpc_port = 9988
+p2p_port = 30335
+prometheus_port = 9617
+args = [
+  "--blocks-pruning",
+  "archive",
+  "--state-pruning",
+  "archive",
+  "--bootnodes",
+  "/ip4/127.0.0.1/tcp/30336/ws/p2p/12D3KooWDV1yAeEGiye3t2CQpW7MJ5TJV3TTKpTUUxv4xtaggSnA",
+  "--",
+  "--bootnodes",
+  "/ip4/127.0.0.1/tcp/30333/ws/p2p/12D3KooWQCkBm1BYtkHpocxCwMgR8yjitEeHGx8spzcDLGt2gkBm",
+  "--workers-path",
+  "{{CUBIKAN_POLKADOT_WORKERS_DIR}}",
+  "--execute-workers-max-num",
+  "1",
+  "--prepare-workers-soft-max-num",
+  "1",
+  "--prepare-workers-hard-max-num",
+  "1",
+]
+
+[[parachains.collators]]
+name = "bob"
+image = "localhost/cubikan/pinned:local"
+command = "exec {{CUBIKAN_ZOMBIENET_NODE_LAUNCHER}} --role collator-b -- --port 30336"
+validator = true
+invulnerable = true
+rpc_port = 9989
+p2p_port = 30336
+prometheus_port = 9618
+args = [
+  "--blocks-pruning",
+  "archive",
+  "--state-pruning",
+  "archive",
+  "--bootnodes",
+  "/ip4/127.0.0.1/tcp/30335/ws/p2p/12D3KooWHhaSXEhWFi3LibWRNgF9PezoqB9Xeae4fS3dxCowJEg3",
+  "--",
+  "--bootnodes",
+  "/ip4/127.0.0.1/tcp/30333/ws/p2p/12D3KooWQCkBm1BYtkHpocxCwMgR8yjitEeHGx8spzcDLGt2gkBm",
+  "--workers-path",
+  "{{CUBIKAN_POLKADOT_WORKERS_DIR}}",
+  "--execute-workers-max-num",
+  "1",
+  "--prepare-workers-soft-max-num",
+  "1",
+  "--prepare-workers-hard-max-num",
+  "1",
+]

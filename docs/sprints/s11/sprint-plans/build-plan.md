@@ -1249,7 +1249,7 @@ used to refresh an expectation.
 
 ### T-1115: Prove the four-node local failover, resynchronization, and rebuild journey
 - **Intents:** [INT-0008](../../../intents/INT-0008-traceable-intent-instantiation.md), [INT-0012](../../../intents/INT-0012-intent-unit-relationships-and-board-projections.md), [INT-0014](../../../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
-- **Touches:** `chain/config/zombienet.toml`, `chain/tools/**`, `tests/chain-e2e/**`, `crates/cubikan-local/tests/chain_e2e.rs`
+- **Touches:** `chain/config/zombienet.toml`, `chain/tools/**`, `tests/chain-e2e/**`, `crates/cubikan-local/tests/chain_e2e.rs`, `crates/cubikan-local/src/execution.rs`, `crates/cubikan-backend/src/lib.rs`, `crates/cubikan-backend/src/attestation.rs`, `crates/cubikan-backend/src/attestation/tests.rs`, `crates/cubikan-backend/tests/read_boundary.rs`
 - **Depends on:** T-1113, T-1114
 - **Acceptance criterion:** One pinned relay runtime across relay validators/collator relay sides and one distinct byte-identical CubiKan runtime across both collators survive one-collator loss, resynchronization, and equal projection rebuilds without public action.
 - **Success criterion (EARS):**
@@ -1258,7 +1258,7 @@ used to refresh an expectation.
   - **T-1115-E3 — WHEN** one collator stops after checkpoint `C`, **THEN** the survivor **SHALL** finalize remaining work; the stopped collator shall restart with its original archive data/config, sync to the named final checkpoint, pass historical range probes and full identity checks, and only then become a rebuild source.
   - **T-1115-E4 — WHEN** disposable projection files rebuild independently through the synchronized collators, **THEN** full-stream-attested units/history/origin/definitions/edges/projections/provenance/pages/checkpoint **SHALL** equal the uninterrupted projection.
   - **T-1115-E5 — WHEN** sockets/config/actions/logs/journals are audited, **THEN** they **SHALL** show loopback/synthetic/dev-only work, no allowlist mutation, and no public RPC/account/key import/faucet/transfer/ParaId/coretime/upload/deploy/release/governance/secret action.
-- **Notes:** Test must record one actual exact-candidate run; a skipped hosted job is not evidence and archive configuration is not a perpetual-availability promise.
+- **Notes:** Test must record one actual exact-candidate run; a skipped hosted job is not evidence and archive configuration is not a perpetual-availability promise. The attestation boundary may prepare one complete fresh archive per request and consume that same private archive for synchronization plus full comparison; this acceptance-driven scope refinement preserves independent fetching, the pinned read transaction, and single-use read capability while avoiding a redundant second genesis-to-checkpoint fetch in the bounded journey.
 
 ### T-1116: Reconcile security, authority, and current-state documentation
 - **Intents:** [INT-0008](../../../intents/INT-0008-traceable-intent-instantiation.md), [INT-0012](../../../intents/INT-0012-intent-unit-relationships-and-board-projections.md), [INT-0014](../../../intents/INT-0014-canonical-blockchain-lifecycle-and-verified-sqlite-projection.md)
