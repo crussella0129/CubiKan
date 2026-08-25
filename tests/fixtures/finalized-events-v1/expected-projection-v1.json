@@ -5,7 +5,7 @@
   "projection_anchor": {
     "singleton": 1,
     "namespace": "polkadot-sdk-parachain",
-    "relay_genesis_hash": "eb2ada687ce553d3b9d695afd5d9d0a9c44a0b82e1f6eb823ac87e81638200f0",
+    "relay_genesis_hash": "2a682650fa14e635c7ec4c2b7e4f043017a08b58d586d0d2dc50a64e223a6d27",
     "parachain_genesis_hash": "627f53b3abc01130ec273ef85759f90779e8497614a428a66d862a624ee01a17",
     "para_id": 1000,
     "deployment_id": "3046cb2cf3f5f9c565a85493cfff10fee94d12d950a0d6f54d7c1ff32a6afc42",

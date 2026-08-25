@@ -10,7 +10,7 @@
     "manifest": {
       "path": "tests/fixtures/protocol-v2/cubikan-local/manifest-v1.json",
       "bytes": 334595,
-      "sha256": "09cb8615098c7d38ca0b2420d554b21b758267e1f2d2c4089025610b25148e70"
+      "sha256": "b19ff73569f612cb3b365d2af83284e99e1cb2b7cc529685aa58267ea23289cc"
     },
   "controls": {
     "process": {

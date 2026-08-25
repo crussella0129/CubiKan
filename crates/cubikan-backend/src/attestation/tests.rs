@@ -42,15 +42,8 @@ struct ScriptedAttestationSource {
     calls: Arc<Mutex<Vec<String>>>,
 }
 
-impl AttestationArchiveSource for ScriptedAttestationSource {
-    async fn fetch_prepared_through(
-        &self,
-        block_number: u64,
-    ) -> Result<PreparedArchive, ProjectionError> {
-        self.calls
-            .lock()
-            .expect("scripted attestation call log")
-            .push(format!("fetch_through:{block_number}"));
+impl ScriptedAttestationSource {
+    fn outcome(&self) -> Result<PreparedArchive, ProjectionError> {
         match &self.outcome {
             ScriptedAttestationOutcome::Archive(archive) => Ok(archive.clone()),
             ScriptedAttestationOutcome::Interrupted => {
@@ -60,6 +53,27 @@ impl AttestationArchiveSource for ScriptedAttestationSource {
                 }))
             }
         }
+    }
+}
+
+impl AttestationArchiveSource for ScriptedAttestationSource {
+    async fn fetch_prepared(&self) -> Result<PreparedArchive, ProjectionError> {
+        self.calls
+            .lock()
+            .expect("scripted attestation call log")
+            .push("fetch_complete".to_owned());
+        self.outcome()
+    }
+
+    async fn fetch_prepared_through(
+        &self,
+        block_number: u64,
+    ) -> Result<PreparedArchive, ProjectionError> {
+        self.calls
+            .lock()
+            .expect("scripted attestation call log")
+            .push(format!("fetch_through:{block_number}"));
+        self.outcome()
     }
 }
 
@@ -112,6 +126,209 @@ impl Drop for TestDirectory {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.0);
     }
+}
+
+#[test]
+fn test_fresh_synchronize_and_attest_reuses_one_archive_or_mints_nothing() {
+    let Some(directory) = TestDirectory::supported() else {
+        return;
+    };
+    let basename = OsStr::new("projection.sqlite3");
+    let path = directory.0.join(basename);
+    let projector = FinalizedProjector::create(&path).expect("fresh combined projection");
+    let archive = full_fixture_archive();
+    let expected_checkpoint = archive.checkpoint().expect("fixture checkpoint");
+    let calls = Arc::new(Mutex::new(Vec::new()));
+    let source = ScriptedAttestationSource {
+        outcome: ScriptedAttestationOutcome::Archive(archive.clone()),
+        calls: Arc::clone(&calls),
+    };
+    let before_pin_calls = Arc::clone(&calls);
+    let before_pin_projector = projector.clone();
+    let before_pin_checkpoint = expected_checkpoint.clone();
+    let snapshot = ready(synchronize_and_attest_finalized_projection_from(
+        &projector,
+        &source,
+        move || {
+            before_pin_calls
+                .lock()
+                .expect("scripted combined call log")
+                .push("before_pin".to_owned());
+            assert_eq!(
+                read_candidate_checkpoint(&before_pin_projector)?,
+                before_pin_checkpoint,
+                "the complete archive must be synchronized before attestation pins"
+            );
+            Ok(())
+        },
+    ))
+    .expect("one fresh archive should synchronize and attest");
+    assert_eq!(
+        *calls.lock().expect("scripted combined call log"),
+        ["fetch_complete", "before_pin"]
+    );
+    assert!(format!("{snapshot:?}").contains("opaque single-use read"));
+    assert_eq!(
+        read_candidate_checkpoint(&projector).expect("combined checkpoint"),
+        expected_checkpoint
+    );
+
+    let interrupted_directory =
+        TestDirectory::supported().expect("supported interrupted combined directory");
+    let interrupted_projector = FinalizedProjector::create(interrupted_directory.0.join(basename))
+        .expect("fresh interrupted projection");
+    let interrupted_calls = Arc::new(Mutex::new(Vec::new()));
+    let interrupted_source = ScriptedAttestationSource {
+        outcome: ScriptedAttestationOutcome::Interrupted,
+        calls: Arc::clone(&interrupted_calls),
+    };
+    let interruption = ready(synchronize_and_attest_finalized_projection_from(
+        &interrupted_projector,
+        &interrupted_source,
+        || Ok(()),
+    ))
+    .expect_err("an interrupted fresh fetch must mint no capability");
+    let SynchronizeAttestationError::Projection(ProjectionError::Archive(ArchiveError::Rpc {
+        operation,
+        source,
+    })) = interruption
+    else {
+        panic!("the combined helper must preserve the projection archive error");
+    };
+    assert_eq!(operation, "scripted attestation fetch");
+    assert!(source.downcast_ref::<ScriptedRpcInterruption>().is_some());
+    assert_eq!(
+        *interrupted_calls
+            .lock()
+            .expect("scripted interrupted call log"),
+        ["fetch_complete"]
+    );
+    assert!(matches!(
+        read_candidate_checkpoint(&interrupted_projector),
+        Err(AttestationError::ProjectionUnavailable)
+    ));
+
+    let sync_failure_directory =
+        TestDirectory::supported().expect("supported synchronization-failure directory");
+    let sync_failure_path = sync_failure_directory.0.join(basename);
+    let sync_failure_projector = FinalizedProjector::create(&sync_failure_path)
+        .expect("fresh synchronization-failure projection");
+    synchronize_prepared(&sync_failure_projector, &archive)
+        .expect("project synchronization-failure baseline");
+    let connection = Connection::open(&sync_failure_path)
+        .expect("open synchronization-failure corruption connection");
+    connection
+        .execute(
+            "UPDATE projected_events SET signer=zeroblob(32) WHERE global_sequence=?1",
+            [stored::encode_u64_blob(7).as_slice()],
+        )
+        .expect("corrupt synchronization-failure baseline");
+    drop(connection);
+    let sync_failure_calls = Arc::new(Mutex::new(Vec::new()));
+    let sync_failure_source = ScriptedAttestationSource {
+        outcome: ScriptedAttestationOutcome::Archive(archive.clone()),
+        calls: Arc::clone(&sync_failure_calls),
+    };
+    let unexpected_pin_calls = Arc::clone(&sync_failure_calls);
+    let sync_failure = ready(synchronize_and_attest_finalized_projection_from(
+        &sync_failure_projector,
+        &sync_failure_source,
+        move || {
+            unexpected_pin_calls
+                .lock()
+                .expect("scripted synchronization-failure call log")
+                .push("unexpected_pin".to_owned());
+            Ok(())
+        },
+    ))
+    .expect_err("a synchronization failure must prevent attestation and capability minting");
+    assert!(matches!(
+        sync_failure,
+        SynchronizeAttestationError::Projection(ProjectionError::Backend(
+            BackendError::ProjectionMismatch
+        ))
+    ));
+    assert_eq!(
+        *sync_failure_calls
+            .lock()
+            .expect("scripted synchronization-failure call log"),
+        ["fetch_complete"]
+    );
+
+    let corrupt_directory =
+        TestDirectory::supported().expect("supported corrupt combined directory");
+    let corrupt_path = corrupt_directory.0.join(basename);
+    let corrupt_projector =
+        FinalizedProjector::create(&corrupt_path).expect("fresh corrupt projection");
+    let corrupt_calls = Arc::new(Mutex::new(Vec::new()));
+    let corrupt_source = ScriptedAttestationSource {
+        outcome: ScriptedAttestationOutcome::Archive(archive.clone()),
+        calls: Arc::clone(&corrupt_calls),
+    };
+    let corrupt_before_pin_calls = Arc::clone(&corrupt_calls);
+    let corruption = ready(synchronize_and_attest_finalized_projection_from(
+        &corrupt_projector,
+        &corrupt_source,
+        move || {
+            corrupt_before_pin_calls
+                .lock()
+                .expect("scripted corrupt call log")
+                .push("corrupt_before_pin".to_owned());
+            let connection =
+                Connection::open(&corrupt_path).expect("open combined corruption connection");
+            connection
+                .execute(
+                    "UPDATE projected_events SET signer=zeroblob(32) WHERE global_sequence=?1",
+                    [stored::encode_u64_blob(7).as_slice()],
+                )
+                .expect("corrupt one row after combined synchronization");
+            Ok(())
+        },
+    ))
+    .expect_err("post-sync corruption must prevent combined capability minting");
+    assert!(matches!(
+        corruption,
+        SynchronizeAttestationError::Attestation(AttestationError::ProjectionMismatch)
+    ));
+    assert_eq!(
+        *corrupt_calls.lock().expect("scripted corrupt call log"),
+        ["fetch_complete", "corrupt_before_pin"]
+    );
+
+    let refresh_directory =
+        TestDirectory::supported().expect("supported refresh combined directory");
+    let refresh_projector = FinalizedProjector::create(refresh_directory.0.join(basename))
+        .expect("fresh refresh combined projection");
+    let through_three = fixture_archive_through(3);
+    let refresh_calls = Arc::new(Mutex::new(Vec::new()));
+    let refresh_source = ScriptedAttestationSource {
+        outcome: ScriptedAttestationOutcome::Archive(through_three),
+        calls: Arc::clone(&refresh_calls),
+    };
+    let refresh_before_pin_calls = Arc::clone(&refresh_calls);
+    let refresh_before_pin_projector = refresh_projector.clone();
+    let refresh = ready(synchronize_and_attest_finalized_projection_from(
+        &refresh_projector,
+        &refresh_source,
+        move || {
+            refresh_before_pin_calls
+                .lock()
+                .expect("scripted refresh call log")
+                .push("advance_before_pin".to_owned());
+            synchronize_prepared(&refresh_before_pin_projector, &archive)
+                .map(|_| ())
+                .map_err(AttestationError::from)
+        },
+    ))
+    .expect_err("a checkpoint advance before pinning must request refresh");
+    assert!(matches!(
+        refresh,
+        SynchronizeAttestationError::Attestation(AttestationError::RefreshRequired)
+    ));
+    assert_eq!(
+        *refresh_calls.lock().expect("scripted refresh call log"),
+        ["fetch_complete", "advance_before_pin"]
+    );
 }
 
 #[test]

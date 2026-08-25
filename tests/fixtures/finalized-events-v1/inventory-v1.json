@@ -11,7 +11,7 @@
       "path": "expected-projection-v1.json",
       "kind": "file",
       "file_size": 17579,
-      "file_sha256": "0ea41a2a4dd9477446d6491a00504b6ad7cfc6fa93e57b3b391af4519489aeef"
+      "file_sha256": "cb4c0dd400105312c8d9aba69c8c2999ec91fa58291c12b08345de267aa9d809"
     },
     {
       "path": "fault-cases-v1.json",
@@ -195,7 +195,7 @@
       "path": "rpc-preflight-v1.json",
       "kind": "file",
       "file_size": 8985,
-      "file_sha256": "04a3d9e8dca2e10d435edf69be0b14626d184dd7c4acd11fb261dc388b12a8bb"
+      "file_sha256": "0a056c5b964dcea880135ccdb4697a91928e44eab02cbe414f1aac87f4b8dea6"
     },
     {
       "path": "valid-stream-v1.json",
@@ -207,7 +207,7 @@
       "path": "verify_fixtures.py",
       "kind": "file",
       "file_size": 57307,
-      "file_sha256": "3fc53adde220ba0aab8bf17aec977fb4a4081ccf92049748ac2af9917f131be9"
+      "file_sha256": "0f3540f0a8d86778f387b6aa88ad55793aee96965c2b4f7d4f7359c12d3b4ac0"
     }
   ]
 }

@@ -74,7 +74,8 @@ readonly PROJECT_ROOT="$(cd -- "$SELF_DIR/../.." && pwd -P)"
 readonly GRAMMAR_FILE="$SELF_DIR/node-argv-grammar-v1.txt"
 readonly SEALED_EXEC="$SELF_DIR/sealed-exec.py"
 readonly PYTHON=/usr/bin/python3.14
-readonly EXPECTED_GRAMMAR_SHA256="112655c95fcf0b1fe535d0e6b209883374bb650b40ecd9f3383d4378dd1b88b4"
+readonly PVF_WORKERS_DIR=/run/cubikan-exec/pvf-workers
+readonly EXPECTED_GRAMMAR_SHA256="64be27a9c5ff19b56adbd009e087c0fae059e667a2cf817cba5c6115fd019498"
 readonly EXPECTED_SEALED_EXEC_SHA256="b3cd068ac20123ca2971aca6dff5f6718778090323e14c3d3156669bc1c1f672"
 readonly EXPECTED_PYTHON_SHA256="b8d8288faefdd300201f43fcf00f6f539a27218eeed3a3dff5ab10b9c4c99700"
 SEALED_EXEC_CONTENT=""
@@ -121,8 +122,80 @@ verify_sealed_exec_boundary() {
     [[ -x "$PYTHON" && ! -L "$PYTHON" && "$(sha256_file "$PYTHON")" == "$EXPECTED_PYTHON_SHA256" ]] || die "sealed execution interpreter identity mismatch"
 }
 
+verify_pvf_worker_file() {
+    local path=$1 expected_size=$2 expected_hash=$3
+    local prefix_fd hash_fd worker_opened_identity worker_path_identity prefix digest
+    [[ -f "$path" && -x "$path" && ! -L "$path" ]] || die 'PVF worker is missing, symbolic, or nonexecutable'
+    [[ "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%u:%a:%h:%s:%F' -- "$path")" == \
+        "$EUID:500:1:$expected_size:regular file" ]] || die 'PVF worker metadata mismatch'
+    exec {prefix_fd}<"$path"
+    exec {hash_fd}<"$path"
+    worker_opened_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "/proc/self/fd/$hash_fd")"
+    worker_path_identity="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$path")"
+    [[ "$worker_opened_identity" == "$worker_path_identity" &&
+        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "/proc/self/fd/$prefix_fd")" == "$worker_opened_identity" ]] ||
+        die 'PVF worker changed while opening'
+    IFS= read -r -N 4 prefix <&"$prefix_fd" || die 'PVF worker lacks a complete ELF header'
+    [[ "$prefix" == $'\x7fELF' ]] || die 'PVF worker is not ELF'
+    digest="$(/usr/lib/cargo/bin/coreutils/sha256sum - <&"$hash_fd")"
+    [[ "${digest%% *}" == "$expected_hash" &&
+        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i:%s:%Y:%Z' -- "$path")" == "$worker_opened_identity" ]] ||
+        die 'PVF worker bytes or identity mismatch'
+    exec {prefix_fd}<&-
+    exec {hash_fd}<&-
+}
+
+verify_pvf_worker_tree() {
+    local mount_proof probe_status=0
+    local -a entries
+    [[ -d "$PVF_WORKERS_DIR" && ! -L "$PVF_WORKERS_DIR" &&
+        "$(/usr/lib/cargo/bin/coreutils/realpath -e -- "$PVF_WORKERS_DIR")" == "$PVF_WORKERS_DIR" &&
+        "$(/usr/lib/cargo/bin/coreutils/stat -fLc '%T' -- "$PVF_WORKERS_DIR")" == tmpfs &&
+        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%u:%a:%F' -- "$PVF_WORKERS_DIR")" == "$EUID:500:directory" ]] ||
+        die 'PVF worker root is not the exact private tmpfs directory'
+    shopt -s dotglob nullglob
+    entries=("$PVF_WORKERS_DIR"/*)
+    shopt -u dotglob nullglob
+    [[ ${#entries[@]} -eq 2 &&
+        "${entries[0]}" == "$PVF_WORKERS_DIR/polkadot-execute-worker" &&
+        "${entries[1]}" == "$PVF_WORKERS_DIR/polkadot-prepare-worker" ]] ||
+        die 'PVF worker root has a missing or extra entry'
+    mount_proof="$(/usr/bin/gawk -v target="$PVF_WORKERS_DIR" '
+        $5 == target {
+            count++
+            split($6, options, ",")
+            delete seen
+            for (option in options) seen[options[option]] = 1
+            dash = 0
+            for (i = 7; i <= NF; i++) if ($i == "-") { dash = i; break }
+            if (seen["ro"] && seen["nodev"] && seen["nosuid"] && !seen["noexec"] &&
+                dash > 0 && $(dash + 1) == "tmpfs") ok++
+        }
+        END { printf "%d:%d\n", count + 0, ok + 0 }
+    ' /proc/self/mountinfo)"
+    [[ "$mount_proof" == 1:1 ]] || die 'PVF worker root is not one executable read-only bind mount'
+    verify_pvf_worker_file "$PVF_WORKERS_DIR/polkadot-prepare-worker" \
+        21387400 5e67a05516e24d5e9b9616bacb3a2d58235beb3392de14dfbe51ff6914244267
+    verify_pvf_worker_file "$PVF_WORKERS_DIR/polkadot-execute-worker" \
+        19463336 cc642041ef2582d972071cd4f7122e9803703bc7775e8d432b2d7626f5011b21
+    "$PYTHON" -I -S -c \
+        'import errno, os, sys
+p = sys.argv[1]
+try:
+    fd = os.open(p, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+except OSError as error:
+    raise SystemExit(0 if error.errno == errno.EROFS else 1)
+else:
+    os.close(fd)
+    os.unlink(p)
+    raise SystemExit(2)' \
+        "$PVF_WORKERS_DIR/.normalizer-write-probe" || probe_status=$?
+    [[ $probe_status -eq 0 && ! -e "$PVF_WORKERS_DIR/.normalizer-write-probe" ]] ||
+        die 'PVF worker root did not reject creation with EROFS'
+}
+
 usage() {
-    printf '%s\n' 'usage: normalize-node-argv.sh --role ROLE [--print0] -- COMMAND ARG...' >&2
+    printf '%s\n' 'usage: normalize-node-argv.sh --role ROLE [--print0 [--verify-workers]] -- COMMAND ARG...' >&2
     exit 2
 }
 
@@ -136,6 +209,7 @@ fi
 
 role=""
 print0=0
+verify_workers=0
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --role)
@@ -148,6 +222,11 @@ while [[ $# -gt 0 ]]; do
             print0=1
             shift
             ;;
+        --verify-workers)
+            [[ $verify_workers -eq 0 ]] || usage
+            verify_workers=1
+            shift
+            ;;
         --)
             shift
             break
@@ -155,6 +234,8 @@ while [[ $# -gt 0 ]]; do
         *) usage ;;
     esac
 done
+
+[[ $verify_workers -eq 0 || $print0 -eq 1 ]] || usage
 
 case "$role" in
     relay-a)
@@ -256,6 +337,23 @@ validate_value() {
             [[ "$value" == /* && "$value" != *'/../'* && "$value" != *'/./'* ]] || die "$side base path is unsafe"
             safe_scalar "$value" || die "$side base path has unsupported bytes"
             ;;
+        --workers-path)
+            [[ "$value" == /run/cubikan-exec/pvf-workers ]] ||
+                die "$side workers path is not the locked private mount"
+            if [[ "$side" == primary ]]; then
+                [[ "$role" == relay-* ]] || die 'collator primary cannot select relay PVF workers'
+            else
+                [[ "$role" == collator-* ]] || die 'relay validator cannot contain a second worker side'
+            fi
+            ;;
+        --execute-workers-max-num|--prepare-workers-soft-max-num|--prepare-workers-hard-max-num)
+            [[ "$value" == 1 ]] || die "$side $flag must be exactly 1"
+            if [[ "$side" == primary ]]; then
+                [[ "$role" == relay-* ]] || die "collator primary cannot supply $flag"
+            else
+                [[ "$role" == collator-* ]] || die "relay validator cannot contain a second worker side"
+            fi
+            ;;
         --listen-addr)
             safe_scalar "$value" || die "$side listen address has unsupported bytes"
             ;;
@@ -263,10 +361,12 @@ validate_value() {
             [[ "$value" =~ ^[0-9]{1,5}$ && "$value" -ge 1 && "$value" -le 65535 ]] || die "$side $flag is not a TCP port"
             ;;
         --rpc-cors)
-            [[ "$value" == all ]] || die "$side rpc-cors must be all"
+            [[ "$side" == primary && "$value" == all ]] ||
+                die "$side rpc-cors must be primary-only and all"
             ;;
         --rpc-methods)
-            [[ "$value" == unsafe ]] || die "$side rpc-methods must be unsafe"
+            [[ "$side" == primary && "$value" == unsafe ]] ||
+                die "$side rpc-methods must be primary-only and unsafe"
             ;;
         --blocks-pruning|--state-pruning)
             [[ "$side" == primary && "$value" == archive ]] || die "$side $flag must be archive"
@@ -279,7 +379,7 @@ validate_value() {
 }
 
 validate_bootnode() {
-    [[ "$1" =~ ^/ip4/127\.0\.0\.1/tcp/(30333|30334|30335|30336|30337|30338)/p2p/[1-9A-HJ-NP-Za-km-z]+$ ]] || die "bootnode is not in the locked loopback inventory"
+    [[ "$1" =~ ^/ip4/127\.0\.0\.1/tcp/(30333|30334|30335|30336|30337|30338)/ws/p2p/[1-9A-HJ-NP-Za-km-z]+$ ]] || die "bootnode is not in the locked loopback WebSocket inventory"
 }
 
 PARSED=()
@@ -289,9 +389,11 @@ parse_side() {
     local -A seen=()
     local token value
     local saw_chain=0 saw_name=0 saw_key=0 saw_base=0
-    local saw_listen=0 saw_port=0 saw_rpc=0 saw_metrics=0
+    local saw_listen=0 saw_port=0 saw_rpc=0 saw_metrics=0 saw_workers=0
+    local saw_execute_workers=0 saw_prepare_soft=0 saw_prepare_hard=0
+    local saw_rpc_cors=0 saw_rpc_methods=0
     local saw_validator=0 saw_collator=0 saw_blocks_archive=0 saw_state_archive=0
-    local saw_no_mdns=0 saw_no_telemetry=0
+    local saw_no_mdns=0 saw_no_telemetry=0 saw_no_hardware_benchmarks=0
     PARSED=()
 
     while [[ $# -gt 0 ]]; do
@@ -311,6 +413,7 @@ parse_side() {
                 [[ "$token" == --collator ]] && saw_collator=1
                 [[ "$token" == --no-mdns ]] && saw_no_mdns=1
                 [[ "$token" == --no-telemetry ]] && saw_no_telemetry=1
+                [[ "$token" == --no-hardware-benchmarks ]] && saw_no_hardware_benchmarks=1
                 ;;
             --bootnodes)
                 [[ -z "${seen[$token]:-}" ]] || die "$side duplicates $token"
@@ -323,7 +426,7 @@ parse_side() {
                     shift
                 done
                 ;;
-            --name|--node-key|--chain|--base-path|--listen-addr|--port|--rpc-port|--ws-port|--prometheus-port|--rpc-cors|--rpc-methods|--blocks-pruning|--state-pruning|--execution)
+            --name|--node-key|--chain|--base-path|--listen-addr|--port|--rpc-port|--ws-port|--prometheus-port|--workers-path|--execute-workers-max-num|--prepare-workers-soft-max-num|--prepare-workers-hard-max-num|--rpc-cors|--rpc-methods|--blocks-pruning|--state-pruning|--execution)
                 [[ -z "${seen[$token]:-}" ]] || die "$side duplicates $token"
                 seen[$token]=1
                 [[ $# -gt 0 ]] || die "$side $token has no value"
@@ -338,13 +441,19 @@ parse_side() {
                         saw_rpc=1
                         ;;
                     --prometheus-port) saw_metrics=1 ;;
+                    --rpc-cors) saw_rpc_cors=1 ;;
+                    --rpc-methods) saw_rpc_methods=1 ;;
+                    --workers-path) saw_workers=1; PARSED+=("$token" "$value") ;;
+                    --execute-workers-max-num) saw_execute_workers=1; PARSED+=("$token" "$value") ;;
+                    --prepare-workers-soft-max-num) saw_prepare_soft=1; PARSED+=("$token" "$value") ;;
+                    --prepare-workers-hard-max-num) saw_prepare_hard=1; PARSED+=("$token" "$value") ;;
                     --chain) saw_chain=1; PARSED+=("$token" "$value") ;;
                     --name) saw_name=1; PARSED+=("$token" "$value") ;;
                     --node-key) saw_key=1; PARSED+=("$token" "$value") ;;
                     --base-path) saw_base=1; PARSED+=("$token" "$value") ;;
                     --blocks-pruning) saw_blocks_archive=1; PARSED+=("$token" "$value") ;;
                     --state-pruning) saw_state_archive=1; PARSED+=("$token" "$value") ;;
-                    --listen-addr|--port|--rpc-port|--ws-port|--prometheus-port) ;;
+                    --listen-addr|--port|--rpc-port|--ws-port|--prometheus-port|--rpc-cors|--rpc-methods) ;;
                     *) PARSED+=("$token" "$value") ;;
                 esac
                 ;;
@@ -356,31 +465,59 @@ parse_side() {
     [[ $saw_port -eq 1 && $saw_rpc -eq 1 && $saw_metrics -eq 1 ]] || die "$side is missing generated port fields"
     if [[ "$side" == primary ]]; then
         [[ $saw_name -eq 1 && $saw_key -eq 1 && $saw_base -eq 1 && $saw_listen -eq 1 ]] || die "primary side is missing generated identity/path/listener fields"
+        [[ $saw_rpc_cors -eq 1 && $saw_rpc_methods -eq 1 ]] ||
+            die 'primary side is missing its generated RPC policy fields'
         if [[ "$role" == relay-* ]]; then
             [[ $saw_validator -eq 1 && $saw_collator -eq 0 ]] || die "relay role must be validator-only"
+            [[ $saw_workers -eq 1 && $saw_execute_workers -eq 1 &&
+                $saw_prepare_soft -eq 1 && $saw_prepare_hard -eq 1 ]] ||
+                die 'relay role is missing its pinned PVF worker contract'
         else
             [[ $saw_collator -eq 1 && $saw_validator -eq 0 ]] || die "collator primary must be collator-only"
             [[ $saw_blocks_archive -eq 1 && $saw_state_archive -eq 1 ]] || die "collator primary must preserve both archive flags"
+            [[ $saw_workers -eq 0 && $saw_execute_workers -eq 0 &&
+                $saw_prepare_soft -eq 0 && $saw_prepare_hard -eq 0 ]] ||
+                die 'collator primary unexpectedly configures relay PVF workers'
         fi
     else
         [[ $saw_name -eq 0 && $saw_key -eq 0 && $saw_collator -eq 0 ]] || die "relay side contains primary-only identity"
+        [[ $saw_rpc_cors -eq 0 && $saw_rpc_methods -eq 0 ]] ||
+            die 'relay side unexpectedly contains primary-only RPC policy fields'
+        [[ $saw_workers -eq 1 && $saw_execute_workers -eq 1 &&
+            $saw_prepare_soft -eq 1 && $saw_prepare_hard -eq 1 ]] ||
+            die 'collator relay side is missing its pinned PVF worker contract'
     fi
     [[ $saw_no_mdns -eq 1 ]] || PARSED+=(--no-mdns)
     [[ $saw_no_telemetry -eq 1 ]] || PARSED+=(--no-telemetry)
+    [[ $saw_no_hardware_benchmarks -eq 1 ]] || PARSED+=(--no-hardware-benchmarks)
 }
 
 parse_side primary "${primary[@]}"
-normalized=("$command_path" "${PARSED[@]}" --listen-addr "/ip4/127.0.0.1/tcp/$primary_p2p/ws" --port "$primary_p2p" --rpc-port "$primary_rpc" --prometheus-port "$primary_metrics")
+normalized=(
+    "$command_path" "${PARSED[@]}"
+    --listen-addr "/ip4/127.0.0.1/tcp/$primary_p2p/ws"
+    --experimental-rpc-endpoint "listen-addr=127.0.0.1:$primary_rpc,methods=unsafe,cors=all"
+    --prometheus-port "$primary_metrics"
+)
 
 if [[ "$role" == collator-* ]]; then
     parse_side relay-side "${relay_side[@]}"
-    normalized+=(-- "${PARSED[@]}" --listen-addr "/ip4/127.0.0.1/tcp/$relay_p2p/ws" --port "$relay_p2p" --rpc-port "$relay_rpc" --prometheus-port "$relay_metrics")
+    normalized+=(
+        -- "${PARSED[@]}"
+        --listen-addr "/ip4/127.0.0.1/tcp/$relay_p2p/ws"
+        --experimental-rpc-endpoint "listen-addr=127.0.0.1:$relay_rpc,methods=unsafe,cors=all"
+        --prometheus-port "$relay_metrics"
+    )
 fi
 
 if [[ $print0 -eq 1 ]]; then
+    if [[ $verify_workers -eq 1 ]]; then
+        verify_pvf_worker_tree
+    fi
     printf '%s\0' "${normalized[@]}"
 else
     verify_sealed_exec_boundary
+    verify_pvf_worker_tree
     readonly command_size="$(/usr/lib/cargo/bin/coreutils/stat -Lc '%s' -- "$command_copy_fd_path")"
     exec "$PYTHON" -I -S -c "$SEALED_EXEC_CONTENT" exec-fd "$command_copy_fd" "$command_size" \
         "$(expected_asset_sha256 "$command_name")" -- "$command_path" "${normalized[@]:1}" </dev/null

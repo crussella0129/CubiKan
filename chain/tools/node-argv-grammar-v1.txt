@@ -17,6 +17,10 @@ Generated flags accepted on a primary side:
   --base-path VALUE
   --listen-addr VALUE
   --port VALUE
+  --workers-path /run/cubikan-exec/pvf-workers
+  --execute-workers-max-num 1
+  --prepare-workers-soft-max-num 1
+  --prepare-workers-hard-max-num 1
   --rpc-port VALUE
   --ws-port VALUE
   --prometheus-port VALUE
@@ -43,12 +47,14 @@ Generated flags accepted after the collator separator:
   --base-path VALUE
   --listen-addr VALUE
   --port VALUE
+  --workers-path /run/cubikan-exec/pvf-workers
+  --execute-workers-max-num 1
+  --prepare-workers-soft-max-num 1
+  --prepare-workers-hard-max-num 1
   --rpc-port VALUE
   --ws-port VALUE
   --prometheus-port VALUE
   --bootnodes VALUE...
-  --rpc-cors all
-  --rpc-methods unsafe
   --execution wasm
   --validator
   --force-authoring
@@ -63,16 +69,25 @@ Generated flags accepted after the collator separator:
   --prometheus-external
 
 Exactly one value follows every value flag except --bootnodes, which consumes
-one or more loopback-only /ip4/127.0.0.1/tcp/PORT/p2p/PEER values. A side must
+one or more loopback-only /ip4/127.0.0.1/tcp/PORT/ws/p2p/PEER values whose
+transport matches the normalized WebSocket listener. A side must
 contain exactly one of --rpc-port or --ws-port; supplying both is a duplicate
-RPC-listener declaration. Flags use separate argv elements; --flag=value is not
-accepted. Duplicate flags, unknown flags, unexpected positionals, unsafe paths,
-non-loopback bootnodes, missing required generated fields, and a relay-side
-separator on a relay validator are rejected before execution.
+RPC-listener declaration. A primary side must also contain exactly one
+--rpc-cors all and one --rpc-methods unsafe. The pinned provider emits neither
+global after the collator separator, so both are rejected on that relay side.
+Flags use separate argv elements; --flag=value is not accepted. Duplicate
+flags, unknown flags, unexpected positionals, unsafe paths, non-loopback
+bootnodes, missing required generated fields, and a relay-side separator on a
+relay validator are rejected before execution.
 
 The normalizer discards every generated external-bind flag and every generated
 listener or port value, including the single generated RPC/WS spelling. It
-emits exactly one --rpc-port and supplies the following fixed values:
+also consumes the required primary --rpc-cors and --rpc-methods globals after
+validating their exact values. It requires the generated --port allocation but
+does not forward --port because the pinned node CLIs reject it when an explicit
+--listen-addr is present. It emits exactly one --listen-addr, one
+--experimental-rpc-endpoint, and one --prometheus-port and supplies the
+following fixed values:
   relay-a: primary rpc 9944, p2p 30333, metrics 9615
   relay-b: primary rpc 9945, p2p 30334, metrics 9616
   collator-a: primary rpc 9988, p2p 30335, metrics 9617;
@@ -80,8 +95,21 @@ emits exactly one --rpc-port and supplies the following fixed values:
   collator-b: primary rpc 9989, p2p 30336, metrics 9618;
               relay-side rpc 9991, p2p 30338, metrics 9620
 
-Every supplied listen address is /ip4/127.0.0.1/tcp/PORT/ws. The normalizer
-also supplies --no-mdns and --no-telemetry when absent. Both collator primary
-sides must preserve --blocks-pruning archive and --state-pruning archive.
+Every supplied P2P listen address is /ip4/127.0.0.1/tcp/PORT/ws. Every supplied
+RPC endpoint is the single scalar
+listen-addr=127.0.0.1:RPC_PORT,methods=unsafe,cors=all. No final --rpc-port,
+--ws-port, --rpc-cors, or --rpc-methods global is emitted, because the pinned
+legacy --rpc-port path also binds an IPv6 loopback listener. For an embedded
+relay side, the fixed grammar supplies the same methods and CORS policy because
+the pinned provider generates only its p2p, RPC, and metrics port allocations
+after the separator. The normalizer also supplies --no-mdns, --no-telemetry,
+and --no-hardware-benchmarks when absent. Both collator primary sides must
+preserve --blocks-pruning archive and --state-pruning archive.
+Every relay execution side (a relay validator primary or a collator side after
+the separator) must supply exactly one
+--workers-path /run/cubikan-exec/pvf-workers and exactly one of each worker-pool
+limit with value 1. A collator primary side may not supply those flags. The
+launcher independently authenticates the two same-release worker binaries in
+that private read-only tmpfs mount before node execution.
 ParaId is supplied by the chain specification and is never accepted as
 generated node argv.

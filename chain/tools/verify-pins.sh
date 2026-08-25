@@ -127,7 +127,7 @@ SEALED_EXEC_CONTENT_SHA256=""
 # Updated only after the complete pin document has passed independent review.
 # This closes the bootstrap hole where a modified pin file could bless a
 # modified namespace executable before the rest of the verifier runs.
-readonly EXPECTED_PINS_SHA256="af06eae31811359dd4af9215a29d5b8dcf34e3fab1ca4635f12a79242dfcfd38"
+readonly EXPECTED_PINS_SHA256="641a3b8f325dcd20cf40831c4ed0f7969a912f0647fbd716bf12c33dba6d5383"
 
 die() {
     printf 'verify-pins: %s\n' "$*" >&2
@@ -320,11 +320,14 @@ require_no_placeholders
 # The exact fetch branch is the sole network-enabled phase. Before locked mode
 # enters the namespace, verify every executable that namespace entry will use.
 if [[ "$mode" == locked ]]; then
+    require_size "$LOOPBACK" "$(pin repository_tools loopback_wrapper_size)"
     bind_verified_repository_script "$LOOPBACK" \
         "$(pin repository_tools loopback_wrapper_sha256)" namespace-wrapper \
         LOOPBACK_CONTENT LOOPBACK_CONTENT_SHA256
     require_hash "$(pin host_tools bash_path)" "$(pin host_tools bash_sha256)"
     require_hash "$(pin host_tools unshare_path)" "$(pin host_tools unshare_sha256)"
+    require_size "$(pin host_tools setpriv_path)" "$(pin host_tools setpriv_size)"
+    require_hash "$(pin host_tools setpriv_path)" "$(pin host_tools setpriv_sha256)"
     require_hash "$(pin host_tools ip_path)" "$(pin host_tools ip_sha256)"
     require_hash "$(pin host_tools netcat_path)" "$(pin host_tools netcat_sha256)"
     require_hash "$(pin host_tools env_path)" "$(pin host_tools env_sha256)"
@@ -332,6 +335,7 @@ if [[ "$mode" == locked ]]; then
     require_hash "$(pin host_tools dd_path)" "$(pin host_tools dd_sha256)"
     require_hash "$(pin host_tools stat_path)" "$(pin host_tools stat_sha256)"
     require_hash "$(pin host_tools mount_path)" "$(pin host_tools mount_sha256)"
+    require_hash "$(pin host_tools umount_path)" "$(pin host_tools umount_sha256)"
     require_hash "$(pin host_tools uname_path)" "$(pin host_tools uname_sha256)"
     enter_or_verify_locked_isolation
 fi
@@ -347,11 +351,15 @@ fi
 # namespace boundary so no dependent execution can precede identity validation.
 
 readonly DOWNLOADS="$CACHE/downloads"
+readonly NPM_CACHE="$CACHE/npm"
 readonly SDK_ARCHIVE="$DOWNLOADS/polkadot-sdk-$(pin polkadot_sdk revision).tar.gz"
 readonly ZOMBIENET_ARCHIVE="$DOWNLOADS/zombienet-$(pin zombienet revision).tar.gz"
 readonly NODE_ARCHIVE="$DOWNLOADS/node-v$(pin node version)-$(pin node platform).tar.xz"
 readonly RUSQLITE_ARCHIVE="$DOWNLOADS/rusqlite-$(pin rusqlite version).crate"
-readonly ASSET_NAMES=(polkadot polkadot-parachain polkadot-omni-node chain-spec-builder frame-omni-bencher)
+readonly ASSET_NAMES=(
+    polkadot polkadot-prepare-worker polkadot-execute-worker
+    polkadot-parachain polkadot-omni-node chain-spec-builder frame-omni-bencher
+)
 
 require_exact_literal() {
     local section="$1" key="$2" expected="$3" actual
@@ -378,18 +386,26 @@ verify_pin_contract() {
     require_exact_literal subxt family subxt,subxt-codegen,subxt-lightclient,subxt-macro,subxt-metadata,subxt-rpcs,subxt-signer,subxt-utils-accountid32,subxt-utils-fetchmetadata
     require_exact_literal zombienet revision a7c434271f094320d17cf94f7a2f95fdef417379
     require_exact_literal zombienet cli_version 1.3.138
+    require_exact_literal zombienet toml_git_commit 5e17114f1af5b5b70e4f2ec10cd007623c928988
+    require_exact_literal zombienet toml_installed_path javascript/node_modules/toml
+    require_exact_literal zombienet toml_installed_tree_sha256 2faea9de33ef0b6a95e7823a17c8beddb514f10873b8988fa65755ecff9114c7
     require_exact_literal node version 22.23.1
     require_exact_literal node npm_version 10.9.8
     require_exact_literal node platform linux-x64
     require_exact_literal node archive_symlink_count 3
     require_exact_literal repository_tools argv_grammar_version 1
+    require_exact_literal repository_tools loopback_wrapper_size 38972
+    require_exact_literal host_tools setpriv_path /usr/bin/setpriv
+    require_exact_literal host_tools setpriv_size 47576
+    require_exact_literal host_tools git_https_helper_path /usr/lib/git-core/git-remote-http
+    require_exact_literal host_tools git_https_helper_size 986272
     require_exact_literal host_tools python_version "Python 3.14.4"
     require_exact_literal foundation snapshot_format cubikan-foundation-snapshot-v1
     require_exact_literal foundation snapshot_file_count 30
     require_exact_literal foundation snapshot_external_tree_count 1
     require_exact_literal runtime_artifacts bootstrap_state resolved
     require_exact_literal runtime_artifacts anchor_path chain/artifacts/local-deployment-anchor-v1.json
-    require_exact_literal runtime_artifacts anchor_sha256 38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7
+    require_exact_literal runtime_artifacts anchor_sha256 aa58c83fb0cfcb27be160aa8ca150f78ee3fff1cfc3868dbd073c92581c69887
     require_exact_literal runtime_artifacts chain_spec_path chain/config/cubikan-local.json
     require_exact_literal runtime_artifacts chain_spec_sha256 dc7945fbeed5b18d21c1839f8f4f5ab13a1660ca956a3513b8a9946bab6334c7
     require_exact_literal runtime_artifacts metadata_path chain/metadata/cubikan-runtime-v1.scale
@@ -408,6 +424,8 @@ verify_pin_contract() {
     require_exact_literal chain_dependencies sdk_source "git+https://github.com/paritytech/polkadot-sdk.git?rev=$(pin polkadot_sdk revision)#$(pin polkadot_sdk revision)"
 
     require_exact_literal assets.polkadot role relay-validator
+    require_exact_literal assets.polkadot-prepare-worker role relay-validator-pvf-prepare-worker
+    require_exact_literal assets.polkadot-execute-worker role relay-validator-pvf-execute-worker
     require_exact_literal assets.polkadot-parachain role same-commit-genesis-export-compatibility
     require_exact_literal assets.polkadot-omni-node role sole-cubikan-collator-host
     require_exact_literal assets.chain-spec-builder role chain-spec
@@ -462,6 +480,7 @@ fetch_all() {
     download_exact "$(pin polkadot_sdk archive_url)" "$SDK_ARCHIVE" "$(pin polkadot_sdk archive_size)" "$(pin polkadot_sdk archive_sha256)"
     download_exact "$(pin zombienet archive_url)" "$ZOMBIENET_ARCHIVE" "$(pin zombienet archive_size)" "$(pin zombienet archive_sha256)"
     download_exact "$(pin node archive_url)" "$NODE_ARCHIVE" "$(pin node archive_size)" "$(pin node archive_sha256)"
+    populate_zombienet_npm_cache
     download_exact "$(pin rusqlite archive_url)" "$RUSQLITE_ARCHIVE" "$(pin rusqlite archive_size)" "$(pin rusqlite archive_sha256)"
     local asset
     for asset in "${ASSET_NAMES[@]}"; do
@@ -573,6 +592,8 @@ verify_materialized_sdk_checkout() {
 
 verify_repository_tool_bytes() {
     require_hash "$PROJECT_ROOT/$(pin repository_tools argv_grammar_path)" "$(pin repository_tools argv_grammar_sha256)"
+    require_size "$PROJECT_ROOT/$(pin repository_tools loopback_wrapper_path)" \
+        "$(pin repository_tools loopback_wrapper_size)"
     if [[ -z "$SEALED_EXEC_CONTENT" ]]; then
         bind_verified_repository_script \
             "$PROJECT_ROOT/$(pin repository_tools sealed_exec_path)" \
@@ -612,7 +633,7 @@ verify_repository_tool_behavior() {
 verify_host_tool_bytes() {
     local path expected_path
     for key in \
-        bash unshare ip ss netcat git rustup env awk sha256sum dd mount stat tar \
+        bash unshare setpriv ip ss netcat git git_https_helper rustup env awk sha256sum dd mount umount stat tar \
         patch diff find sort iconv uname dirname readlink sed grep head wc cp rm \
         mkdir mktemp curl chmod mv python; do
         path="$(pin host_tools "${key}_path")"
@@ -621,12 +642,16 @@ verify_host_tool_bytes() {
         [[ -x "$path" ]] || die "pinned host executable is unavailable: $path"
         require_hash "$path" "$(pin host_tools "${key}_sha256")"
     done
+    require_size "$(pin host_tools setpriv_path)" "$(pin host_tools setpriv_size)"
+    require_size "$(pin host_tools git_https_helper_path)" \
+        "$(pin host_tools git_https_helper_size)"
 }
 
 verify_host_tool_behavior() {
     verify_current_network_namespace
     [[ "$("$(pin host_tools bash_path)" --version | /usr/lib/cargo/bin/coreutils/head -1)" == "$(pin host_tools bash_version)" ]] || die "Bash version mismatch"
     [[ "$("$(pin host_tools unshare_path)" --version | /usr/lib/cargo/bin/coreutils/head -1)" == "unshare from util-linux $(pin host_tools util_linux_version)" ]] || die "util-linux version mismatch"
+    [[ "$("$(pin host_tools setpriv_path)" --version | /usr/lib/cargo/bin/coreutils/head -1)" == "setpriv from util-linux $(pin host_tools util_linux_version)" ]] || die "setpriv version mismatch"
     [[ "$("$(pin host_tools ip_path)" -V 2>&1)" == *"iproute2-$(pin host_tools iproute2_version)"* ]] || die "iproute2 version mismatch"
     [[ "$("$(pin host_tools ss_path)" -V 2>&1)" == *"iproute2-$(pin host_tools iproute2_version)"* ]] || die "ss version mismatch"
     [[ "$("$(pin host_tools git_path)" --version)" == "git version $(pin host_tools git_version)" ]] || die "Git version mismatch"
@@ -714,6 +739,308 @@ safe_extract() {
     /usr/bin/gnurm -f -- "$names" "$modes"
 }
 
+verify_npm_cache_tree() {
+    local cache="$1" canonical
+    [[ "$cache" == /* && "$cache" != / && -d "$cache" && ! -L "$cache" ]] ||
+        die "npm cache root is missing, symbolic, or non-absolute"
+    canonical="$(/usr/lib/cargo/bin/coreutils/readlink -f -- "$cache")"
+    [[ "$canonical" == "$cache" ]] || die "npm cache root is not canonical"
+    [[ -z "$(/usr/bin/find "$cache" -type l -print -quit)" ]] ||
+        die "npm cache contains a symbolic link"
+    [[ -z "$(/usr/bin/find "$cache" ! -type d ! -type f -print -quit)" ]] ||
+        die "npm cache contains a nonregular entry"
+    [[ -d "$cache/_cacache/content-v2" && -d "$cache/_cacache/index-v5" ]] ||
+        die "npm cache lacks its content-addressed closure"
+    [[ -n "$(/usr/bin/find "$cache/_cacache/content-v2" -type f -print -quit)" ]] ||
+        die "npm content-addressed closure is empty"
+}
+
+verify_zombienet_toml_lock() {
+    local package_lock=$1 python
+    python="$(pin host_tools python_path)"
+    "$python" -I -S - "$package_lock" "$(pin zombienet toml_git_commit)" <<'PY'
+import json
+import pathlib
+import sys
+
+path = pathlib.Path(sys.argv[1])
+commit = sys.argv[2]
+lock = json.loads(path.read_bytes())
+entry = lock.get("packages", {}).get("node_modules/toml")
+expected = {
+    "version": "3.0.0",
+    "resolved": f"git+ssh://git@github.com/pepoviola/toml-node.git#{commit}",
+    "license": "MIT",
+}
+git_entries = sorted(
+    (name, value.get("resolved"))
+    for name, value in lock.get("packages", {}).items()
+    if isinstance(value, dict)
+    and isinstance(value.get("resolved"), str)
+    and value["resolved"].startswith(("git+", "git://", "ssh://"))
+)
+if (
+    entry != expected
+    or "integrity" in entry
+    or git_entries != [("node_modules/toml", expected["resolved"])]
+):
+    raise SystemExit("package-lock toml Git dependency identity mismatch")
+PY
+}
+
+verify_zombienet_toml_install() {
+    local zombie_root=$1 installed actual
+    installed="$zombie_root/$(pin zombienet toml_installed_path)"
+    actual="$(tree_sha256 "$installed")"
+    [[ "$actual" == "$(pin zombienet toml_installed_tree_sha256)" ]] ||
+        die 'installed toml Git dependency tree hash mismatch'
+}
+
+prepare_pinned_git_https_helper() {
+    local home=$1 source helper_root helper
+    source="$(pin host_tools git_https_helper_path)"
+    helper_root="$home/git-exec"
+    helper="$helper_root/git-remote-https"
+    [[ "$source" == /usr/lib/git-core/git-remote-http && -f "$source" &&
+        -x "$source" && ! -L "$source" &&
+        "$(/usr/lib/cargo/bin/coreutils/readlink -f -- "$source")" == "$source" ]] ||
+        die 'pinned Git HTTPS helper is noncanonical, missing, or symbolic'
+    require_size "$source" "$(pin host_tools git_https_helper_size)"
+    require_hash "$source" "$(pin host_tools git_https_helper_sha256)"
+    [[ -d "$home" && ! -L "$home" && ! -e "$helper_root" && ! -L "$helper_root" ]] ||
+        die 'private Git HTTPS helper root is not fresh'
+    /usr/lib/cargo/bin/coreutils/mkdir -m 0700 -- "$helper_root"
+    /usr/bin/gnucp -- "$source" "$helper"
+    [[ -f "$helper" && -x "$helper" && ! -L "$helper" ]] ||
+        die 'private Git HTTPS helper is invalid'
+    require_size "$helper" "$(pin host_tools git_https_helper_size)"
+    require_hash "$helper" "$(pin host_tools git_https_helper_sha256)"
+    [[ -z "$(/usr/bin/find "$helper_root" -type l -print -quit)" &&
+        -z "$(/usr/bin/find "$helper_root" ! -type d ! -type f -print -quit)" &&
+        "$(/usr/bin/find "$helper_root" -mindepth 1 -maxdepth 1 -printf '%f\n')" == \
+        git-remote-https ]] || die 'private Git HTTPS helper inventory drifted'
+}
+
+run_pinned_npm() {
+    local network_mode="$1" node_root="$2" javascript="$3" home="$4" cache="$5"
+    shift 5
+    local node_bin="$node_root/bin/node"
+    local npm_cli="$node_root/lib/node_modules/npm/bin/npm-cli.js"
+    local git_bin git_exec_path
+    local user_config="$home/user.npmrc"
+    local global_config="$home/global.npmrc"
+    local -a network_environment=()
+    case "$network_mode" in
+        online)
+            git_exec_path="$home/git-exec"
+            [[ -d "$git_exec_path" && ! -L "$git_exec_path" &&
+                -f "$git_exec_path/git-remote-https" &&
+                -x "$git_exec_path/git-remote-https" &&
+                ! -L "$git_exec_path/git-remote-https" ]] ||
+                die 'private Git HTTPS helper is unavailable'
+            require_size "$git_exec_path/git-remote-https" \
+                "$(pin host_tools git_https_helper_size)"
+            require_hash "$git_exec_path/git-remote-https" \
+                "$(pin host_tools git_https_helper_sha256)"
+            network_environment=(
+                GIT_EXEC_PATH="$git_exec_path"
+                GIT_ALLOW_PROTOCOL=https
+                GIT_CONFIG_COUNT=4
+                GIT_CONFIG_KEY_0=url.https://github.com/pepoviola/toml-node.git.insteadOf
+                GIT_CONFIG_VALUE_0=ssh://git@github.com/pepoviola/toml-node.git
+                GIT_CONFIG_KEY_1=url.https://github.com/pepoviola/toml-node.git.insteadOf
+                GIT_CONFIG_VALUE_1=git@github.com:pepoviola/toml-node.git
+                GIT_CONFIG_KEY_2=url.https://github.com/pepoviola/toml-node.git.insteadOf
+                GIT_CONFIG_VALUE_2=git+ssh://git@github.com/pepoviola/toml-node.git
+                GIT_CONFIG_KEY_3=credential.helper
+                GIT_CONFIG_VALUE_3=
+            )
+            ;;
+        offline)
+            network_environment=(
+                npm_config_offline=true
+                GIT_EXEC_PATH=/nonexistent
+                GIT_ALLOW_PROTOCOL=
+                GIT_CONFIG_COUNT=0
+            )
+            ;;
+        *) die "internal unsupported npm network mode" ;;
+    esac
+    [[ -x "$node_bin" && -f "$node_bin" && ! -L "$node_bin" ]] ||
+        die "pinned Node executable is invalid"
+    [[ -f "$npm_cli" && ! -L "$npm_cli" ]] || die "pinned npm CLI is invalid"
+    git_bin="$(pin host_tools git_path)"
+    [[ "$git_bin" == /usr/bin/git && -f "$git_bin" && -x "$git_bin" && ! -L "$git_bin" &&
+        "$(/usr/lib/cargo/bin/coreutils/readlink -f -- "$git_bin")" == "$git_bin" ]] ||
+        die 'pinned npm Git executable is noncanonical, missing, or symbolic'
+    require_hash "$git_bin" "$(pin host_tools git_sha256)"
+    [[ -d "$javascript" && ! -L "$javascript" && -d "$home" && ! -L "$home" ]] ||
+        die "npm build root is invalid"
+    if [[ ! -e "$user_config" && ! -L "$user_config" ]]; then
+        : >"$user_config"
+    fi
+    if [[ ! -e "$global_config" && ! -L "$global_config" ]]; then
+        : >"$global_config"
+    fi
+    [[ -f "$user_config" && ! -L "$user_config" && ! -s "$user_config" &&
+        -f "$global_config" && ! -L "$global_config" && ! -s "$global_config" &&
+        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i' -- "$user_config")" != \
+        "$(/usr/lib/cargo/bin/coreutils/stat -Lc '%d:%i' -- "$global_config")" ]] ||
+        die "npm configuration inputs are not distinct empty regular files"
+    (
+        builtin cd -- "$javascript"
+        /usr/lib/cargo/bin/coreutils/env -i \
+            HOME="$home" PATH="$node_root/bin:/usr/bin:/bin" \
+            LC_ALL=C LANG=C TZ=UTC \
+            npm_config_cache="$cache" \
+            npm_config_userconfig="$user_config" npm_config_globalconfig="$global_config" \
+            npm_config_audit=false npm_config_fund=false \
+            npm_config_update_notifier=false npm_config_loglevel=error npm_config_logs_max=0 \
+            npm_config_git="$git_bin" \
+            GIT_CONFIG_NOSYSTEM=1 GIT_CONFIG_GLOBAL=/dev/null \
+            GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=/nonexistent SSH_ASKPASS=/nonexistent \
+            GIT_SSH=/nonexistent GIT_SSH_COMMAND=/nonexistent GIT_PROXY_COMMAND=/nonexistent \
+            GIT_PROTOCOL_FROM_USER=0 \
+            GIT_NO_REPLACE_OBJECTS=1 GIT_NO_LAZY_FETCH=1 GIT_OPTIONAL_LOCKS=0 \
+            "${network_environment[@]}" \
+            "$node_bin" "$npm_cli" "$@"
+    )
+}
+
+run_pinned_node() {
+    local node_root=$1 javascript=$2 home=$3
+    shift 3
+    local node_bin="$node_root/bin/node"
+    [[ -x "$node_bin" && -f "$node_bin" && ! -L "$node_bin" ]] ||
+        die 'pinned Node executable is invalid'
+    (
+        builtin cd -- "$javascript"
+        /usr/lib/cargo/bin/coreutils/env -i \
+            HOME="$home" PATH="$node_root/bin:/usr/bin:/bin" \
+            LC_ALL=C LANG=C TZ=UTC \
+            "$node_bin" "$@"
+    )
+}
+
+build_zombienet_javascript() {
+    local node_root=$1 javascript=$2 home=$3 workspace
+    run_pinned_node "$node_root" "$javascript" "$home" -e '
+const fs = require("node:fs");
+for (const directory of process.argv.slice(1)) {
+  fs.rmSync(directory, { recursive: true, force: true });
+}
+' \
+        "$javascript/packages/utils/dist" \
+        "$javascript/packages/orchestrator/dist" \
+        "$javascript/packages/cli/dist"
+    for workspace in utils orchestrator cli; do
+        run_pinned_node "$node_root" "$javascript" "$home" \
+            "$javascript/node_modules/typescript/bin/tsc" \
+            --project "$javascript/packages/$workspace/tsconfig.json"
+    done
+    run_pinned_node "$node_root" "$javascript" "$home" -e '
+const fs = require("node:fs");
+fs.cpSync(process.argv[1], process.argv[2], {
+  recursive: true,
+  force: false,
+  errorOnExist: true,
+});
+' \
+        "$javascript/packages/orchestrator/src/providers/podman/resources/configs" \
+        "$javascript/packages/orchestrator/dist/providers/podman/resources/configs"
+}
+
+verify_zombienet_npm_build() {
+    local node_root="$1" zombie_root="$2" home="$3" cache="$4" network_mode="$5"
+    local javascript="$zombie_root/javascript"
+    local package_lock="$zombie_root/$(pin zombienet package_lock_path)"
+    local cli="$javascript/packages/cli/dist/cli.js"
+    local cli_version
+
+    require_hash "$package_lock" "$(pin zombienet package_lock_sha256)"
+    verify_zombienet_toml_lock "$package_lock"
+    if [[ "$network_mode" == online ]]; then
+        prepare_pinned_git_https_helper "$home"
+    fi
+    [[ "$($node_root/bin/node --version)" == "v$(pin node version)" ]] ||
+        die "Node version mismatch"
+    [[ "$(run_pinned_npm "$network_mode" "$node_root" "$javascript" "$home" "$cache" --version)" == "$(pin node npm_version)" ]] ||
+        die "npm version mismatch"
+    run_pinned_npm "$network_mode" "$node_root" "$javascript" "$home" "$cache" \
+        ci --ignore-scripts --no-audit --no-fund
+    verify_zombienet_toml_install "$zombie_root"
+    require_hash "$package_lock" "$(pin zombienet package_lock_sha256)"
+    if [[ "$network_mode" == offline ]]; then
+        build_zombienet_javascript "$node_root" "$javascript" "$home"
+        verify_zombienet_toml_install "$zombie_root"
+        [[ -f "$cli" && ! -L "$cli" ]] || die "built Zombienet CLI is missing or symbolic"
+        cli_version="$(/usr/lib/cargo/bin/coreutils/env -i \
+            HOME="$home" PATH="$node_root/bin:/usr/bin:/bin" \
+            LC_ALL=C LANG=C TZ=UTC "$node_root/bin/node" "$cli" version)" ||
+            die "built Zombienet CLI version command failed"
+        [[ "$cli_version" == "$(pin zombienet cli_version)" ]] ||
+            die "built Zombienet CLI version mismatch"
+        require_hash "$package_lock" "$(pin zombienet package_lock_sha256)"
+    fi
+}
+
+publish_zombienet_npm_cache() {
+    local incoming="$1" backup=""
+    [[ "$incoming" == "$CACHE"/npm.incoming.* && -d "$incoming" && ! -L "$incoming" ]] ||
+        die "npm cache publication source is invalid"
+    verify_npm_cache_tree "$incoming"
+
+    if [[ -e "$NPM_CACHE" || -L "$NPM_CACHE" ]]; then
+        [[ -d "$NPM_CACHE" && ! -L "$NPM_CACHE" ]] ||
+            die "existing npm cache is not a real directory"
+        backup="$(/usr/lib/cargo/bin/coreutils/mktemp -d "$CACHE/npm.backup.XXXXXX")"
+        /usr/bin/gnurmdir -- "$backup"
+        /usr/bin/gnumv -T -- "$NPM_CACHE" "$backup"
+    fi
+    if ! /usr/bin/gnumv -T -- "$incoming" "$NPM_CACHE"; then
+        if [[ -n "$backup" ]]; then
+            /usr/bin/gnumv -T -- "$backup" "$NPM_CACHE" ||
+                die "npm cache publication and restoration both failed"
+        fi
+        die "atomic npm cache publication failed"
+    fi
+    if [[ -n "$backup" ]]; then
+        /usr/bin/gnurm -rf -- "$backup"
+    fi
+}
+
+populate_zombienet_npm_cache() {
+    local work incoming node_root zombie_root javascript home
+    work="$(/usr/lib/cargo/bin/coreutils/mktemp -d "$TASK_TMP/cubikan-zombienet-npm-fetch.XXXXXX")"
+    incoming="$(/usr/lib/cargo/bin/coreutils/mktemp -d "$CACHE/npm.incoming.XXXXXX")"
+    trap '/usr/bin/gnurm -rf -- "${work:-}" "${incoming:-}"' RETURN
+
+    safe_extract "$NODE_ARCHIVE" "$work/node" xz node
+    safe_extract "$ZOMBIENET_ARCHIVE" "$work/zombienet" gz
+    node_root="$work/node/$(pin node archive_directory)"
+    zombie_root="$work/zombienet/zombienet-$(pin zombienet revision)"
+    javascript="$zombie_root/javascript"
+    home="$work/home"
+    /usr/lib/cargo/bin/coreutils/mkdir -m 0700 -- "$home"
+
+    # This is the only network-enabled npm boundary. The exact lockfile and
+    # pinned Node/npm populate a new cache; a second clean install and build
+    # must then succeed with npm's offline mode before the single rename below.
+    verify_zombienet_npm_build "$node_root" "$zombie_root" "$home" "$incoming" online
+    verify_npm_cache_tree "$incoming"
+    run_pinned_npm offline "$node_root" "$javascript" "$home" "$incoming" \
+        cache verify --offline --no-audit --no-fund
+    /usr/bin/gnurm -rf -- "$javascript/node_modules"
+    verify_zombienet_npm_build "$node_root" "$zombie_root" "$home" "$incoming" offline
+    verify_npm_cache_tree "$incoming"
+
+    publish_zombienet_npm_cache "$incoming"
+    incoming=""
+    /usr/bin/gnurm -rf -- "$work"
+    work=""
+    trap - RETURN
+}
+
 verify_sdk_and_scaffold() {
     local work source file actual manifest
     require_size "$SDK_ARCHIVE" "$(pin polkadot_sdk archive_size)"
@@ -742,7 +1069,7 @@ verify_sdk_and_scaffold() {
 }
 
 verify_node_and_zombienet() {
-    local work node_root zombie_root node_bin npm_bin
+    local work node_root zombie_root node_bin npm_bin verification_cache home
     require_size "$NODE_ARCHIVE" "$(pin node archive_size)"
     require_hash "$NODE_ARCHIVE" "$(pin node archive_sha256)"
     require_size "$ZOMBIENET_ARCHIVE" "$(pin zombienet archive_size)"
@@ -760,6 +1087,15 @@ verify_node_and_zombienet() {
     zombie_root="$work/zombienet/zombienet-$(pin zombienet revision)"
     require_hash "$zombie_root/$(pin zombienet package_lock_path)" "$(pin zombienet package_lock_sha256)"
     /usr/bin/grep -F '"version": "1.3.138"' "$zombie_root/javascript/packages/cli/package.json" >/dev/null || die "Zombienet CLI version mismatch"
+    verify_npm_cache_tree "$NPM_CACHE"
+    verification_cache="$work/npm-cache"
+    home="$work/home"
+    /usr/lib/cargo/bin/coreutils/mkdir -m 0700 -- "$verification_cache" "$home"
+    /usr/bin/gnucp -a -- "$NPM_CACHE/." "$verification_cache/"
+    verify_npm_cache_tree "$verification_cache"
+    run_pinned_npm offline "$node_root" "$zombie_root/javascript" "$home" "$verification_cache" \
+        cache verify --offline --no-audit --no-fund
+    verify_zombienet_npm_build "$node_root" "$zombie_root" "$home" "$verification_cache" offline
     /usr/bin/gnurm -rf -- "$work"
     trap - RETURN
 }
@@ -1225,13 +1561,15 @@ verify_identity_subject() {
         node_archive) expected_hash="$(pin node archive_sha256)"; expected_size="$(pin node archive_size)" ;;
         rusqlite_archive) expected_hash="$(pin rusqlite archive_sha256)"; expected_size="$(pin rusqlite archive_size)" ;;
         asset_polkadot) expected_hash="$(pin assets.polkadot sha256)"; expected_size="$(pin assets.polkadot size)" ;;
+        asset_polkadot_prepare_worker) expected_hash="$(pin assets.polkadot-prepare-worker sha256)"; expected_size="$(pin assets.polkadot-prepare-worker size)" ;;
+        asset_polkadot_execute_worker) expected_hash="$(pin assets.polkadot-execute-worker sha256)"; expected_size="$(pin assets.polkadot-execute-worker size)" ;;
         asset_polkadot_parachain) expected_hash="$(pin assets.polkadot-parachain sha256)"; expected_size="$(pin assets.polkadot-parachain size)" ;;
         asset_polkadot_omni_node) expected_hash="$(pin assets.polkadot-omni-node sha256)"; expected_size="$(pin assets.polkadot-omni-node size)" ;;
         asset_chain_spec_builder) expected_hash="$(pin assets.chain-spec-builder sha256)"; expected_size="$(pin assets.chain-spec-builder size)" ;;
         asset_frame_omni_bencher) expected_hash="$(pin assets.frame-omni-bencher sha256)"; expected_size="$(pin assets.frame-omni-bencher size)" ;;
         argv_grammar) expected_hash="$(pin repository_tools argv_grammar_sha256)" ;;
         argv_normalizer) expected_hash="$(pin repository_tools argv_normalizer_sha256)" ;;
-        loopback_wrapper) expected_hash="$(pin repository_tools loopback_wrapper_sha256)" ;;
+        loopback_wrapper) expected_hash="$(pin repository_tools loopback_wrapper_sha256)"; expected_size="$(pin repository_tools loopback_wrapper_size)" ;;
         sealed_exec) expected_hash="$(pin repository_tools sealed_exec_sha256)" ;;
         root_manifest) expected_hash="$(pin foundation root_manifest_sha256)" ;;
         root_lock) expected_hash="$(pin foundation root_lock_sha256)" ;;
@@ -1252,8 +1590,13 @@ verify_identity_subject() {
         rusqlite_patch) expected_hash="$(pin rusqlite patch_sha256)" ;;
         runtime_wasm) expected_hash="$(pin foundation runtime_wasm_sha256)"; expected_size="$(pin foundation runtime_wasm_size)" ;;
         host_*)
-            [[ "${class#host_}" =~ ^(bash|unshare|ip|ss|netcat|git|rustup|env|awk|sha256sum|dd|mount|stat|tar|patch|diff|find|sort|iconv|uname|dirname|readlink|sed|grep|head|wc|cp|rm|mkdir|mktemp|curl|chmod|mv|python)$ ]] || die "unknown host identity-test class: $class"
+            [[ "${class#host_}" =~ ^(bash|unshare|setpriv|ip|ss|netcat|git|git_https_helper|rustup|env|awk|sha256sum|dd|mount|umount|stat|tar|patch|diff|find|sort|iconv|uname|dirname|readlink|sed|grep|head|wc|cp|rm|mkdir|mktemp|curl|chmod|mv|python)$ ]] || die "unknown host identity-test class: $class"
             expected_hash="$(pin host_tools "${class#host_}_sha256")"
+            if [[ "${class#host_}" == setpriv ]]; then
+                expected_size="$(pin host_tools setpriv_size)"
+            elif [[ "${class#host_}" == git_https_helper ]]; then
+                expected_size="$(pin host_tools git_https_helper_size)"
+            fi
             ;;
         rusqlite_vendor_tree)
             actual="$(tree_sha256 "$subject")"

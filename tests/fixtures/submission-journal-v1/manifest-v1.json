@@ -26,14 +26,14 @@
     "verifier": {
       "path": "verify_fixtures.py",
       "size": 63035,
-      "sha256": "a39a121c51f902df02b7a317df25a69e57f7f6965f4709f4c3ddb707ebedfce7"
+      "sha256": "13e3d6d00c0bcf9cc209c8e27e54b0ba6130be1d68a4dfc83a91a99c53f74a04"
     }
   },
   "external_artifacts": {
     "deployment_anchor": {
       "path": "chain/artifacts/local-deployment-anchor-v1.json",
       "size": 5868,
-      "sha256": "38f795fb3bbb666f571b3bd1e4fa3ad1666476f3fff20dee9d93feb9c925dee7"
+      "sha256": "aa58c83fb0cfcb27be160aa8ca150f78ee3fff1cfc3868dbd073c92581c69887"
     },
     "metadata": {
       "path": "chain/metadata/cubikan-runtime-v1.scale",

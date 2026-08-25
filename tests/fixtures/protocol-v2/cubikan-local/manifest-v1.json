@@ -24,7 +24,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-create_intent_unit.json",
           "bytes": 2291,
-          "sha256": "0116668e0b9fc753c69fde5da788d706956ad59e0895fb423143f32ec1714175"
+          "sha256": "1bbb20a23ba8ea3ff2c40534e4302050af52a78f4f07e6446abb3c5919b4a22c"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-create_intent_unit.json",
@@ -55,7 +55,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-transition_intent_unit.json",
           "bytes": 1833,
-          "sha256": "b94936f48d24d28b3fafb68505ae12c866f22158820c8c5171050960b75aa810"
+          "sha256": "0dbca23cb0dfe8d3cf2b9a92014114408945197724e6e016d63d5afb02bd5ce5"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-transition_intent_unit.json",
@@ -86,7 +86,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-complete_intent_unit.json",
@@ -117,7 +117,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-create_relationship_definition.json",
           "bytes": 1865,
-          "sha256": "6bdec0bb08e3294d67a32c16f99308f3e74a0bb1ff07fc3a6a56dd0dc0a3ecf0"
+          "sha256": "f5e54441f075f3927b86ef1cf6d3ee0c9ce7bfc147d5a6d161a72ac80f59392d"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-create_relationship_definition.json",
@@ -148,7 +148,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-create_relationship.json",
           "bytes": 1956,
-          "sha256": "01ade25a851e38f2344c67670b99d1a157562ec1ff36aacefbb4e06d4a89a5d8"
+          "sha256": "9667fff45b7809f28647be09a849d33a6ddf1023edb9e4d93918d3163289412c"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-create_relationship.json",
@@ -179,7 +179,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-delete_relationship.json",
           "bytes": 1956,
-          "sha256": "89eca2c02f4e54fc5d6881dece6485c10ae9e0382f14b1bc4135d3c3b0b919d3"
+          "sha256": "ecfbe331ed73955ea1569cf65f05c7d9d44eae53fb84d19251e9350eadb5c140"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-delete_relationship.json",
@@ -210,7 +210,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-record_association.json",
           "bytes": 2471,
-          "sha256": "a82e0c6325e3bc4674d2514f4dae9afa4a2e50329248c24130002b96ccd11f39"
+          "sha256": "8924222215dfbd369fb15076d4d7edd1c3e2c7c039d060824364d9fe4b6dde2c"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-record_association.json",
@@ -241,7 +241,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-revoke_association.json",
           "bytes": 2471,
-          "sha256": "2f4e00e2053ad0351feb29ec1fbf4fa551ab00d37aff47bb05ab9a304a0c9979"
+          "sha256": "dcb413e09de026dd255ae76f2d82daef6ae474fba38a01f2abbdbd46c1755d92"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-revoke_association.json",
@@ -1299,7 +1299,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1325,7 +1325,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1351,7 +1351,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1377,7 +1377,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1403,7 +1403,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1429,7 +1429,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1455,7 +1455,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1481,7 +1481,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1507,7 +1507,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1533,7 +1533,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1559,7 +1559,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1585,7 +1585,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1611,7 +1611,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1637,7 +1637,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1663,7 +1663,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1689,7 +1689,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1715,7 +1715,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1741,7 +1741,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1767,7 +1767,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1793,7 +1793,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1819,7 +1819,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1845,7 +1845,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1871,7 +1871,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1897,7 +1897,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1923,7 +1923,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1949,7 +1949,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -1975,7 +1975,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -2001,7 +2001,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -2027,7 +2027,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -2053,7 +2053,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -2079,7 +2079,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -2105,7 +2105,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -2131,7 +2131,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -2157,7 +2157,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -2183,7 +2183,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-complete_intent_unit.json",
           "bytes": 1795,
-          "sha256": "b2ce7786017e1c51bd5d8a4ebd1f3e111cef4810a46e92011b11df627f690c56"
+          "sha256": "0ddcecd4fac438b91b0d89235e127657aec14708c9febe557a868b1e54339192"
         }
       },
       "stdout": {
@@ -7737,7 +7737,7 @@
         "signer": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/signer/vector-create_relationship_definition-option-none.json",
           "bytes": 1805,
-          "sha256": "53fc3fd08509e4fd715df0c143f190aff4482876876f031b2083bc4ff258ab6d"
+          "sha256": "cb21f027841014ce649a7c16339582259ae4b0cf580f4d3d899812fd610e8680"
         },
         "projection": {
           "path": "tests/fixtures/protocol-v2/cubikan-local/context/projection/accepted-create_relationship_definition-option-none.json",

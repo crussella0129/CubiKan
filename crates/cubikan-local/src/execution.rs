@@ -5,8 +5,8 @@ use cubikan_backend::{
     ListIntentUnits, PageLimit, ProjectionCheckpoint, ProjectionError, ReadError,
     RelationshipDefinitionId as BackendDefinitionId,
     RelationshipDefinitionKey as BackendDefinitionKey,
-    RelationshipDefinitionVersion as BackendDefinitionVersion, VerifiedReadSnapshot,
-    attest_finalized_projection,
+    RelationshipDefinitionVersion as BackendDefinitionVersion, SynchronizeAttestationError,
+    VerifiedReadSnapshot, attest_finalized_projection, synchronize_and_attest_finalized_projection,
 };
 use cubikan_chain_client::{
     AcceptedEffect, ArchiveError, ArchiveNodeEvidence, DevSigner, Mutation, NodeEvidenceError,
@@ -369,13 +369,9 @@ async fn execute_read(
     operation: DecodedOperation,
 ) -> Result<ExecutedRequest, ErrorDetail> {
     let projector = open_or_create_projector(database_path)?;
-    projector
-        .synchronize(client)
+    let snapshot = synchronize_and_attest_finalized_projection(&projector, client)
         .await
-        .map_err(|error| projection_error(&error))?;
-    let snapshot = attest_finalized_projection(&projector, client)
-        .await
-        .map_err(|error| attestation_error(&error))?;
+        .map_err(|error| synchronize_attestation_error(&error))?;
 
     match operation {
         DecodedOperation::GetIntentUnit(command) => snapshot
@@ -463,10 +459,7 @@ trait AcceptedProjectionServices<Client, Anchor> {
 
     fn open(&mut self, database_path: &Path) -> Result<Self::Projector, ()>;
 
-    async fn synchronize(&mut self, projector: &Self::Projector, client: &Client)
-    -> Result<(), ()>;
-
-    async fn attest(
+    async fn synchronize_and_attest(
         &mut self,
         projector: &Self::Projector,
         client: &Client,
@@ -503,8 +496,10 @@ where
     };
 
     let caught_up = async {
-        services.synchronize(&projector, client).await.ok()?;
-        let snapshot = services.attest(&projector, client).await.ok()?;
+        let snapshot = services
+            .synchronize_and_attest(&projector, client)
+            .await
+            .ok()?;
         let checkpoint = services.semantic_anchor(snapshot, anchor).ok()?;
         Services::global_sequence(&checkpoint)
             .is_some_and(|sequence| sequence >= accepted_sequence)
@@ -531,24 +526,12 @@ impl AcceptedProjectionServices<VerifiedArchiveClient, AcceptedEffect>
         open_or_create_projector(database_path).map_err(|_| ())
     }
 
-    async fn synchronize(
-        &mut self,
-        projector: &Self::Projector,
-        client: &VerifiedArchiveClient,
-    ) -> Result<(), ()> {
-        projector
-            .synchronize(client)
-            .await
-            .map(|_| ())
-            .map_err(|_| ())
-    }
-
-    async fn attest(
+    async fn synchronize_and_attest(
         &mut self,
         projector: &Self::Projector,
         client: &VerifiedArchiveClient,
     ) -> Result<Self::Snapshot, ()> {
-        attest_finalized_projection(projector, client)
+        synchronize_and_attest_finalized_projection(projector, client)
             .await
             .map_err(|_| ())
     }
@@ -698,6 +681,13 @@ fn attestation_error(error: &AttestationError) -> ErrorDetail {
         AttestationError::InvalidFinalizedStream | AttestationError::ProjectionUnavailable => {
             ErrorDetail::plain(ErrorCode::ProjectionError)
         }
+    }
+}
+
+fn synchronize_attestation_error(error: &SynchronizeAttestationError) -> ErrorDetail {
+    match error {
+        SynchronizeAttestationError::Projection(error) => projection_error(error),
+        SynchronizeAttestationError::Attestation(error) => attestation_error(error),
     }
 }
 
@@ -1017,8 +1007,7 @@ pub(crate) mod tests {
 
     struct ProjectionSpy {
         calls: Vec<&'static str>,
-        synchronize: bool,
-        attest: bool,
+        synchronize_and_attest: bool,
         anchor_sequence: Option<u64>,
         lagging_sequence: Option<u64>,
     }
@@ -1033,22 +1022,13 @@ pub(crate) mod tests {
             Ok(())
         }
 
-        async fn synchronize(
-            &mut self,
-            _projector: &Self::Projector,
-            _client: &(),
-        ) -> Result<(), ()> {
-            self.calls.push("synchronize");
-            self.synchronize.then_some(()).ok_or(())
-        }
-
-        async fn attest(
+        async fn synchronize_and_attest(
             &mut self,
             _projector: &Self::Projector,
             _client: &(),
         ) -> Result<Self::Snapshot, ()> {
-            self.calls.push("attest");
-            self.attest.then_some(()).ok_or(())
+            self.calls.push("synchronize_and_attest");
+            self.synchronize_and_attest.then_some(()).ok_or(())
         }
 
         fn semantic_anchor(
@@ -1252,6 +1232,20 @@ pub(crate) mod tests {
             ErrorCode::ProjectionError
         );
         assert_eq!(
+            synchronize_attestation_error(&SynchronizeAttestationError::Projection(
+                ProjectionError::ConflictingFinalizedBlock,
+            ))
+            .code(),
+            ErrorCode::ConflictingFinalizedBlock
+        );
+        assert_eq!(
+            synchronize_attestation_error(&SynchronizeAttestationError::Attestation(
+                AttestationError::ProjectionMismatch,
+            ))
+            .code(),
+            ErrorCode::ProjectionMismatch
+        );
+        assert_eq!(
             read_error(&ReadError::Backend(missing_unit())).code(),
             ErrorCode::IntentUnitNotFound
         );
@@ -1265,8 +1259,7 @@ pub(crate) mod tests {
     async fn assert_projection_resolution_order() {
         let mut caught_up = ProjectionSpy {
             calls: Vec::new(),
-            synchronize: true,
-            attest: true,
+            synchronize_and_attest: true,
             anchor_sequence: Some(9),
             lagging_sequence: Some(8),
         };
@@ -1276,13 +1269,12 @@ pub(crate) mod tests {
         );
         assert_eq!(
             caught_up.calls,
-            ["open", "synchronize", "attest", "semantic_anchor"]
+            ["open", "synchronize_and_attest", "semantic_anchor"]
         );
 
         let mut behind = ProjectionSpy {
             calls: Vec::new(),
-            synchronize: true,
-            attest: true,
+            synchronize_and_attest: true,
             anchor_sequence: Some(8),
             lagging_sequence: Some(8),
         };
@@ -1294,8 +1286,7 @@ pub(crate) mod tests {
             behind.calls,
             [
                 "open",
-                "synchronize",
-                "attest",
+                "synchronize_and_attest",
                 "semantic_anchor",
                 "fresh_attest_and_bounded_fallback"
             ]
@@ -1303,8 +1294,7 @@ pub(crate) mod tests {
 
         let mut unattested = ProjectionSpy {
             calls: Vec::new(),
-            synchronize: true,
-            attest: false,
+            synchronize_and_attest: false,
             anchor_sequence: Some(99),
             lagging_sequence: None,
         };
@@ -1316,8 +1306,7 @@ pub(crate) mod tests {
             unattested.calls,
             [
                 "open",
-                "synchronize",
-                "attest",
+                "synchronize_and_attest",
                 "fresh_attest_and_bounded_fallback"
             ]
         );

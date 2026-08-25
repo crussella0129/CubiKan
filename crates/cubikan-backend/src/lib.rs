@@ -22,7 +22,10 @@ mod sqlite;
 mod stored;
 mod verified_read;
 
-pub use attestation::{AttestationError, attest_finalized_projection};
+pub use attestation::{
+    AttestationError, SynchronizeAttestationError, attest_finalized_projection,
+    synchronize_and_attest_finalized_projection,
+};
 pub use error::{BackendError, ListCursorError, PageLimitError, StorageFailure};
 pub use model::{
     CompleteIntentUnit, CreateIntentUnit, GetIntentUnit, IntentUnitPage, IntentUnitSummary,
